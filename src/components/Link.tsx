@@ -1,28 +1,32 @@
-import { type LinkProps, Link as TSRLink } from "@tanstack/react-router";
+import {
+  type LinkProps,
+  Link as TSRLink,
+  useNavigate,
+} from "@tanstack/react-router";
 import { type CSSProperties, useTransition } from "react";
 
-interface ViewTransitionLinkProps extends Omit<LinkProps, "onClick"> {
+interface ManicLinkProps extends LinkProps {
   viewTransitionName?: string;
+  className?: string;
   disableViewTransition?: boolean;
-  style: CSSProperties;
-  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  style?: CSSProperties;
 }
 
 export const Link = ({
   viewTransitionName,
   disableViewTransition = false,
-  onClick,
   style,
+  className,
   preload = "intent",
   preloadDelay = 50,
   resetScroll = false,
+  to,
   ...linkProps
-}: ViewTransitionLinkProps) => {
+}: ManicLinkProps) => {
   const [, startTransition] = useTransition();
+  const navigate = useNavigate();
 
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    onClick?.(e);
-
     if (
       e.defaultPrevented ||
       e.metaKey ||
@@ -38,7 +42,7 @@ export const Link = ({
 
       document.startViewTransition(() => {
         startTransition(() => {
-          e.currentTarget?.click();
+          navigate({ to, resetScroll });
         });
       });
     }
@@ -46,9 +50,11 @@ export const Link = ({
 
   return (
     <TSRLink
+      to={to}
       preload={preload}
       preloadDelay={preloadDelay}
       resetScroll={resetScroll}
+      className={className}
       {...linkProps}
       onClick={handleNavigation}
       style={viewTransitionName ? { ...style, viewTransitionName } : style}
