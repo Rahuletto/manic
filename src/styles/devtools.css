@@ -1,0 +1,45 @@
+button.go1767807125 {
+    display: none;
+}
+
+.go1688509379 {
+    background-color: #0e0e0e !important;
+}
+
+.go2273422943,
+.go2042539364,
+.go2224423957 {
+    background-color: #f0eee613 !important;
+    backdrop-filter: blur(6px);
+}
+
+.go1648261519,
+.go1091339057,
+.go3515246205,
+.go1468579934,
+.go1232428028,
+.go3620606704,
+.go3752837924,
+.go905199096 {
+    border-color: #f0eee613 !important;
+}
+.go2224423957 {
+    border-color: transparent !important;
+}
+
+.go862916629 {
+    color: #f0eee643;
+}
+
+.go2107851696,
+.go1505018836:hover {
+    background-color: #e96464 !important;
+    color: #0e0e0e !important;
+}
+
+.go1863549978 {
+    color: #e96464 !important;
+}
+.go1648261519 {
+    display: none !important;
+}
