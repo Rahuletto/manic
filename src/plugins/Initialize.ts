@@ -1,21 +1,21 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {
+  bgCyan,
+  bgYellow,
   bold,
   cyan,
   gray,
   green,
   red,
   yellow,
-  bgCyan,
-  bgYellow,
 } from "colorette";
 import Elysia from "elysia";
 
 const startTime = performance.now();
 
-export const initPlugin = new Elysia({ name: "framework.init" })
-  .onStart(({ server }) => {
+export const initPlugin = new Elysia({ name: "framework.init" }).onStart(
+  ({ server }) => {
     const envFilePath = path.join(process.cwd(), ".env");
     const envFileExists = existsSync(envFilePath);
 
@@ -23,7 +23,7 @@ export const initPlugin = new Elysia({ name: "framework.init" })
 
     if (envFileExists) {
       try {
-        const envFileContent = fs.readFileSync(envFilePath, "utf-8");
+        const envFileContent = readFileSync(envFilePath, "utf-8");
 
         envVarKeys = envFileContent
           .split("\n")
@@ -31,7 +31,6 @@ export const initPlugin = new Elysia({ name: "framework.init" })
           .filter((line) => line.length > 0 && !line.startsWith("#"))
           .map((line) => line.split("=")[0]!.trim());
       } catch (error) {
-        xw;
         console.error(red(`\n\t\tError reading .env file: ${error.message}`));
       }
     }
@@ -52,5 +51,5 @@ export const initPlugin = new Elysia({ name: "framework.init" })
             `\n\t\t${yellow(bold("ENVs"))}: ${envVarKeys.map((key) => yellow(key)).join(cyan(", "))}`
         : "",
     );
-  })
-  .listen(3000);
+  },
+);
