@@ -1,7 +1,7 @@
 {
   "name": "manicjs",
   "module": "index.ts",
-  "version": "0.0.2-fix-5",
+  "version": "0.0.3",
   "type": "module",
   "bin": {
     "manic": "./src/cli/index.ts"
