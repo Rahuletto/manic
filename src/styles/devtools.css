@@ -43,3 +43,7 @@ button.go1767807125 {
 .go1648261519 {
     display: none !important;
 }
+
+div:has(.TanStackRouterDevtools) {
+    padding-bottom: 0px !important;
+}

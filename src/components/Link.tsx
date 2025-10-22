@@ -54,10 +54,10 @@ export const Link = ({
       preload={preload}
       preloadDelay={preloadDelay}
       resetScroll={resetScroll}
-      className={className}
       {...linkProps}
+      className={className}
       onClick={handleNavigation}
       style={viewTransitionName ? { ...style, viewTransitionName } : style}
-    />
+    ></TSRLink>
   );
 };

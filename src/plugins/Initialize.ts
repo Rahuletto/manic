@@ -5,6 +5,7 @@ import {
   bgYellow,
   bold,
   cyan,
+  dim,
   gray,
   green,
   red,
@@ -47,9 +48,9 @@ export const initPlugin = new Elysia({ name: "framework.init" }).onStart(
       `\n\t\t${cyan(bold("URL"))}:      ${green(url)}\n`,
       `\n\t\t${green("Ready in")} ${bold(duration + "ms")}\n`,
       envVarKeys.length >= 1
-        ? `\t\t${gray(`Injected env from ${bold(".env")}`)}\n` +
-            `\n\t\t${yellow(bold("ENVs"))}: ${envVarKeys.map((key) => yellow(key)).join(cyan(", "))}`
-        : "",
+        ? `\n\t\t${dim(gray(`Injected env from ${bold(".env")}`))}\n` +
+            `\t\t${envVarKeys.map((key) => yellow(`└─ ${key} = ****************`)).join("\n\t\t")}\n\n`
+        : "\n",
     );
   },
 );
