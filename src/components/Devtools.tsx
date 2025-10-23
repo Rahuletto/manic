@@ -12,6 +12,8 @@ export const Devtools = () => {
         <>
           <TanStackRouterDevtools position="bottom-right" />
           <button
+            name="router-devtools"
+            aria-label="router-devtools"
             type="button"
             className="fixed right-5 bottom-5 border-1 group transition-all duration-200 border-foreground/20 bg-foreground/10 backdrop-blur-md w-[50px] h-[50px] rounded-full flex items-center justify-center cursor-pointer"
             onClick={() => {

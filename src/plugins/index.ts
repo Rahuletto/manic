@@ -6,3 +6,4 @@ export {
   loadAPIFromRegistry,
   walk,
 } from "./LoadRoutes";
+export { optimizeImagePlugin } from "./OptimizeImage";

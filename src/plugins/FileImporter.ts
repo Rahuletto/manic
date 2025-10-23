@@ -49,7 +49,19 @@ export async function createFileImporter(instances: Elysia[]) {
       };
       set.headers["Content-Type"] =
         types[ext || ""] || "application/octet-stream";
+
+      if (/\.(js|css|svg|png|jpg|jpeg|woff2?)$/i.test(path)) {
+        set.headers["Cache-Control"] = "public, max-age=31536000, immutable";
+      } else {
+        set.headers["Cache-Control"] = "public, max-age=3600";
+      }
+
       return file(path);
+    })
+    .get("/robots.txt", () => {
+      return `User-agent: *
+    Allow: /
+    `;
     })
 
     .use(
