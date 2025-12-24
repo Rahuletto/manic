@@ -21,7 +21,7 @@ export default function Home() {
           className="md:text-3xl text-xl font-semibold"
           style={{ viewTransitionName: "subtitle" }}
         >
-          Stupidly fast, Crazy light.
+          Stupidly heheheh, Crazy light.
         </p>
 
         <div className="mt-6 flex gap-6">

@@ -3,8 +3,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "manic-app",
-    "test-app"
+    "manic-app"
   ],
   "scripts": {
     "dev": "cd manic-app && bun run dev",

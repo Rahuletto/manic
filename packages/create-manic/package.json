@@ -1,6 +1,6 @@
 {
   "name": "create-manic",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create a new Manic app",
   "type": "module",
   "license": "GPL-3.0",
