@@ -1,0 +1,18 @@
+{
+  "name": "manic-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "manic-app",
+    "test-app"
+  ],
+  "scripts": {
+    "dev": "cd manic-app && bun run dev",
+    "build": "cd manic-app && bun run build",
+    "typecheck": "cd packages/manic && bun run tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}

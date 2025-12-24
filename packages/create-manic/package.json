@@ -1,0 +1,26 @@
+{
+  "name": "create-manic",
+  "version": "0.1.0",
+  "description": "Create a new Manic app",
+  "type": "module",
+  "license": "GPL-3.0",
+  "author": "Rahuletto",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rahuletto/manic"
+  },
+  "bin": {
+    "create-manic": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "template/**/*"
+  ],
+  "keywords": [
+    "manic",
+    "create",
+    "react",
+    "bun",
+    "scaffold"
+  ]
+}
