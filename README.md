@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="manic-app/assets/wordmark.svg" alt="Manic" width="300" />
-</p>
+<img src="manic-app/assets/wordmark.svg" alt="Manic" width="300" />
 
 Stupidly fast, Crazy light React framework.
 
@@ -19,10 +17,10 @@ bun dev
 
 ## Packages
 
-| Package                               | Description              |
-| ------------------------------------- | ------------------------ |
-| [manicjs](packages/manic)             | The framework            |
-| [create-manic](packages/create-manic) | CLI to scaffold new apps |
+| Package                                                    | Description              |
+| ---------------------------------------------------------- | ------------------------ |
+| [manicjs](https://www.npmjs.com/package/manicjs)           | The framework            |
+| [create-manic](https://www.npmjs.com/package/create-manic) | CLI to scaffold new apps |
 
 ## Requirements
 
