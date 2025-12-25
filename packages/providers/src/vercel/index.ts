@@ -155,10 +155,22 @@ export default app;
         JSON.stringify({ type: "module" }, null, 2)
       );
 
+      // Create vercel.json if it doesn't exist (for GitHub integration)
+      if (!existsSync("vercel.json")) {
+        const vercelJson = {
+          buildCommand: "bun run build",
+          installCommand: "bun install",
+          framework: null,
+        };
+        await Bun.write("vercel.json", JSON.stringify(vercelJson, null, 2));
+        console.log(dim("\n  Created vercel.json - commit this to your repo for GitHub integration"));
+      }
+
       process.stdout.write(
         `\r${dim(green("● Exporting to Vercel... done"))}\n`
       );
-      console.log(yellow(bold("ℹ Deploy with: manic deploy")));
+      console.log(yellow(bold("ℹ Deploy: manic deploy --run")));
+      console.log(dim("  For GitHub CI/CD: commit vercel.json and push"));
     },
   };
 }

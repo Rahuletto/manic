@@ -48,6 +48,16 @@ vercel({
 
 Full support for static sites and API routes with native Bun runtime.
 
+**Deploy with CLI (recommended):**
+```bash
+manic build && manic deploy --run
+```
+
+**Deploy via Vercel Dashboard/GitHub:**
+1. Set Build Command: `bun run build`
+2. Set Output Directory: `.vercel/output`
+3. Set Install Command: `bun install`
+
 ### Netlify
 
 ```typescript

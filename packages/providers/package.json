@@ -9,6 +9,13 @@
     "type": "git",
     "url": "https://github.com/Rahuletto/manic"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/Rahuletto/manic#readme",
+  "bugs": {
+    "url": "https://github.com/Rahuletto/manic/issues"
+  },
   "keywords": [
     "manic",
     "vercel",
