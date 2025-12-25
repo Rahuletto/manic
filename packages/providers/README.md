@@ -22,6 +22,15 @@ export default defineConfig({
 });
 ```
 
+## Provider Comparison
+
+| Feature | Vercel | Netlify | Cloudflare |
+|---------|--------|---------|------------|
+| Static site | ✅ | ✅ | ✅ |
+| API routes | ✅ | ✅ | ❌ |
+| Edge runtime | ✅ | ✅ (edge option) | - |
+| Bun runtime | ✅ | ❌ | - |
+
 ## Providers
 
 ### Vercel
@@ -37,20 +46,7 @@ vercel({
 });
 ```
 
-Uses Vercel Build Output API with native Bun runtime support.
-
-### Cloudflare Pages
-
-```typescript
-import { cloudflare } from "@manicjs/providers";
-
-cloudflare({
-  compatibilityDate: "2024-01-01",
-  compatibilityFlags: [],
-});
-```
-
-Generates Cloudflare Pages Functions and `wrangler.toml`.
+Full support for static sites and API routes with native Bun runtime.
 
 ### Netlify
 
@@ -58,11 +54,33 @@ Generates Cloudflare Pages Functions and `wrangler.toml`.
 import { netlify } from "@manicjs/providers";
 
 netlify({
-  edge: false,
+  edge: false, // Use edge functions (experimental)
 });
 ```
 
-Generates Netlify Functions and `netlify.toml`.
+Full support for static sites and API routes via Netlify Functions.
+
+### Cloudflare Pages
+
+```typescript
+import { cloudflare } from "@manicjs/providers";
+
+cloudflare({
+  projectName: "my-app", // Cloudflare Pages project name
+});
+```
+
+Deploys as a static site with SPA routing.
+
+**Limitations:**
+- ❌ API routes not supported (Elysia incompatible with Cloudflare Workers runtime)
+- Use Vercel or Netlify if you need API routes
+
+Deploy manually:
+
+```bash
+bunx wrangler pages deploy dist --project-name my-app
+```
 
 ## Creating Custom Providers
 
