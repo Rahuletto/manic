@@ -1,5 +1,5 @@
 import { defineConfig } from "manicjs/config";
-// import { vercel } from "@manicjs/providers";
+import { netlify } from "@manicjs/providers";
 
 export default defineConfig({
   app: {
@@ -10,5 +10,5 @@ export default defineConfig({
     port: 6070,
   },
 
-  // providers: [vercel()],
+  providers: [netlify()],
 });

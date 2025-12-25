@@ -29,36 +29,28 @@ body {
   navigation: auto;
 }
 
+/* Root transition - subtle crossfade so named elements stand out */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.25s;
+  animation-duration: 0.2s;
   animation-timing-function: ease-out;
+  mix-blend-mode: normal;
+}
+
+
+::view-transition-group(*) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-new(root) {
+  animation: none;
+  opacity: 1;
 }
 
 ::view-transition-old(root) {
-  animation-name: fade-out;
-}
-
-::view-transition-new(root) {
-  animation-name: fade-in;
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  animation: none;
+  opacity: 1;
 }
 
 .border-box {
@@ -92,22 +84,6 @@ body {
 .btn-outline:hover {
   background-color: var(--theme-foreground);
   color: var(--theme-background);
-}
-
-.sidebar-item {
-  border: 2px solid transparent;
-  padding: 0.75rem 1rem;
-  transition: all 0.15s;
-  cursor: pointer;
-}
-
-.sidebar-item:hover {
-  border-color: var(--theme-foreground);
-}
-
-.sidebar-item.active {
-  border-color: var(--color-accent);
-  background-color: rgba(233, 100, 100, 0.1);
 }
 
 code {
