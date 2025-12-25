@@ -15,9 +15,9 @@
       "dependencies": {
         "@elysiajs/static": "^1.4.7",
         "@elysiajs/swagger": "^1.3.1",
-        "@manicjs/providers": "workspace:*",
+        "@manicjs/providers": "^0.1.0",
         "elysia": "latest",
-        "manicjs": "workspace:*",
+        "manicjs": "^0.5.2",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "tailwindcss": "^4.0.0",
@@ -36,7 +36,7 @@
     },
     "packages/manic": {
       "name": "manicjs",
-      "version": "0.4.0",
+      "version": "0.5.2",
       "bin": {
         "manic": "./src/cli/index.ts",
       },

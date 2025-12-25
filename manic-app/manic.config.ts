@@ -1,5 +1,5 @@
 import { defineConfig } from "manicjs/config";
-import { netlify } from "@manicjs/providers";
+import { cloudflare, vercel, netlify } from "@manicjs/providers";
 
 export default defineConfig({
   app: {
@@ -10,5 +10,5 @@ export default defineConfig({
     port: 6070,
   },
 
-  providers: [netlify()],
+  providers: [vercel(), cloudflare(), netlify()],
 });
