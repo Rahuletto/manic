@@ -1,4 +1,5 @@
 import { defineConfig } from "manicjs/config";
+// import { vercel, cloudflare, netlify } from "@manicjs/providers";
 
 export default defineConfig({
   app: {
@@ -33,4 +34,8 @@ export default defineConfig({
   //     },
   //   },
   // },
+
+  // providers: [vercel()],   // Deploy to Vercel
+  // providers: [cloudflare()], // Deploy to Cloudflare Pages
+  // providers: [netlify()],   // Deploy to Netlify
 });

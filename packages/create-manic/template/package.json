@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "manic dev",
     "build": "manic build",
-    "start": "manic start"
+    "start": "manic start",
+    "deploy": "manic deploy"
   },
   "dependencies": {
     "@elysiajs/static": "^1.4.7",
