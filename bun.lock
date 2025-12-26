@@ -9,13 +9,14 @@
         "typescript": "^5",
       },
     },
-    "manic-app": {
+    "demo": {
       "name": "manic-app",
       "version": "0.1.0",
       "dependencies": {
         "@elysiajs/static": "^1.4.7",
         "@elysiajs/swagger": "^1.3.1",
         "@manicjs/providers": "^0.1.0",
+        "bun-plugin-tailwind": "^0.1.2",
         "elysia": "latest",
         "manicjs": "^0.5.2",
         "react": "^19.0.0",
@@ -159,7 +160,7 @@
 
     "ieee754": ["ieee754@1.2.1", "", {}, "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="],
 
-    "manic-app": ["manic-app@workspace:manic-app"],
+    "manic-app": ["manic-app@workspace:demo"],
 
     "manicjs": ["manicjs@workspace:packages/manic"],
 
