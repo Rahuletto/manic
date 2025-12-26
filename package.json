@@ -3,11 +3,11 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "manic-app"
+    "demo"
   ],
   "scripts": {
-    "dev": "cd manic-app && bun run dev",
-    "build": "cd manic-app && bun run build",
+    "dev": "cd demo && bun run dev",
+    "build": "cd demo && bun run build",
     "typecheck": "cd packages/manic && bun run tsc --noEmit"
   },
   "devDependencies": {
