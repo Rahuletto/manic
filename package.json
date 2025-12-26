@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "demo"
+    "demo",
+    "examples/*"
   ],
   "scripts": {
     "dev": "cd demo && bun run dev",
