@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #e96464;
+  --color-background: var(--theme-background);
+  --color-foreground: var(--theme-foreground);
+}
+
+:root {
+  --theme-background: #f0eee6;
+  --theme-foreground: #0e0e0e;
+
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+.dark {
+  --theme-background: #0e0e0e;
+  --theme-foreground: #f0eee6;
+}
+
+body {
+  background-color: var(--theme-background);
+  color: var(--theme-foreground);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+/* Root transition - subtle crossfade so named elements stand out */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+  mix-blend-mode: normal;
+}
+
+
+::view-transition-group(*) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-new(root) {
+  animation: none;
+  opacity: 1;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  opacity: 1;
+}
+
+.border-box {
+  border: 2px solid var(--theme-foreground);
+}
+
+.border-box-accent {
+  border: 2px solid var(--color-accent);
+}
+
+.btn-primary {
+  background-color: var(--theme-foreground);
+  color: var(--theme-background);
+  border: 2px solid transparent;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-outline {
+  border: 2px solid var(--theme-foreground);
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.btn-outline:hover {
+  background-color: var(--theme-foreground);
+  color: var(--theme-background);
+}
+
+code {
+  font-family: "Google Sans Code", monospace;
+}

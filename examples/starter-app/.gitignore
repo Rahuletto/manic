@@ -1,0 +1,12 @@
+node_modules
+.manic
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vercel
+.env*.local
+netlify
+dist
+wrangler
