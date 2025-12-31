@@ -1,4 +1,4 @@
-<img src="manic-app/assets/wordmark.svg" alt="Manic" width="300" />
+<img src="demo/assets/wordmark.svg" alt="Manic" width="300" />
 
 Stupidly fast, Crazy light React framework.
 
