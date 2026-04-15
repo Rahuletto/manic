@@ -1,8 +1,11 @@
 import { Link } from "manicjs";
 import { useTheme } from "manicjs/theme";
+import { useState } from "react";
+
 
 export default function Home() {
   const { isDark } = useTheme();
+  const [state, setState] = useState(0);
 
   return (
     <main className="md:py-14 md:px-24 py-6 px-12 bg-background min-h-screen flex items-center justify-center text-foreground">
@@ -21,7 +24,7 @@ export default function Home() {
           className="md:text-3xl text-xl font-semibold"
           style={{ viewTransitionName: "subtitle" }}
         >
-          Stupidly fast, Crazy light.
+          Godspeed, with bun and oxc toolkit
         </p>
 
         <div className="mt-6 flex gap-6">
@@ -40,6 +43,8 @@ export default function Home() {
             Docs ↗
           </a>
         </div>
+
+        <button className="btn-outline px-4 py-2 bg" onClick={() => setState(state + 1)}>{state}</button>
       </div>
     </main>
   );

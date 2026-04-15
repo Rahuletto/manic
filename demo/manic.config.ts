@@ -6,6 +6,8 @@ export default defineConfig({
     name: "Manic",
   },
 
+
+
   server: {
     port: 6070,
   },
