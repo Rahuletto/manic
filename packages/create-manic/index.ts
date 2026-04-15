@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { mkdir, cp, readdir } from "fs/promises";
+import { mkdir, cp, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { resolve, join } from "path";
 import * as readline from "readline";
@@ -38,6 +38,23 @@ function askYesNo(
   });
 }
 
+function askChoice(
+  question: string,
+  choices: string[],
+  defaultChoice: string
+): Promise<string> {
+  const choiceStr = choices
+    .map((c) => (c === defaultChoice ? bold(c) : c))
+    .join(" / ");
+  return new Promise((resolve) => {
+    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, (answer) => {
+      const a = answer.trim().toLowerCase();
+      if (choices.includes(a)) resolve(a);
+      else resolve(defaultChoice);
+    });
+  });
+}
+
 async function main() {
   const args = process.argv.slice(2);
   let projectName = args[0];
@@ -62,8 +79,16 @@ ${dim("--- --- --- --- ---")}
   }
 
   const appName = await ask("App name", projectName);
+  const mode = await askChoice(
+    "Project mode",
+    ["fullstack", "frontend"],
+    "fullstack"
+  );
   const port = await ask("Port", "6070");
-  const swagger = await askYesNo("Include Swagger API docs?", true);
+  const isFrontend = mode === "frontend";
+  const swagger = isFrontend
+    ? false
+    : await askYesNo("Include Swagger API docs?", true);
   const viewTransitions = await askYesNo("Enable View Transitions?", true);
 
   console.log(`\n${dim("Creating project...")}\n`);
@@ -72,14 +97,34 @@ ${dim("--- --- --- --- ---")}
   await mkdir(projectPath, { recursive: true });
   await cp(templatePath, projectPath, { recursive: true });
 
+  if (isFrontend) {
+    const apiDir = join(projectPath, "app", "api");
+    if (existsSync(apiDir)) {
+      await rm(apiDir, { recursive: true, force: true });
+    }
+  }
+
   const pkgPath = join(projectPath, "package.json");
   const pkg = await Bun.file(pkgPath).json();
   pkg.name = projectName;
+
+  if (isFrontend) {
+    delete pkg.dependencies["elysia"];
+    delete pkg.dependencies["@elysiajs/static"];
+    delete pkg.dependencies["@elysiajs/swagger"];
+  }
+
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
 
   const configContent = `import { defineConfig } from "manicjs/config";
 
-export default defineConfig({
+export default defineConfig({${
+    isFrontend
+      ? `
+  mode: "frontend",
+`
+      : ""
+  }
   app: {
     name: "${appName}",
   },
