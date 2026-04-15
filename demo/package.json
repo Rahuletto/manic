@@ -8,8 +8,8 @@
     "build": "manic build",
     "start": "manic start",
     "deploy": "manic deploy",
-    "lint": "oxlint",
-    "format": "oxlint --fix"
+    "lint": "oxlint --fix .",
+    "format": "oxlint --fix ."
   },
   "dependencies": {
     "@elysiajs/static": "^1.4.7",
