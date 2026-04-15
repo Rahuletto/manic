@@ -5,8 +5,9 @@ export default defineConfig({
   app: {
     name: "Manic",
   },
-
-
+  swagger: {
+    theme: "mars"
+  },
 
   server: {
     port: 6070,
