@@ -2,7 +2,13 @@
   "name": "create-manic",
   "version": "0.3.2",
   "description": "Create a new Manic app",
-  "type": "module",
+  "keywords": [
+    "bun",
+    "create",
+    "manic",
+    "react",
+    "scaffold"
+  ],
   "license": "GPL-3.0",
   "author": "Rahuletto",
   "repository": {
@@ -16,11 +22,5 @@
     "index.ts",
     "template/**/*"
   ],
-  "keywords": [
-    "manic",
-    "create",
-    "react",
-    "bun",
-    "scaffold"
-  ]
+  "type": "module"
 }

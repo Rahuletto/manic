@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { mkdir, cp, rm } from "fs/promises";
-import { existsSync } from "fs";
-import { resolve, join } from "path";
-import * as readline from "readline";
+import { mkdir, cp, rm } from 'fs/promises';
+import { existsSync } from 'fs';
+import { resolve, join } from 'path';
+import * as readline from 'readline';
 
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
@@ -16,10 +16,10 @@ const rl = readline.createInterface({
 });
 
 function ask(question: string, defaultValue?: string): Promise<string> {
-  const suffix = defaultValue ? dim(` (${defaultValue})`) : "";
-  return new Promise((resolve) => {
-    rl.question(`  ${question}${suffix}: `, (answer) => {
-      resolve(answer.trim() || defaultValue || "");
+  const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
+  return new Promise(resolve => {
+    rl.question(`  ${question}${suffix}: `, answer => {
+      resolve(answer.trim() || defaultValue || '');
     });
   });
 }
@@ -28,12 +28,12 @@ function askYesNo(
   question: string,
   defaultYes: boolean = true
 ): Promise<boolean> {
-  const hint = defaultYes ? "Y/n" : "y/N";
-  return new Promise((resolve) => {
-    rl.question(`  ${question} ${dim(`(${hint})`)}: `, (answer) => {
+  const hint = defaultYes ? 'Y/n' : 'y/N';
+  return new Promise(resolve => {
+    rl.question(`  ${question} ${dim(`(${hint})`)}: `, answer => {
       const a = answer.trim().toLowerCase();
-      if (a === "") resolve(defaultYes);
-      else resolve(a === "y" || a === "yes");
+      if (a === '') resolve(defaultYes);
+      else resolve(a === 'y' || a === 'yes');
     });
   });
 }
@@ -44,10 +44,10 @@ function askChoice(
   defaultChoice: string
 ): Promise<string> {
   const choiceStr = choices
-    .map((c) => (c === defaultChoice ? bold(c) : c))
-    .join(" / ");
-  return new Promise((resolve) => {
-    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, (answer) => {
+    .map(c => (c === defaultChoice ? bold(c) : c))
+    .join(' / ');
+  return new Promise(resolve => {
+    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, answer => {
       const a = answer.trim().toLowerCase();
       if (choices.includes(a)) resolve(a);
       else resolve(defaultChoice);
@@ -60,58 +60,58 @@ async function main() {
   let projectName = args[0];
 
   console.log(`
-${red(bold("■ MANIC"))}
-${dim("--- --- --- --- ---")}
+${red(bold('■ MANIC'))}
+${dim('--- --- --- --- ---')}
 `);
 
   if (!projectName) {
-    projectName = await ask("Project name", "my-manic-app");
+    projectName = await ask('Project name', 'my-manic-app');
   }
 
   const projectPath = resolve(process.cwd(), projectName);
 
   if (existsSync(projectPath)) {
     console.log(
-      `\n${red("Error:")} Directory ${cyan(projectName)} already exists.`
+      `\n${red('Error:')} Directory ${cyan(projectName)} already exists.`
     );
     rl.close();
     process.exit(1);
   }
 
-  const appName = await ask("App name", projectName);
+  const appName = await ask('App name', projectName);
   const mode = await askChoice(
-    "Project mode",
-    ["fullstack", "frontend"],
-    "fullstack"
+    'Project mode',
+    ['fullstack', 'frontend'],
+    'fullstack'
   );
-  const port = await ask("Port", "6070");
-  const isFrontend = mode === "frontend";
+  const port = await ask('Port', '6070');
+  const isFrontend = mode === 'frontend';
   const swagger = isFrontend
     ? false
-    : await askYesNo("Include Swagger API docs?", true);
-  const viewTransitions = await askYesNo("Enable View Transitions?", true);
+    : await askYesNo('Include Swagger API docs?', true);
+  const viewTransitions = await askYesNo('Enable View Transitions?', true);
 
-  console.log(`\n${dim("Creating project...")}\n`);
+  console.log(`\n${dim('Creating project...')}\n`);
 
-  const templatePath = join(import.meta.dir, "template");
+  const templatePath = join(import.meta.dir, 'template');
   await mkdir(projectPath, { recursive: true });
   await cp(templatePath, projectPath, { recursive: true });
 
   if (isFrontend) {
-    const apiDir = join(projectPath, "app", "api");
+    const apiDir = join(projectPath, 'app', 'api');
     if (existsSync(apiDir)) {
       await rm(apiDir, { recursive: true, force: true });
     }
   }
 
-  const pkgPath = join(projectPath, "package.json");
+  const pkgPath = join(projectPath, 'package.json');
   const pkg = await Bun.file(pkgPath).json();
   pkg.name = projectName;
 
   if (isFrontend) {
-    delete pkg.dependencies["elysia"];
-    delete pkg.dependencies["@elysiajs/static"];
-    delete pkg.dependencies["@elysiajs/swagger"];
+    delete pkg.dependencies['elysia'];
+    delete pkg.dependencies['@elysiajs/static'];
+    delete pkg.dependencies['@elysiajs/swagger'];
   }
 
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
@@ -123,7 +123,7 @@ export default defineConfig({${
       ? `
   mode: "frontend",
 `
-      : ""
+      : ''
   }
   app: {
     name: "${appName}",
@@ -142,26 +142,26 @@ export default defineConfig({${
       ? `{
     path: "/docs",
   }`
-      : "false"
+      : 'false'
   },
 });
 `;
 
-  await Bun.write(join(projectPath, "manic.config.ts"), configContent);
+  await Bun.write(join(projectPath, 'manic.config.ts'), configContent);
 
-  console.log(`${green("Success!")} Created ${cyan(projectName)}`);
+  console.log(`${green('Success!')} Created ${cyan(projectName)}`);
   console.log(`
-${dim("Next steps:")}
+${dim('Next steps:')}
 
   ${cyan(`cd ${projectName}`)}
-  ${cyan("bun install")}
-  ${cyan("bun dev")}
+  ${cyan('bun install')}
+  ${cyan('bun dev')}
 `);
 
   rl.close();
 }
 
-main().catch((e) => {
+main().catch(e => {
   console.error(e);
   process.exit(1);
 });

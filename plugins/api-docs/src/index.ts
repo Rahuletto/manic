@@ -1,4 +1,4 @@
-import type { ManicPlugin, ManicServerPluginContext } from "manicjs/config";
+import type { ManicPlugin, ManicServerPluginContext } from 'manicjs/config';
 
 export interface ApiDocsOptions {
   /** Path to mount the docs UI @default "/docs" */
@@ -10,21 +10,24 @@ export interface ApiDocsOptions {
 }
 
 export function apiDocs(options: ApiDocsOptions = {}): ManicPlugin {
-  const docsPath = options.path ?? "/docs";
-  const specUrl = options.specUrl ?? "/openapi.json";
+  const docsPath = options.path ?? '/docs';
+  const specUrl = options.specUrl ?? '/openapi.json';
 
   return {
-    name: "@manicjs/api-docs",
+    name: '@manicjs/api-docs',
 
     async configureServer(ctx: ManicServerPluginContext) {
-      const { Hono } = await import("hono");
-      const { apiReference } = await import("@scalar/hono-api-reference");
+      const { Hono } = await import('hono');
+      const { apiReference } = await import('@scalar/hono-api-reference');
 
       const app = new Hono();
-      app.get(docsPath, apiReference({ spec: { url: specUrl }, theme: options.theme as any }));
+      app.get(
+        docsPath,
+        apiReference({ spec: { url: specUrl }, theme: options.theme as any })
+      );
 
-      ctx.addRoute(docsPath, (req) => app.fetch(req));
-      ctx.addRoute(`${docsPath}/*`, (req) => app.fetch(req));
+      ctx.addRoute(docsPath, req => app.fetch(req));
+      ctx.addRoute(`${docsPath}/*`, req => app.fetch(req));
     },
   };
 }

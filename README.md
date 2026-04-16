@@ -8,11 +8,11 @@ Built exclusively for [Bun](https://bun.sh).
 
 ## Live Demo
 
-| Platform   | URL                                                                 |
-| ---------- | ------------------------------------------------------------------- |
-| Vercel     | [manic-framework.vercel.app](https://manic-framework.vercel.app)    |
-| Netlify    | [manic-framework.netlify.app](https://manic-framework.netlify.app)  |
-| Cloudflare | [manic-framework.pages.dev](https://manic-framework.pages.dev)      |
+| Platform   | URL                                                                |
+| ---------- | ------------------------------------------------------------------ |
+| Vercel     | [manic-framework.vercel.app](https://manic-framework.vercel.app)   |
+| Netlify    | [manic-framework.netlify.app](https://manic-framework.netlify.app) |
+| Cloudflare | [manic-framework.pages.dev](https://manic-framework.pages.dev)     |
 
 ---
 
@@ -27,10 +27,10 @@ bun dev
 
 ## Packages
 
-| Package                                                                | Description                          |
-| ---------------------------------------------------------------------- | ------------------------------------ |
-| [manicjs](https://www.npmjs.com/package/manicjs)                       | The framework                        |
-| [create-manic](https://www.npmjs.com/package/create-manic)             | CLI to scaffold new apps             |
+| Package                                                                | Description                                       |
+| ---------------------------------------------------------------------- | ------------------------------------------------- |
+| [manicjs](https://www.npmjs.com/package/manicjs)                       | The framework                                     |
+| [create-manic](https://www.npmjs.com/package/create-manic)             | CLI to scaffold new apps                          |
 | [@manicjs/providers](https://www.npmjs.com/package/@manicjs/providers) | Deployment adapters (Vercel, Netlify, Cloudflare) |
 
 ## Requirements
@@ -39,13 +39,12 @@ bun dev
 
 ## Provider Comparison
 
-| Feature | Vercel | Netlify | Cloudflare |
-|---------|--------|---------|------------|
-| Static site | ✅ | ✅ | ✅ |
-| API routes | ✅ | ✅ | ❌ |
-| Edge runtime | ✅ | ✅ (edge option) | - |
-| Bun runtime | ✅ | ❌ | - |
-
+| Feature      | Vercel | Netlify          | Cloudflare |
+| ------------ | ------ | ---------------- | ---------- |
+| Static site  | ✅     | ✅               | ✅         |
+| API routes   | ✅     | ✅               | ❌         |
+| Edge runtime | ✅     | ✅ (edge option) | -          |
+| Bun runtime  | ✅     | ❌               | -          |
 
 ## License
 

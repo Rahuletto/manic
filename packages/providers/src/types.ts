@@ -1,4 +1,4 @@
-import type { ManicConfig } from "manicjs/config";
+import type { ManicConfig } from 'manicjs/config';
 
 export interface BuildContext {
   dist: string;

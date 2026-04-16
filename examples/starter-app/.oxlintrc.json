@@ -5,11 +5,7 @@
     "**/dist/**",
     "**/build/**"
   ],
-  "plugins": [
-    "react",
-    "react-hooks",
-    "react-perf"
-  ],
+  "plugins": ["react", "react-hooks", "react-perf"],
   "categories": {
     "correctness": "error",
     "perf": "error",

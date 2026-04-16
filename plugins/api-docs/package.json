@@ -2,13 +2,24 @@
   "name": "@manicjs/api-docs",
   "version": "0.1.0",
   "description": "Scalar API docs plugin for Manic framework",
-  "type": "module",
+  "keywords": [
+    "api",
+    "docs",
+    "manic",
+    "openapi",
+    "scalar"
+  ],
   "license": "GPL-3.0",
   "author": "Rahuletto",
   "repository": {
     "type": "git",
     "url": "https://github.com/Rahuletto/manic"
   },
+  "files": [
+    "src/**/*",
+    "README.md"
+  ],
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -17,8 +28,6 @@
       "import": "./src/index.ts"
     }
   },
-  "files": ["src/**/*", "README.md"],
-  "keywords": ["manic", "api", "docs", "scalar", "openapi"],
   "dependencies": {
     "@scalar/hono-api-reference": "^0.10.8",
     "hono": "^4.7.0"

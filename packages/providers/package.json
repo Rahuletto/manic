@@ -2,28 +2,29 @@
   "name": "@manicjs/providers",
   "version": "0.3.2",
   "description": "Deployment providers for Manic framework - Vercel, Cloudflare, Netlify",
-  "type": "module",
+  "keywords": [
+    "adapter",
+    "cloudflare",
+    "deploy",
+    "manic",
+    "netlify",
+    "vercel"
+  ],
+  "homepage": "https://github.com/Rahuletto/manic#readme",
+  "bugs": {
+    "url": "https://github.com/Rahuletto/manic/issues"
+  },
   "license": "GPL-3.0",
   "author": "Rahuletto",
   "repository": {
     "type": "git",
     "url": "https://github.com/Rahuletto/manic"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "homepage": "https://github.com/Rahuletto/manic#readme",
-  "bugs": {
-    "url": "https://github.com/Rahuletto/manic/issues"
-  },
-  "keywords": [
-    "manic",
-    "vercel",
-    "cloudflare",
-    "netlify",
-    "deploy",
-    "adapter"
+  "files": [
+    "src/**/*",
+    "README.md"
   ],
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -44,12 +45,8 @@
       "import": "./src/netlify/index.ts"
     }
   },
-  "files": [
-    "src/**/*",
-    "README.md"
-  ],
-  "peerDependencies": {
-    "manicjs": ">=0.7.2"
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "colorette": "^2.0.20"
@@ -57,5 +54,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "manicjs": ">=0.7.2"
   }
 }

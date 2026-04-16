@@ -2,13 +2,22 @@
   "name": "@manicjs/sitemap",
   "version": "0.1.0",
   "description": "Sitemap generation for Manic framework",
-  "type": "module",
+  "keywords": [
+    "manic",
+    "seo",
+    "sitemap"
+  ],
   "license": "GPL-3.0",
   "author": "Rahuletto",
   "repository": {
     "type": "git",
     "url": "https://github.com/Rahuletto/manic"
   },
+  "files": [
+    "src/**/*",
+    "README.md"
+  ],
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -17,15 +26,6 @@
       "import": "./src/index.ts"
     }
   },
-  "files": [
-    "src/**/*",
-    "README.md"
-  ],
-  "keywords": [
-    "manic",
-    "sitemap",
-    "seo"
-  ],
   "peerDependencies": {
     "manicjs": "workspace:*"
   }

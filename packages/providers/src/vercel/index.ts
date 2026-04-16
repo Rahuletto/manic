@@ -1,62 +1,65 @@
-import { rmSync, mkdirSync, cpSync, existsSync } from "node:fs";
-import { green, dim, yellow, bold } from "colorette";
-import type { ManicProvider, BuildContext } from "../types";
+import { rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
+import { green, dim, yellow, bold } from 'colorette';
+import type { ManicProvider, BuildContext } from '../types';
 
 export interface VercelOptions {
-  runtime?: "bun" | "nodejs20.x" | "nodejs22.x";
+  runtime?: 'bun' | 'nodejs20.x' | 'nodejs22.x';
   regions?: string[];
   memory?: number;
   maxDuration?: number;
 }
 
 export function vercel(options: VercelOptions = {}): ManicProvider {
-  const runtime = options.runtime ?? "bun";
+  const runtime = options.runtime ?? 'bun';
 
   return {
-    name: "vercel",
+    name: 'vercel',
     async build(ctx: BuildContext) {
-      process.stdout.write(dim("● Exporting to Vercel..."));
+      process.stdout.write(dim('● Exporting to Vercel...'));
 
-      const vDist = ".vercel/output";
+      const vDist = '.vercel/output';
       rmSync(vDist, { recursive: true, force: true });
       mkdirSync(`${vDist}/static`, { recursive: true });
       mkdirSync(`${vDist}/functions/api.func`, { recursive: true });
 
       cpSync(`${ctx.dist}/client`, `${vDist}/static`, { recursive: true });
 
-      const faviconFiles = ["favicon.ico", "favicon.svg", "favicon.png"];
+      const faviconFiles = ['favicon.ico', 'favicon.svg', 'favicon.png'];
       for (const favicon of faviconFiles) {
         if (existsSync(`${vDist}/static/assets/${favicon}`)) {
-          cpSync(`${vDist}/static/assets/${favicon}`, `${vDist}/static/${favicon}`);
+          cpSync(
+            `${vDist}/static/assets/${favicon}`,
+            `${vDist}/static/${favicon}`
+          );
           break;
         }
       }
 
       const docsPath =
         ctx.config.swagger !== false
-          ? ctx.config.swagger?.path ?? "/docs"
+          ? (ctx.config.swagger?.path ?? '/docs')
           : null;
 
       const vConfig = {
         version: 3,
         routes: [
-          { handle: "filesystem" },
-          { src: "/api/(.*)", dest: "api" },
-          ...(docsPath ? [{ src: `${docsPath}(.*)`, dest: "api" }] : []),
-          { src: "/(.*)", dest: "/index.html" },
+          { handle: 'filesystem' },
+          { src: '/api/(.*)', dest: 'api' },
+          ...(docsPath ? [{ src: `${docsPath}(.*)`, dest: 'api' }] : []),
+          { src: '/(.*)', dest: '/index.html' },
         ],
       };
       await Bun.write(`${vDist}/config.json`, JSON.stringify(vConfig, null, 2));
 
       const vcConfig: Record<string, unknown> = {
-        runtime: runtime === "bun" ? "bun1.x" : runtime,
-        handler: "index.mjs",
+        runtime: runtime === 'bun' ? 'bun1.x' : runtime,
+        handler: 'index.mjs',
         shouldAddHelpers: false,
         supportsResponseStreaming: true,
       };
 
-      if (runtime !== "bun") {
-        vcConfig.launcherType = "Nodejs";
+      if (runtime !== 'bun') {
+        vcConfig.launcherType = 'Nodejs';
       }
 
       if (options.regions) vcConfig.regions = options.regions;
@@ -75,18 +78,18 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       if (existsSync(`${ctx.dist}/api`)) {
         for (const entry of ctx.apiEntries) {
           const name = entry
-            .replace("app/api/", "")
-            .replace("/index.ts", "")
-            .replace("index.ts", "root");
+            .replace('app/api/', '')
+            .replace('/index.ts', '')
+            .replace('index.ts', 'root');
 
           apiImports.push(
-            `import api_${name.replace(/-/g, "_")} from "${cwd}/${entry}";`
+            `import api_${name.replace(/-/g, '_')} from "${cwd}/${entry}";`
           );
-          const routePath = name === "root" ? "" : `/${name}`;
+          const routePath = name === 'root' ? '' : `/${name}`;
           apiRoutes.push(
             `app.group("/api${routePath}", (g) => g.use(api_${name.replace(
               /-/g,
-              "_"
+              '_'
             )}));`
           );
         }
@@ -96,13 +99,13 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
 ${
   ctx.config.swagger !== false
     ? 'import { swagger } from "@elysiajs/swagger";'
-    : ""
+    : ''
 }
-${apiImports.join("\n")}
+${apiImports.join('\n')}
 
 const app = new Elysia();
 
-${apiRoutes.join("\n")}
+${apiRoutes.join('\n')}
 
 ${
   ctx.config.swagger !== false
@@ -114,17 +117,17 @@ ${
       title: "${
         ctx.config.swagger?.documentation?.info?.title ??
         ctx.config.app?.name ??
-        "Manic API"
+        'Manic API'
       }",
       description: "${
         ctx.config.swagger?.documentation?.info?.description ??
-        "API documentation powered by Manic"
+        'API documentation powered by Manic'
       }",
-      version: "${ctx.config.swagger?.documentation?.info?.version ?? "1.0.0"}"
+      version: "${ctx.config.swagger?.documentation?.info?.version ?? '1.0.0'}"
     }
   }
 }));`
-    : ""
+    : ''
 }
 
 export default app;
@@ -136,15 +139,15 @@ export default app;
       const buildResult = await Bun.build({
         entrypoints: [tempEntry],
         outdir: `${vDist}/functions/api.func`,
-        target: runtime === "bun" ? "bun" : "node",
-        format: "esm",
+        target: runtime === 'bun' ? 'bun' : 'node',
+        format: 'esm',
         minify: true,
-        naming: "index.mjs",
+        naming: 'index.mjs',
       });
 
       if (!buildResult.success) {
-        console.error("\nVercel build failed:");
-        buildResult.logs.forEach((log) => console.error(log));
+        console.error('\nVercel build failed:');
+        buildResult.logs.forEach(log => console.error(log));
         return;
       }
 
@@ -152,25 +155,29 @@ export default app;
 
       await Bun.write(
         `${vDist}/functions/api.func/package.json`,
-        JSON.stringify({ type: "module" }, null, 2)
+        JSON.stringify({ type: 'module' }, null, 2)
       );
 
       // Create vercel.json if it doesn't exist (for GitHub integration)
-      if (!existsSync("vercel.json")) {
+      if (!existsSync('vercel.json')) {
         const vercelJson = {
-          buildCommand: "bun run build",
-          installCommand: "bun install",
+          buildCommand: 'bun run build',
+          installCommand: 'bun install',
           framework: null,
         };
-        await Bun.write("vercel.json", JSON.stringify(vercelJson, null, 2));
-        console.log(dim("\n  Created vercel.json - commit this to your repo for GitHub integration"));
+        await Bun.write('vercel.json', JSON.stringify(vercelJson, null, 2));
+        console.log(
+          dim(
+            '\n  Created vercel.json - commit this to your repo for GitHub integration'
+          )
+        );
       }
 
       process.stdout.write(
-        `\r${dim(green("● Exporting to Vercel... done"))}\n`
+        `\r${dim(green('● Exporting to Vercel... done'))}\n`
       );
-      console.log(yellow(bold("ℹ Deploy: manic deploy --run")));
-      console.log(dim("  For GitHub CI/CD: commit vercel.json and push"));
+      console.log(yellow(bold('ℹ Deploy: manic deploy --run')));
+      console.log(dim('  For GitHub CI/CD: commit vercel.json and push'));
     },
   };
 }

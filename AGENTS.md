@@ -4,13 +4,13 @@ This is a monorepo for the **Manic** React framework.
 
 ## Directory Structure
 
-| Path | Purpose |
-|------|---------|
-| `packages/manic/` | The core framework (runtime, CLI, router, etc.) |
+| Path                     | Purpose                                                  |
+| ------------------------ | -------------------------------------------------------- |
+| `packages/manic/`        | The core framework (runtime, CLI, router, etc.)          |
 | `packages/create-manic/` | CLI tool to scaffold new Manic apps (`bun create manic`) |
-| `packages/providers/` | Deployment adapters (Vercel, Netlify, Cloudflare) |
-| `demo/` | Testbench to test framework changes locally |
-| `examples/` | Example apps shown to users |
+| `packages/providers/`    | Deployment adapters (Vercel, Netlify, Cloudflare)        |
+| `demo/`                  | Testbench to test framework changes locally              |
+| `examples/`              | Example apps shown to users                              |
 
 ## How It Works
 

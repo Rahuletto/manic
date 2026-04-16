@@ -1,5 +1,5 @@
-import { Link } from "manicjs";
-import { useTheme } from "manicjs/theme";
+import { Link } from 'manicjs';
+import { useTheme } from 'manicjs/theme';
 
 export default function Home() {
   const { isDark } = useTheme();
@@ -7,19 +7,19 @@ export default function Home() {
   return (
     <main className="md:py-14 md:px-24 py-6 px-12 bg-background min-h-screen flex items-center justify-center text-foreground">
       <div
-        style={{ viewTransitionName: "content" }}
+        style={{ viewTransitionName: 'content' }}
         className="flex items-center justify-center flex-col gap-5"
       >
         <img
-          src={isDark ? "/assets/wordmark.svg" : "/assets/wordmark-dark.svg"}
+          src={isDark ? '/assets/wordmark.svg' : '/assets/wordmark-dark.svg'}
           alt="MANIC."
           className="max-md:w-96 max-sm:w-64 transition-all duration-250"
-          style={{ viewTransitionName: "logo" }}
+          style={{ viewTransitionName: 'logo' }}
         />
 
         <p
           className="md:text-3xl text-xl font-semibold"
-          style={{ viewTransitionName: "subtitle" }}
+          style={{ viewTransitionName: 'subtitle' }}
         >
           Stupidly fast, Crazy light.
         </p>
@@ -28,14 +28,14 @@ export default function Home() {
           <Link
             to="/build"
             className="btn-primary flex items-center justify-center"
-            style={{ viewTransitionName: "linkbutton" }}
+            style={{ viewTransitionName: 'linkbutton' }}
           >
             How fast? →
           </Link>
           <a
             href="/docs"
             className="btn-outline"
-            style={{ viewTransitionName: "docsbutton" }}
+            style={{ viewTransitionName: 'docsbutton' }}
           >
             Docs ↗
           </a>
