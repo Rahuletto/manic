@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { Router } from "manicjs";
+import { Router } from "manicjs/router";
 import { ThemeProvider } from "manicjs/theme";
 import { routes, notFoundPage, errorPage } from "./~routes.generated";
 import "./global.css";

@@ -1,9 +1,9 @@
-import { defineConfig } from "manicjs/config";
-import { cloudflare, vercel, netlify } from "@manicjs/providers";
+import { defineConfig } from 'manicjs/config';
+import { cloudflare, vercel, netlify } from '@manicjs/providers';
 
 export default defineConfig({
   app: {
-    name: "Manic",
+    name: 'Manic',
   },
 
   server: {

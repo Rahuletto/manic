@@ -1,8 +1,8 @@
-import { defineConfig } from "manicjs/config";
+import { defineConfig } from 'manicjs/config';
 
 export default defineConfig({
   app: {
-    name: "chatbot",
+    name: 'chatbot',
   },
 
   server: {
@@ -14,6 +14,6 @@ export default defineConfig({
   },
 
   swagger: {
-    path: "/docs",
+    path: '/docs',
   },
 });

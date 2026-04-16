@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "oxc-minify": "^0.125.0",
     "oxlint": "^1.60.0",
     "typescript": "^5"
   }
