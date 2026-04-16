@@ -4,6 +4,8 @@ const packages = [
   { name: "manicjs", path: "packages/manic/package.json" },
   { name: "@manicjs/providers", path: "packages/providers/package.json" },
   { name: "create-manic", path: "packages/create-manic/package.json" },
+  { name: "@manicjs/api-docs", path: "plugins/api-docs/package.json" },
+  { name: "@manicjs/sitemap", path: "plugins/sitemap/package.json" },
 ];
 
 async function getVersion(pkgPath: string): Promise<string> {

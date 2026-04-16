@@ -61,94 +61,34 @@ export function netlify(options: NetlifyOptions = {}): ManicProvider {
         }
       }
 
-      if (useEdge) {
-        // Edge Functions (Deno runtime) - experimental
-        mkdirSync("netlify/edge-functions", { recursive: true });
+      // Serverless Functions (Node.js runtime) - recommended
+      mkdirSync("netlify/functions", { recursive: true });
 
-        const paths = ["/api", "/api/*"];
-        if (docsPath) {
-          paths.push(docsPath, `${docsPath}/*`);
-        }
-
-        const edgeFunctionCode = `import { Elysia } from "elysia";
-${
-  ctx.config.swagger !== false
-    ? 'import { swagger } from "@elysiajs/swagger";'
-    : ""
-}
+      const functionCode = `import { Hono } from "hono";
 ${apiImports.join("\n")}
 
-const app = new Elysia();
+const app = new Hono();
+const apiApp = new Hono();
 
 ${apiRoutes.join("\n")}
 
-${
-  ctx.config.swagger !== false
-    ? `app.use(swagger({ 
-  path: "${docsPath}",
-  exclude: ["/", "/assets", "/favicon.ico"],
-  documentation: {
-    info: {
-      title: "${
-        ctx.config.swagger?.documentation?.info?.title ??
-        ctx.config.app?.name ??
-        "Manic API"
-      }",
-      description: "${
-        ctx.config.swagger?.documentation?.info?.description ??
-        "API documentation powered by Manic"
-      }",
-      version: "${ctx.config.swagger?.documentation?.info?.version ?? "1.0.0"}"
-    }
-  }
-}));`
-    : ""
+app.route("/api", apiApp);
+
+// OpenAPI spec
+const paths = {};
+for (const { path, method } of apiApp.routes) {
+  if (method === "ALL") continue;
+  const oaPath = path.replace(/:([^\\/]+)/g, "{$1}");
+  if (!paths[oaPath]) paths[oaPath] = {};
+  paths[oaPath][method.toLowerCase()] = { responses: { 200: { description: "OK" } } };
 }
-
-export default async (request, context) => {
-  return app.fetch(request);
-};
-
-export const config = { path: ${JSON.stringify(paths)} };
-`;
-
-        await Bun.write("netlify/edge-functions/api.ts", edgeFunctionCode);
-      } else {
-        // Serverless Functions (Node.js runtime) - recommended
-        mkdirSync("netlify/functions", { recursive: true });
-
-        const functionCode = `import { Elysia } from "elysia";
-${
-  ctx.config.swagger !== false
-    ? 'import { swagger } from "@elysiajs/swagger";'
-    : ""
-}
-${apiImports.join("\n")}
-
-const app = new Elysia();
-
-${apiRoutes.join("\n")}
+const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? "Manic"} API", version: "1.0.0" }, paths };
+app.get("/openapi.json", (c) => c.json(spec));
 
 ${
-  ctx.config.swagger !== false
-    ? `app.use(swagger({ 
-  path: "${docsPath}",
-  exclude: ["/", "/assets", "/favicon.ico"],
-  documentation: {
-    info: {
-      title: "${
-        ctx.config.swagger?.documentation?.info?.title ??
-        ctx.config.app?.name ??
-        "Manic API"
-      }",
-      description: "${
-        ctx.config.swagger?.documentation?.info?.description ??
-        "API documentation powered by Manic"
-      }",
-      version: "${ctx.config.swagger?.documentation?.info?.version ?? "1.0.0"}"
-    }
-  }
-}));`
+  docsPath
+    ? `app.get("${docsPath}", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+app.get("${docsPath}/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));`
     : ""
 }
 
@@ -156,7 +96,6 @@ export const handler = async (event, context) => {
   const url = new URL(event.rawUrl);
   const headers = new Headers();
   
-  // Convert Netlify headers to Headers object
   for (const [key, value] of Object.entries(event.headers || {})) {
     if (value) headers.set(key, value);
   }
@@ -193,32 +132,31 @@ export const handler = async (event, context) => {
 };
 `;
 
-        const tempEntry = "netlify/functions/_entry.ts";
-        await Bun.write(tempEntry, functionCode);
+      const tempEntry = "netlify/functions/_entry.ts";
+      await Bun.write(tempEntry, functionCode);
 
-        const buildResult = await Bun.build({
-          entrypoints: [tempEntry],
-          outdir: "netlify/functions",
-          target: "node",
-          format: "esm",
-          minify: true,
-          naming: "api.mjs",
-        });
+      const buildResult = await Bun.build({
+        entrypoints: [tempEntry],
+        outdir: "netlify/functions",
+        target: "node",
+        format: "esm",
+        minify: true,
+        naming: "api.mjs",
+      });
 
-        if (!buildResult.success) {
-          console.error("\nNetlify build failed:");
-          buildResult.logs.forEach((log) => console.error(log));
-          return;
-        }
-
-        rmSync(tempEntry, { force: true });
-
-        // Create package.json for ESM support
-        await Bun.write(
-          "netlify/functions/package.json",
-          JSON.stringify({ type: "module" }, null, 2)
-        );
+      if (!buildResult.success) {
+        console.error("\nNetlify build failed:");
+        buildResult.logs.forEach((log) => console.error(log));
+        return;
       }
+
+      rmSync(tempEntry, { force: true });
+
+      // Create package.json for ESM support
+      await Bun.write(
+        "netlify/functions/package.json",
+        JSON.stringify({ type: "module" }, null, 2)
+      );
 
       process.stdout.write(
         `\r${dim(green("● Exporting to Netlify... done"))}\n`

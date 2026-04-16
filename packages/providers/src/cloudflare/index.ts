@@ -42,30 +42,18 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
         (p) => p.name === "@manicjs/api-docs"
       );
       const docsPath = "/docs";
-
-      // Generate _redirects for SPA routing
       const hasApi = ctx.apiEntries.length > 0;
-      let redirects = "";
-      if (hasApi) {
-        redirects += "/api/*    /api/*    200\n";
-        redirects += "/openapi.json    /openapi.json    200\n";
-        if (hasApiDocs) {
-          redirects += `${docsPath}*    ${docsPath}*    200\n`;
-        }
-      }
-      redirects += `/*    /index.html   200`;
-      await Bun.write(`${cfDist}/_redirects`, redirects);
 
-      const apiImports: string[] = [];
-      const apiMounts: string[] = [];
-
-      if (hasApi) {
-        mkdirSync(`${cfDist}/functions/api`, { recursive: true });
+      if (hasApi || hasApiDocs) {
+        mkdirSync(`${cfDist}/api`, { recursive: true });
         if (existsSync(`${ctx.dist}/api`)) {
-          cpSync(`${ctx.dist}/api`, `${cfDist}/functions/api`, {
+          cpSync(`${ctx.dist}/api`, `${cfDist}/api`, {
             recursive: true,
           });
         }
+
+        const apiImports: string[] = [];
+        const apiMounts: string[] = [];
 
         for (const entry of ctx.apiEntries) {
           const name = entry
@@ -78,11 +66,8 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
           const routePath = name === "root" ? "/" : `/${name}`;
           apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
         }
-      }
 
-      const serverCode = `import { Hono } from "hono";
-import { handle } from "hono/cloudflare-pages";
-${hasApiDocs ? 'import { apiReference } from "@scalar/hono-api-reference";' : ""}
+        const serverCode = `import { Hono } from "hono";
 ${apiImports.join("\n")}
 
 const app = new Hono();
@@ -96,7 +81,7 @@ app.route("/api", apiApp);
 const paths = {};
 for (const { path, method } of apiApp.routes) {
   if (method === "ALL") continue;
-  const oaPath = path.replace(/:([^\\/]+)/g, "{$1}");
+  const oaPath = "/api" + path.replace(/:([^\\/]+)/g, "{$1}");
   if (!paths[oaPath]) paths[oaPath] = {};
   paths[oaPath][method.toLowerCase()] = { responses: { 200: { description: "OK" } } };
 }
@@ -105,17 +90,26 @@ app.get("/openapi.json", (c) => c.json(spec));
 
 ${
   hasApiDocs
-    ? `app.get("${docsPath}", apiReference({ spec: { url: "/openapi.json" } }));
-app.get("${docsPath}/*", apiReference({ spec: { url: "/openapi.json" } }));`
+    ? `app.get("${docsPath}", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+app.get("${docsPath}/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));`
     : ""
 }
 
-export const onRequest = handle(app);
-`;
+// Serve static assets from Cloudflare Pages
+app.get("/*", async (c) => {
+  const res = await c.env.ASSETS.fetch(c.req.raw);
+  if (res.status === 404) {
+    return await c.env.ASSETS.fetch(new URL("/index.html", c.req.url));
+  }
+  return res;
+});
 
-      if (hasApi) {
-        mkdirSync(`${cfDist}/functions`, { recursive: true });
-        await Bun.write(`${cfDist}/functions/[[path]].js`, serverCode);
+export default app;
+`;
+        await Bun.write(`${cfDist}/_worker.js`, serverCode);
+      } else {
+        const redirects = `/*    /index.html   200`;
+        await Bun.write(`${cfDist}/_redirects`, redirects);
       }
 
       // Generate wrangler.toml

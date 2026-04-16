@@ -43,7 +43,7 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
           { handle: 'filesystem' },
           { src: '/api/(.*)', dest: '/api' },
           { src: '/openapi.json', dest: '/api' },
-          { src: `${docsPath}(.*)`, dest: '/api' },
+          { src: '/docs(.*)', dest: '/api' },
           { src: '/(.*)', dest: '/index.html' },
         ],
       };
@@ -97,7 +97,6 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       );
 
       const serverCode = `import { Hono } from "hono";
-${hasApiDocs ? 'import { apiReference } from "@scalar/hono-api-reference";' : ''}
 ${apiImports.join('\n')}
 
 const app = new Hono();
@@ -118,12 +117,8 @@ for (const { path, method } of apiApp.routes) {
 const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? 'Manic'} API", version: "1.0.0" }, paths };
 app.get("/openapi.json", (c) => c.json(spec));
 
-${
-  hasApiDocs
-    ? `app.get("${docsPath}", apiReference({ spec: { url: "/openapi.json" } }));
-app.get("${docsPath}/*", apiReference({ spec: { url: "/openapi.json" } }));`
-    : ''
-}
+app.get("/docs", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+app.get("/docs/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
 
 export default {
   fetch: app.fetch

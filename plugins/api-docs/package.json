@@ -28,6 +28,9 @@
       "import": "./src/index.ts"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@scalar/hono-api-reference": "^0.10.8",
     "hono": "^4.7.0"
