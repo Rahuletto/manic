@@ -28,7 +28,7 @@ export default function Home() {
         />
 
         <p className="md:text-3xl text-xl font-semibold" style={SUBTITLE_STYLE}>
-          Godspeed, with bun and oxc toolkit right?
+          Godspeed, with bun and oxc toolkit rightttt
         </p>
 
         <div className="mt-6 flex gap-6">
