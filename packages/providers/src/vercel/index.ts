@@ -35,17 +35,15 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
         }
       }
 
-      const docsPath =
-        ctx.config.swagger !== false
-          ? (ctx.config.swagger?.path ?? '/docs')
-          : null;
+      const docsPath = '/docs';
 
       const vConfig = {
         version: 3,
         routes: [
           { handle: 'filesystem' },
-          { src: '/api/(.*)', dest: 'api' },
-          ...(docsPath ? [{ src: `${docsPath}(.*)`, dest: 'api' }] : []),
+          { src: '/api/(.*)', dest: 'api.func' },
+          { src: '/openapi.json', dest: 'api.func' },
+          { src: `${docsPath}(.*)`, dest: 'api.func' },
           { src: '/(.*)', dest: '/index.html' },
         ],
       };
@@ -72,86 +70,67 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       );
 
       const apiImports: string[] = [];
-      const apiRoutes: string[] = [];
+      const apiMounts: string[] = [];
       const cwd = process.cwd();
 
       if (existsSync(`${ctx.dist}/api`)) {
+        mkdirSync(`${vDist}/functions/api.func/api`, { recursive: true });
+        cpSync(`${ctx.dist}/api`, `${vDist}/functions/api.func/api`, {
+          recursive: true,
+        });
+
         for (const entry of ctx.apiEntries) {
           const name = entry
             .replace('app/api/', '')
             .replace('/index.ts', '')
             .replace('index.ts', 'root');
 
-          apiImports.push(
-            `import api_${name.replace(/-/g, '_')} from "${cwd}/${entry}";`
-          );
-          const routePath = name === 'root' ? '' : `/${name}`;
-          apiRoutes.push(
-            `app.group("/api${routePath}", (g) => g.use(api_${name.replace(
-              /-/g,
-              '_'
-            )}));`
-          );
+          const safeName = name.replace(/-/g, '_');
+          apiImports.push(`import api_${safeName} from "./api/${name}.js";`);
+          const routePath = name === 'root' ? '/' : `/${name}`;
+          apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
         }
       }
 
-      const serverCode = `import { Elysia } from "elysia";
-${
-  ctx.config.swagger !== false
-    ? 'import { swagger } from "@elysiajs/swagger";'
-    : ''
-}
+      // Detect if apiDocs plugin is configured
+      const hasApiDocs = ctx.config.plugins?.some(
+        p => p.name === '@manicjs/api-docs'
+      );
+
+      const serverCode = `import { Hono } from "hono";
+${hasApiDocs ? 'import { apiReference } from "@scalar/hono-api-reference";' : ''}
 ${apiImports.join('\n')}
 
-const app = new Elysia();
+const app = new Hono();
+const apiApp = new Hono();
 
-${apiRoutes.join('\n')}
+${apiMounts.join('\n')}
+
+app.route("/api", apiApp);
+
+// OpenAPI spec
+const paths = {};
+for (const { path, method } of apiApp.routes) {
+  if (method === "ALL") continue;
+  const oaPath = path.replace(/:([^\\/]+)/g, "{$1}");
+  if (!paths[oaPath]) paths[oaPath] = {};
+  paths[oaPath][method.toLowerCase()] = { responses: { 200: { description: "OK" } } };
+}
+const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? 'Manic'} API", version: "1.0.0" }, paths };
+app.get("/openapi.json", (c) => c.json(spec));
 
 ${
-  ctx.config.swagger !== false
-    ? `app.use(swagger({ 
-  path: "${docsPath}",
-  exclude: ["/", "/assets", "/favicon.ico"],
-  documentation: {
-    info: {
-      title: "${
-        ctx.config.swagger?.documentation?.info?.title ??
-        ctx.config.app?.name ??
-        'Manic API'
-      }",
-      description: "${
-        ctx.config.swagger?.documentation?.info?.description ??
-        'API documentation powered by Manic'
-      }",
-      version: "${ctx.config.swagger?.documentation?.info?.version ?? '1.0.0'}"
-    }
-  }
-}));`
+  hasApiDocs
+    ? `app.get("${docsPath}", apiReference({ spec: { url: "/openapi.json" } }));
+app.get("${docsPath}/*", apiReference({ spec: { url: "/openapi.json" } }));`
     : ''
 }
 
 export default app;
 `;
 
-      const tempEntry = `${vDist}/functions/api.func/_entry.ts`;
-      await Bun.write(tempEntry, serverCode);
-
-      const buildResult = await Bun.build({
-        entrypoints: [tempEntry],
-        outdir: `${vDist}/functions/api.func`,
-        target: runtime === 'bun' ? 'bun' : 'node',
-        format: 'esm',
-        minify: true,
-        naming: 'index.mjs',
-      });
-
-      if (!buildResult.success) {
-        console.error('\nVercel build failed:');
-        buildResult.logs.forEach(log => console.error(log));
-        return;
-      }
-
-      rmSync(tempEntry, { force: true });
+      const serverEntry = `${vDist}/functions/api.func/index.mjs`;
+      await Bun.write(serverEntry, serverCode);
 
       await Bun.write(
         `${vDist}/functions/api.func/package.json`,
