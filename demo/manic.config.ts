@@ -5,6 +5,7 @@ export default defineConfig({
   app: {
     name: 'Manic',
   },
+  // mode: "frontend",
 
   server: {
     port: 6070,
