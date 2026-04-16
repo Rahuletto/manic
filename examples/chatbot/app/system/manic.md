@@ -213,16 +213,16 @@ async function build(): Promise<void>;
 2. **Client Bundle**:
    ```typescript
    await Bun.build({
-     entrypoints: ["./app/main.tsx"],
+     entrypoints: ['./app/main.tsx'],
      outdir: `${dist}/client`,
-     target: "browser",
+     target: 'browser',
      minify: true,
      splitting: true,
-     sourcemap: "linked",
+     sourcemap: 'linked',
      naming: {
-       entry: "[name]-[hash].[ext]",
-       chunk: "chunks/[name]-[hash].[ext]",
-       asset: "assets/[name]-[hash].[ext]",
+       entry: '[name]-[hash].[ext]',
+       chunk: 'chunks/[name]-[hash].[ext]',
+       asset: 'assets/[name]-[hash].[ext]',
      },
      plugins: [bunPluginTailwind],
    });
@@ -236,9 +236,9 @@ async function build(): Promise<void>;
    await Bun.build({
      entrypoints: [entry],
      outdir: `${dist}/api`,
-     target: "bun",
+     target: 'bun',
      minify: true,
-     external: ["*"], // Important: externalize all deps
+     external: ['*'], // Important: externalize all deps
      naming: `${outName}.js`,
    });
    ```
@@ -250,12 +250,12 @@ async function build(): Promise<void>;
    await Bun.build({
      entrypoints: [prodEntry],
      outdir: dist,
-     target: "bun",
+     target: 'bun',
      minify: true,
      define: {
-       "process.env.NODE_ENV": JSON.stringify("production"),
+       'process.env.NODE_ENV': JSON.stringify('production'),
      },
-     naming: { entry: "server.js" },
+     naming: { entry: 'server.js' },
    });
    ```
 7. **Provider Builds** - Call each provider's `build()` method
@@ -324,10 +324,10 @@ async function deploy(): Promise<void>;
 
 ```typescript
 const portIndex =
-  args.indexOf("--port") > -1 ? args.indexOf("--port") : args.indexOf("-p");
+  args.indexOf('--port') > -1 ? args.indexOf('--port') : args.indexOf('-p');
 const portArg = portIndex > -1 ? args[portIndex + 1] : undefined;
 const port = portArg ? parseInt(portArg, 10) : undefined;
-const network = args.includes("--network");
+const network = args.includes('--network');
 ```
 
 ---
@@ -339,7 +339,7 @@ const network = args.includes("--network");
 **File**: `packages/manic/src/server/index.ts`
 
 ```typescript
-import { HTMLBundle } from "bun";
+import { HTMLBundle } from 'bun';
 
 interface ManicServerOptions {
   html: HTMLBundle; // Bun's HTML bundle type (from import)
@@ -379,26 +379,26 @@ In `Bun.serve()` routes object:
 
 ```typescript
 const bunRoutes = {
-  "/": htmlHandler, // Root
+  '/': htmlHandler, // Root
   [discoveredRoutes]: htmlHandler, // Each discovered route
-  "/api/*": apiApp.handle, // API routes
-  "/_manic/*": apiApp.handle, // Internal routes
-  "/assets/*": apiApp.handle, // Static assets
-  "/favicon.ico": apiApp.handle, // Favicon
-  "/docs": apiApp.handle, // Swagger (if enabled)
-  "/docs/*": apiApp.handle, // Swagger assets
-  "/*": catchAllHandler, // SPA fallback
+  '/api/*': apiApp.handle, // API routes
+  '/_manic/*': apiApp.handle, // Internal routes
+  '/assets/*': apiApp.handle, // Static assets
+  '/favicon.ico': apiApp.handle, // Favicon
+  '/docs': apiApp.handle, // Swagger (if enabled)
+  '/docs/*': apiApp.handle, // Swagger assets
+  '/*': catchAllHandler, // SPA fallback
 };
 ```
 
 ## Catch-All Handler Logic
 
 ```typescript
-bunRoutes["/*"] = (req: Request) => {
+bunRoutes['/*'] = (req: Request) => {
   const url = new URL(req.url);
   const hasExtension = url.pathname
-    .slice(url.pathname.lastIndexOf("/"))
-    .includes(".");
+    .slice(url.pathname.lastIndexOf('/'))
+    .includes('.');
 
   // In production, serve static files with extensions
   if (prod && hasExtension) {
@@ -414,12 +414,12 @@ bunRoutes["/*"] = (req: Request) => {
 
 ```typescript
 const htmlHandler =
-  typeof options.html === "string"
+  typeof options.html === 'string'
     ? () =>
         new Response(options.html, {
           headers: {
-            "content-type": "text/html",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
+            'content-type': 'text/html',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
           },
         })
     : options.html; // Bun's HTMLBundle handler
@@ -432,9 +432,9 @@ if (prod) {
   apiApp.use(
     staticPlugin({
       assets: `${dist}/client`,
-      prefix: "/",
+      prefix: '/',
       headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
+        'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })
   );
@@ -522,8 +522,8 @@ const isInitialMount = useRef(true);
 
 ```typescript
 routeDefs.sort((a, b) => {
-  const aIsDynamic = a.path.includes(":") || a.path.includes("[");
-  const bIsDynamic = b.path.includes(":") || b.path.includes("[");
+  const aIsDynamic = a.path.includes(':') || a.path.includes('[');
+  const bIsDynamic = b.path.includes(':') || b.path.includes('[');
   if (aIsDynamic && !bIsDynamic) return 1; // Static first
   if (!aIsDynamic && bIsDynamic) return -1;
   return b.path.length - a.path.length; // Longer paths first
@@ -592,7 +592,7 @@ async function navigate(to: string): Promise<void>;
 ```typescript
 interface RouteMatch {
   path: string;
-  component: RouteDef["component"];
+  component: RouteDef['component'];
   params: Record<string, string>;
 }
 
@@ -609,11 +609,11 @@ for (const route of routes) {
   const regexPath = route.path
     .replace(/:([^/]+)/g, (_, key) => {
       paramNames.push(key);
-      return "([^/]+)";
+      return '([^/]+)';
     })
     .replace(/\[([^\]]+)\]/g, (_, key) => {
       paramNames.push(key);
-      return "([^/]+)";
+      return '([^/]+)';
     });
 
   const match = currentPath.match(new RegExp(`^${regexPath}$`));
@@ -715,12 +715,12 @@ interface ManicConfig {
   router?: {
     viewTransitions?: boolean;
     preserveScroll?: boolean;
-    scrollBehavior?: "auto" | "smooth";
+    scrollBehavior?: 'auto' | 'smooth';
   };
 
   build?: {
     minify?: boolean;
-    sourcemap?: boolean | "inline" | "external";
+    sourcemap?: boolean | 'inline' | 'external';
     splitting?: boolean;
     outdir?: string;
   };
@@ -746,27 +746,27 @@ interface SwaggerConfig {
 
 ```typescript
 const DEFAULT_CONFIG: Required<ManicConfig> = {
-  app: { name: "Manic App" },
+  app: { name: 'Manic App' },
   server: { port: 6070, hmr: true },
   router: {
     viewTransitions: true,
     preserveScroll: false,
-    scrollBehavior: "auto",
+    scrollBehavior: 'auto',
   },
   build: {
     minify: true,
-    sourcemap: "inline",
+    sourcemap: 'inline',
     splitting: true,
-    outdir: ".manic",
+    outdir: '.manic',
   },
   providers: [],
   swagger: {
-    path: "/docs",
+    path: '/docs',
     documentation: {
       info: {
-        title: "API",
-        description: "API documentation",
-        version: "1.0.0",
+        title: 'API',
+        description: 'API documentation',
+        version: '1.0.0',
       },
     },
   },
@@ -832,11 +832,11 @@ Synchronous. Returns cached config or defaults.
 ## Types
 
 ```typescript
-type Theme = "light" | "dark" | "system";
+type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextValue {
   theme: Theme;
-  resolvedTheme: "light" | "dark";
+  resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
   toggle: () => void;
   isDark: boolean;
@@ -855,13 +855,13 @@ Adds/removes `dark` class on `document.documentElement`:
 
 ```typescript
 function applyTheme(theme: Theme) {
-  const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
+  const resolvedTheme = theme === 'system' ? getSystemTheme() : theme;
   const root = document.documentElement;
 
-  if (resolvedTheme === "dark") {
-    root.classList.add("dark");
+  if (resolvedTheme === 'dark') {
+    root.classList.add('dark');
   } else {
-    root.classList.remove("dark");
+    root.classList.remove('dark');
   }
 }
 ```
@@ -869,10 +869,10 @@ function applyTheme(theme: Theme) {
 ## System Theme Detection
 
 ```typescript
-function getSystemTheme(): "light" | "dark" {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+function getSystemTheme(): 'light' | 'dark' {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 }
 ```
 
@@ -915,7 +915,7 @@ Renders a button with `☀️` (dark mode) or `🌙` (light mode).
 
 ```typescript
 // Runs immediately when module is loaded
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   initTheme();
 }
 ```
@@ -972,8 +972,10 @@ const ViewTransitions = {
 ## ViewTransitionProps
 
 ```typescript
-interface ViewTransitionProps
-  extends Omit<HTMLAttributes<HTMLElement>, "style"> {
+interface ViewTransitionProps extends Omit<
+  HTMLAttributes<HTMLElement>,
+  'style'
+> {
   name: string; // Required - the view transition name
   children?: ReactNode;
   className?: string;
@@ -1008,7 +1010,7 @@ function createViewTransitionElement(tag: string) {
 ## Usage Example
 
 ```tsx
-import { ViewTransitions } from "manicjs/transitions";
+import { ViewTransitions } from 'manicjs/transitions';
 
 <ViewTransitions.div name="hero">
   <ViewTransitions.h1 name="hero-title">Welcome</ViewTransitions.h1>
@@ -1045,7 +1047,7 @@ import { ViewTransitions } from "manicjs/transitions";
 ### Public Prefix
 
 ```typescript
-const PUBLIC_PREFIX = "MANIC_PUBLIC_";
+const PUBLIC_PREFIX = 'MANIC_PUBLIC_';
 ```
 
 ### loadEnvFiles
@@ -1138,7 +1140,7 @@ Returns all public env vars (from process.env on server, window.**MANIC_ENV** on
 
 ```typescript
 async function apiLoaderPlugin(
-  apiDir: string = "app/api"
+  apiDir: string = 'app/api'
 ): Promise<{ app: Elysia; routes: string[] }>;
 ```
 
@@ -1164,11 +1166,11 @@ async function apiLoaderPlugin(
 
 ```typescript
 // app/api/hello/index.ts
-import { Elysia } from "elysia";
+import { Elysia } from 'elysia';
 
 export default new Elysia()
-  .get("/", () => ({ message: "Hello!" }))
-  .post("/", ({ body }) => body);
+  .get('/', () => ({ message: 'Hello!' }))
+  .post('/', ({ body }) => body);
 ```
 
 ## Static File Plugin
@@ -1176,7 +1178,7 @@ export default new Elysia()
 **File**: `packages/manic/src/plugins/lib/static.ts`
 
 ```typescript
-function fileImporterPlugin(publicDir: string = "public"): Elysia;
+function fileImporterPlugin(publicDir: string = 'public'): Elysia;
 ```
 
 Wraps `@elysiajs/static` plugin.
@@ -1232,14 +1234,14 @@ Wraps `@elysiajs/static` plugin.
 **Original** (`~manic.ts`):
 
 ```typescript
-import app from "./app/index.html";
+import app from './app/index.html';
 await createManicServer({ html: app });
 ```
 
 **Transformed**:
 
 ```typescript
-const html = await Bun.file(".manic/client/index.html").text();
+const html = await Bun.file('.manic/client/index.html').text();
 await createManicServer({ html });
 ```
 
@@ -1248,16 +1250,16 @@ await createManicServer({ html });
 ```typescript
 // Client build
 await Bun.build({
-  entrypoints: ["./app/main.tsx"],
+  entrypoints: ['./app/main.tsx'],
   outdir: `${dist}/client`,
-  target: "browser",
+  target: 'browser',
   minify: true,
   splitting: true,
-  sourcemap: "linked",
+  sourcemap: 'linked',
   naming: {
-    entry: "[name]-[hash].[ext]",
-    chunk: "chunks/[name]-[hash].[ext]",
-    asset: "assets/[name]-[hash].[ext]",
+    entry: '[name]-[hash].[ext]',
+    chunk: 'chunks/[name]-[hash].[ext]',
+    asset: 'assets/[name]-[hash].[ext]',
   },
   plugins: [bunPluginTailwind],
 });
@@ -1266,9 +1268,9 @@ await Bun.build({
 await Bun.build({
   entrypoints: [entry],
   outdir: `${dist}/api`,
-  target: "bun",
+  target: 'bun',
   minify: true,
-  external: ["*"], // Externalize all dependencies
+  external: ['*'], // Externalize all dependencies
   naming: `${outName}.js`,
 });
 
@@ -1276,12 +1278,12 @@ await Bun.build({
 await Bun.build({
   entrypoints: [prodEntry],
   outdir: dist,
-  target: "bun",
+  target: 'bun',
   minify: true,
   define: {
-    "process.env.NODE_ENV": JSON.stringify("production"),
+    'process.env.NODE_ENV': JSON.stringify('production'),
   },
-  naming: { entry: "server.js" },
+  naming: { entry: 'server.js' },
 });
 ```
 
@@ -1314,7 +1316,7 @@ interface BuildContext {
 
 ```typescript
 interface VercelOptions {
-  runtime?: "bun" | "nodejs20.x" | "nodejs22.x"; // Default: "bun"
+  runtime?: 'bun' | 'nodejs20.x' | 'nodejs22.x'; // Default: "bun"
   regions?: string[];
   memory?: number;
   maxDuration?: number;
@@ -1434,14 +1436,14 @@ export const handler = async (event, context) => {
   }
 
   const hasBody =
-    event.body && ["POST", "PUT", "PATCH", "DELETE"].includes(event.httpMethod);
+    event.body && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(event.httpMethod);
 
   const request = new Request(url.toString(), {
     method: event.httpMethod,
     headers,
     body: hasBody
       ? event.isBase64Encoded
-        ? Buffer.from(event.body, "base64").toString()
+        ? Buffer.from(event.body, 'base64').toString()
         : event.body
       : undefined,
   });
@@ -1486,8 +1488,8 @@ bun create manic [project-name]
 ### ~manic.ts (Server Entry)
 
 ```typescript
-import { createManicServer } from "manicjs/server";
-import app from "./app/index.html";
+import { createManicServer } from 'manicjs/server';
+import app from './app/index.html';
 
 await createManicServer({ html: app });
 ```
@@ -1638,7 +1640,7 @@ interface RouteDef {
 // Route match result
 interface RouteMatch {
   path: string;
-  component: RouteDef["component"];
+  component: RouteDef['component'];
   params: Record<string, string>;
 }
 
@@ -1672,11 +1674,11 @@ interface ManicConfig {
   router?: {
     viewTransitions?: boolean;
     preserveScroll?: boolean;
-    scrollBehavior?: "auto" | "smooth";
+    scrollBehavior?: 'auto' | 'smooth';
   };
   build?: {
     minify?: boolean;
-    sourcemap?: boolean | "inline" | "external";
+    sourcemap?: boolean | 'inline' | 'external';
     splitting?: boolean;
     outdir?: string;
   };
@@ -1713,7 +1715,7 @@ interface BuildContext {
 }
 
 interface VercelOptions {
-  runtime?: "bun" | "nodejs20.x" | "nodejs22.x";
+  runtime?: 'bun' | 'nodejs20.x' | 'nodejs22.x';
   regions?: string[];
   memory?: number;
   maxDuration?: number;
@@ -1732,11 +1734,11 @@ interface NetlifyOptions {
 ## Theme Types
 
 ```typescript
-type Theme = "light" | "dark" | "system";
+type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextValue {
   theme: Theme;
-  resolvedTheme: "light" | "dark";
+  resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
   toggle: () => void;
   isDark: boolean;
@@ -1772,8 +1774,10 @@ interface RouteInfo {
 ## View Transition Types
 
 ```typescript
-interface ViewTransitionProps
-  extends Omit<HTMLAttributes<HTMLElement>, "style"> {
+interface ViewTransitionProps extends Omit<
+  HTMLAttributes<HTMLElement>,
+  'style'
+> {
   name: string;
   children?: ReactNode;
   className?: string;
@@ -1885,20 +1889,20 @@ Components are cached by their route path (e.g., `/blog/:slug`), not the actual 
 ## Route Discovery Algorithm
 
 ```typescript
-async function discoverRoutes(routesDir = "app/routes") {
+async function discoverRoutes(routesDir = 'app/routes') {
   const routes = [];
-  const glob = new Bun.Glob("**/*.tsx");
+  const glob = new Bun.Glob('**/*.tsx');
 
   for await (const file of glob.scan({ cwd: routesDir })) {
-    if (file.startsWith("~")) continue; // Skip internal files
+    if (file.startsWith('~')) continue; // Skip internal files
 
     let urlPath = file
-      .replace(/\.tsx$/, "") // Remove extension
-      .replace(/\/index$/, "") // Remove /index suffix
-      .replace(/^index$/, ""); // Remove root index
+      .replace(/\.tsx$/, '') // Remove extension
+      .replace(/\/index$/, '') // Remove /index suffix
+      .replace(/^index$/, ''); // Remove root index
 
-    urlPath = urlPath.replace(/\[([^\]]+)\]/g, ":$1"); // [param] → :param
-    urlPath = urlPath === "" ? "/" : `/${urlPath}`;
+    urlPath = urlPath.replace(/\[([^\]]+)\]/g, ':$1'); // [param] → :param
+    urlPath = urlPath === '' ? '/' : `/${urlPath}`;
 
     routes.push({ path: urlPath, filePath: `${routesDir}/${file}` });
   }
@@ -1911,11 +1915,11 @@ async function discoverRoutes(routesDir = "app/routes") {
 
 ```typescript
 const routeEntries = routes
-  .map((r) => {
-    const importPath = `./${r.filePath.replace("app/", "")}`;
+  .map(r => {
+    const importPath = `./${r.filePath.replace('app/', '')}`;
     return `  "${r.path}": () => import("${importPath}"),`;
   })
-  .join("\n");
+  .join('\n');
 
 return `export const routes = {\n${routeEntries}\n};\n`;
 ```
@@ -1925,9 +1929,9 @@ return `export const routes = {\n${routeEntries}\n};\n`;
 ```typescript
 for (const line of lines) {
   const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith("#")) continue;
+  if (!trimmed || trimmed.startsWith('#')) continue;
 
-  const eqIndex = trimmed.indexOf("=");
+  const eqIndex = trimmed.indexOf('=');
   if (eqIndex === -1) continue;
 
   const key = trimmed.slice(0, eqIndex).trim();
@@ -2041,13 +2045,13 @@ manic deploy --run           # Deploy
 ## Config Template
 
 ```typescript
-import { defineConfig } from "manicjs/config";
-import { vercel } from "@manicjs/providers";
+import { defineConfig } from 'manicjs/config';
+import { vercel } from '@manicjs/providers';
 
 export default defineConfig({
-  app: { name: "My App" },
+  app: { name: 'My App' },
   server: { port: 3000 },
-  swagger: { path: "/docs" },
+  swagger: { path: '/docs' },
   providers: [vercel()],
 });
 ```

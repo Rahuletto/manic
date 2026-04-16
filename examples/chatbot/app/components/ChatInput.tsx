@@ -1,7 +1,7 @@
-import { ArrowUp, SlidersHorizontal, Square } from "lucide-react";
-import { ViewTransitions } from "manicjs";
-import { useState } from "react";
-import { ChatActionsPopup, type ContextSettings } from "./ChatActionsPopup";
+import { ArrowUp, SlidersHorizontal, Square } from 'lucide-react';
+import { ViewTransitions } from 'manicjs';
+import { useState } from 'react';
+import { ChatActionsPopup, type ContextSettings } from './ChatActionsPopup';
 
 type Model = { id: string; name: string };
 
@@ -36,7 +36,7 @@ export function ChatInput({
   const isDisabled = !hasContent && !isLoading;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSubmit?.();
     }
@@ -63,7 +63,7 @@ export function ChatInput({
               <ChatActionsPopup
                 models={models}
                 currentModel={currentModel}
-                onModelSelect={(id) => {
+                onModelSelect={id => {
                   onModelSelect(id);
                   setShowActions(false);
                 }}
@@ -83,8 +83,8 @@ export function ChatInput({
                 transition-all duration-200
                 ${
                   showActions
-                    ? "bg-foreground/20 text-foreground"
-                    : "text-foreground/80 bg-foreground/10"
+                    ? 'bg-foreground/20 text-foreground'
+                    : 'text-foreground/80 bg-foreground/10'
                 }
               `}
             >
@@ -127,10 +127,10 @@ export function ChatInput({
                 mb-1
                 ${
                   isLoading
-                    ? "bg-accent text-white hover:opacity-90 hover:scale-105 active:scale-95 cursor-pointer"
+                    ? 'bg-accent text-white hover:opacity-90 hover:scale-105 active:scale-95 cursor-pointer'
                     : isDisabled
-                    ? "bg-foreground/20 text-foreground/40 cursor-not-allowed"
-                    : "bg-foreground text-background hover:opacity-90 hover:scale-105 active:scale-95 cursor-pointer"
+                      ? 'bg-foreground/20 text-foreground/40 cursor-not-allowed'
+                      : 'bg-foreground text-background hover:opacity-90 hover:scale-105 active:scale-95 cursor-pointer'
                 }
               `}
       >

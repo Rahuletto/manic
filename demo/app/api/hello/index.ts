@@ -1,5 +1,5 @@
-import { Elysia } from "elysia";
+import { Elysia } from 'elysia';
 
-export default new Elysia().get("/", () => ({
-  message: "Hello from Manic API!",
+export default new Elysia().get('/', () => ({
+  message: 'Hello from Manic API!',
 }));
