@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "manic dev",
     "build": "manic build",
-    "start": "manic start"
+    "start": "manic start",
+    "lint": "manic lint",
+    "format": "manic fmt"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",
@@ -25,6 +27,8 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react-dom": "^19.0.0",
+    "oxfmt": "latest",
+    "oxlint": "latest"
   }
 }

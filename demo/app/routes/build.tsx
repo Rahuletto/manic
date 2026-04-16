@@ -1,27 +1,24 @@
-import { Link } from "manicjs";
-import { useTheme } from "manicjs/theme";
+import { Link } from 'manicjs';
+import { useTheme } from 'manicjs/theme';
 
-const CONTENT_STYLE = { viewTransitionName: "content" };
-const LOGO_STYLE = { viewTransitionName: "logo" };
-const SUBTITLE_STYLE = { viewTransitionName: "subtitle" };
-const LINKBUTTON_STYLE = { viewTransitionName: "linkbutton" };
-const DOCSBUTTON_STYLE = { viewTransitionName: "docsbutton" };
-const CODE_COLOR = { color: "#E96464" };
+const CONTENT_STYLE = { viewTransitionName: 'content' };
+const LOGO_STYLE = { viewTransitionName: 'logo' };
+const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
+const LINKBUTTON_STYLE = { viewTransitionName: 'linkbutton' };
+const DOCSBUTTON_STYLE = { viewTransitionName: 'docsbutton' };
+const CODE_COLOR = { color: '#E96464' };
 
 function BuildHeader({ isDark }: { isDark: boolean }) {
   return (
     <>
       <img
-        src={isDark ? "/assets/wordmark.svg" : "/assets/wordmark-dark.svg"}
+        src={isDark ? '/assets/wordmark.svg' : '/assets/wordmark-dark.svg'}
         alt="MANIC."
         className="w-84 max-sm:w-64 transition-all duration-250"
         style={LOGO_STYLE}
       />
 
-      <p
-        className="text-xl font-medium"
-        style={SUBTITLE_STYLE}
-      >
+      <p className="text-xl font-medium" style={SUBTITLE_STYLE}>
         I mean, try building it?
       </p>
     </>
@@ -34,14 +31,14 @@ function BuildCommands() {
       <code className="border-box my-4 px-4 py-2">
         <span className="font-semibold" style={CODE_COLOR}>
           bun
-        </span>{" "}
+        </span>{' '}
         run build
       </code>
       <span>(or)</span>
       <code className="border-box my-4 px-4 py-2">
         <span className="font-semibold" style={CODE_COLOR}>
           manic
-        </span>{" "}
+        </span>{' '}
         build
       </code>
     </div>
@@ -58,11 +55,7 @@ function BuildFooter() {
       >
         ← Go back
       </Link>
-      <a
-        href="/docs"
-        className="btn-outline"
-        style={DOCSBUTTON_STYLE}
-      >
+      <a href="/docs" className="btn-outline" style={DOCSBUTTON_STYLE}>
         Docs ↗
       </a>
     </div>

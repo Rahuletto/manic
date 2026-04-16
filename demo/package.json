@@ -8,8 +8,8 @@
     "build": "manic build",
     "start": "manic start",
     "deploy": "manic deploy",
-    "lint": "oxlint --fix .",
-    "format": "oxlint --fix ."
+    "lint": "manic lint",
+    "format": "manic fmt"
   },
   "dependencies": {
     "@elysiajs/static": "^1.4.7",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "oxfmt": "latest",
     "oxlint": "latest"
   }
 }
