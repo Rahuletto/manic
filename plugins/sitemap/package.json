@@ -25,5 +25,8 @@
     "manic",
     "sitemap",
     "seo"
-  ]
+  ],
+  "peerDependencies": {
+    "manicjs": "workspace:*"
+  }
 }
