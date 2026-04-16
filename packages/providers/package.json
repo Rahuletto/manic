@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/providers",
-  "version": "0.3.4",
+  "version": "0.3.6",
   "description": "Deployment providers for Manic framework - Vercel, Cloudflare, Netlify",
   "keywords": [
     "adapter",

@@ -42,7 +42,7 @@ bun dev
 | Feature      | Vercel | Netlify          | Cloudflare |
 | ------------ | ------ | ---------------- | ---------- |
 | Static site  | ✅     | ✅               | ✅         |
-| API routes   | ✅     | ✅               | ❌         |
+| API routes   | ✅     | ✅               | ✅         |
 | Edge runtime | ✅     | ✅ (edge option) | -          |
 | Bun runtime  | ✅     | ❌               | -          |
 

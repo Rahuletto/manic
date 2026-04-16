@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/sitemap",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Sitemap generation for Manic framework",
   "keywords": [
     "manic",
@@ -30,6 +30,6 @@
     }
   },
   "peerDependencies": {
-    "manicjs": "workspace:*"
+    "manicjs": "^0.7.4"
   }
 }

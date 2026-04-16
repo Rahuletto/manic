@@ -1,6 +1,6 @@
 {
   "name": "chatbot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
     "ai": "^6.0.3",
     "elysia": "latest",
     "lucide-react": "^0.562.0",
-    "manicjs": "workspace:*",
+    "manicjs": "latest",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "streamdown": "^1.6.10",

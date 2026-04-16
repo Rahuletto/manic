@@ -54,6 +54,7 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
 
         const apiImports: string[] = [];
         const apiMounts: string[] = [];
+        const apiRoutes: string[] = [];
 
         for (const entry of ctx.apiEntries) {
           const name = entry
@@ -65,6 +66,7 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
           apiImports.push(`import api_${safeName} from "./api/${name}.js";`);
           const routePath = name === "root" ? "/" : `/${name}`;
           apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
+          apiRoutes.push(routePath);
         }
 
         const serverCode = `import { Hono } from "hono";
@@ -79,12 +81,7 @@ app.route("/api", apiApp);
 
 // OpenAPI spec
 const paths = {};
-for (const { path, method } of apiApp.routes) {
-  if (method === "ALL") continue;
-  const oaPath = "/api" + path.replace(/:([^\\/]+)/g, "{$1}");
-  if (!paths[oaPath]) paths[oaPath] = {};
-  paths[oaPath][method.toLowerCase()] = { responses: { 200: { description: "OK" } } };
-}
+${apiRoutes.map(route => `paths["/api${route === "/" ? "" : route}"] = { get: { responses: { 200: { description: "OK" } } } };`).join("\n")}
 const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? "Manic"} API", version: "1.0.0" }, paths };
 app.get("/openapi.json", (c) => c.json(spec));
 
