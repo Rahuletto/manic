@@ -1,6 +1,6 @@
 {
   "name": "create-manic",
-  "version": "0.3.2",
+  "version": "0.3.4",
   "description": "Create a new Manic app",
   "keywords": [
     "bun",
