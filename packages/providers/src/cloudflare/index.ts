@@ -37,18 +37,35 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
         }
       }
 
+      // Detect if apiDocs plugin is configured
+      const hasApiDocs = ctx.config.plugins?.some(
+        (p) => p.name === "@manicjs/api-docs"
+      );
+      const docsPath = "/docs";
+
       // Generate _redirects for SPA routing
-      const redirects = `/*    /index.html   200`;
+      const hasApi = ctx.apiEntries.length > 0;
+      let redirects = "";
+      if (hasApi) {
+        redirects += "/api/*    /api/*    200\n";
+        redirects += "/openapi.json    /openapi.json    200\n";
+        if (hasApiDocs) {
+          redirects += `${docsPath}*    ${docsPath}*    200\n`;
+        }
+      }
+      redirects += `/*    /index.html   200`;
       await Bun.write(`${cfDist}/_redirects`, redirects);
 
       const apiImports: string[] = [];
       const apiMounts: string[] = [];
 
-      if (existsSync(`${ctx.dist}/api`)) {
+      if (hasApi) {
         mkdirSync(`${cfDist}/functions/api`, { recursive: true });
-        cpSync(`${ctx.dist}/api`, `${cfDist}/functions/api`, {
-          recursive: true,
-        });
+        if (existsSync(`${ctx.dist}/api`)) {
+          cpSync(`${ctx.dist}/api`, `${cfDist}/functions/api`, {
+            recursive: true,
+          });
+        }
 
         for (const entry of ctx.apiEntries) {
           const name = entry
@@ -62,12 +79,6 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
           apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
         }
       }
-
-      // Detect if apiDocs plugin is configured
-      const hasApiDocs = ctx.config.plugins?.some(
-        (p) => p.name === "@manicjs/api-docs"
-      );
-      const docsPath = "/docs";
 
       const serverCode = `import { Hono } from "hono";
 import { handle } from "hono/cloudflare-pages";
@@ -102,7 +113,7 @@ app.get("${docsPath}/*", apiReference({ spec: { url: "/openapi.json" } }));`
 export const onRequest = handle(app);
 `;
 
-      if (ctx.apiEntries.length > 0) {
+      if (hasApi) {
         mkdirSync(`${cfDist}/functions`, { recursive: true });
         await Bun.write(`${cfDist}/functions/[[path]].js`, serverCode);
       }

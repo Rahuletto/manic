@@ -41,9 +41,9 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
         version: 3,
         routes: [
           { handle: 'filesystem' },
-          { src: '/api/(.*)', dest: 'api.func' },
-          { src: '/openapi.json', dest: 'api.func' },
-          { src: `${docsPath}(.*)`, dest: 'api.func' },
+          { src: '/api/(.*)', dest: '/api' },
+          { src: '/openapi.json', dest: '/api' },
+          { src: `${docsPath}(.*)`, dest: '/api' },
           { src: '/(.*)', dest: '/index.html' },
         ],
       };
@@ -71,7 +71,6 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
 
       const apiImports: string[] = [];
       const apiMounts: string[] = [];
-      const cwd = process.cwd();
 
       if (existsSync(`${ctx.dist}/api`)) {
         mkdirSync(`${vDist}/functions/api.func/api`, { recursive: true });
@@ -126,7 +125,9 @@ app.get("${docsPath}/*", apiReference({ spec: { url: "/openapi.json" } }));`
     : ''
 }
 
-export default app;
+export default {
+  fetch: app.fetch
+};
 `;
 
       const serverEntry = `${vDist}/functions/api.func/index.mjs`;

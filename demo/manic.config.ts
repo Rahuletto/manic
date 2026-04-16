@@ -1,5 +1,5 @@
 import { defineConfig } from 'manicjs/config';
-import { cloudflare, vercel, netlify } from '@manicjs/providers';
+import { cloudflare, vercel } from '@manicjs/providers';
 import { apiDocs } from '@manicjs/api-docs';
 
 export default defineConfig({
@@ -14,5 +14,5 @@ export default defineConfig({
 
   plugins: [apiDocs()],
 
-  providers: [vercel(), cloudflare(), netlify()],
+  providers: [vercel(), cloudflare()],
 });
