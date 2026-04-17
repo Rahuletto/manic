@@ -119,9 +119,7 @@ app.get("/openapi.json", (c) => c.json(spec));
 app.get("/docs", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
 app.get("/docs/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
 
-export default {
-  fetch: app.fetch
-};
+${runtime === 'edge' ? 'export default (req, ctx) => app.fetch(req, { vercel: ctx });' : 'export default { fetch: app.fetch };'}
 `;
 
       // Write raw source, then bundle so all deps (hono, etc.) are inlined.
@@ -133,7 +131,7 @@ export default {
       const bundle = await Bun.build({
         entrypoints: [rawEntry],
         outdir: `${vDist}/functions/api.func`,
-        target: runtime === 'edge' ? 'browser' : 'bun',
+        target: 'bun',
         minify: true,
         naming: { entry: 'index.mjs' },
       });
