@@ -2,11 +2,9 @@ import { Link } from 'manicjs';
 import { useTheme } from 'manicjs/theme';
 import { useState, useCallback } from 'react';
 
-const CONTENT_STYLE = { viewTransitionName: 'content' };
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
 const LINKBUTTON_STYLE = { viewTransitionName: 'linkbutton' };
-const DOCSBUTTON_STYLE = { viewTransitionName: 'docsbutton' };
 
 export default function Home() {
   const { isDark } = useTheme();
