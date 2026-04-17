@@ -71,6 +71,7 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
 
       const apiImports: string[] = [];
       const apiMounts: string[] = [];
+      const apiRoutes: string[] = [];
 
       if (existsSync(`${ctx.dist}/api`)) {
         mkdirSync(`${vDist}/functions/api.func/api`, { recursive: true });
@@ -88,6 +89,7 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
           apiImports.push(`import api_${safeName} from "./api/${name}.js";`);
           const routePath = name === 'root' ? '/' : `/${name}`;
           apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
+          apiRoutes.push(routePath);
         }
       }
 
@@ -108,12 +110,7 @@ app.route("/api", apiApp);
 
 // OpenAPI spec
 const paths = {};
-for (const { path, method } of apiApp.routes) {
-  if (method === "ALL") continue;
-  const oaPath = path.replace(/:([^\\/]+)/g, "{$1}");
-  if (!paths[oaPath]) paths[oaPath] = {};
-  paths[oaPath][method.toLowerCase()] = { responses: { 200: { description: "OK" } } };
-}
+${apiRoutes.map(route => `paths["/api${route === "/" ? "" : route}"] = { get: { responses: { 200: { description: "OK" } } } };`).join('\n')}
 const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? 'Manic'} API", version: "1.0.0" }, paths };
 app.get("/openapi.json", (c) => c.json(spec));
 
@@ -125,8 +122,28 @@ export default {
 };
 `;
 
-      const serverEntry = `${vDist}/functions/api.func/index.mjs`;
-      await Bun.write(serverEntry, serverCode);
+      // Write raw source, then bundle so all deps (hono, etc.) are inlined.
+      // Without this, Bun on Vercel tries to auto-install missing packages
+      // and hits ReadOnlyFileSystem.
+      const rawEntry = `${vDist}/functions/api.func/_entry.mjs`;
+      await Bun.write(rawEntry, serverCode);
+
+      const bundle = await Bun.build({
+        entrypoints: [rawEntry],
+        outdir: `${vDist}/functions/api.func`,
+        target: 'bun',
+        minify: true,
+        naming: { entry: 'index.mjs' },
+      });
+
+      if (!bundle.success) {
+        console.error('\n  Failed to bundle Vercel function:');
+        bundle.logs.forEach(l => console.error(' ', l));
+      }
+
+      // Clean up raw entry
+      const { unlinkSync } = await import('node:fs');
+      try { unlinkSync(rawEntry); } catch {}
 
       await Bun.write(
         `${vDist}/functions/api.func/package.json`,

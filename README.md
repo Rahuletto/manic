@@ -32,6 +32,8 @@ bun dev
 | [manicjs](https://www.npmjs.com/package/manicjs)                       | The framework                                     |
 | [create-manic](https://www.npmjs.com/package/create-manic)             | CLI to scaffold new apps                          |
 | [@manicjs/providers](https://www.npmjs.com/package/@manicjs/providers) | Deployment adapters (Vercel, Netlify, Cloudflare) |
+| [@manicjs/api-docs](https://www.npmjs.com/package/@manicjs/api-docs)   | Scalar API documentation plugin                   |
+| [@manicjs/sitemap](https://www.npmjs.com/package/@manicjs/sitemap)     | Sitemap generation plugin                         |
 
 ## Requirements
 
