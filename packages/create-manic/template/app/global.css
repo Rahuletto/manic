@@ -49,13 +49,11 @@ body {
   mix-blend-mode: normal;
 }
 
-/* Named elements get smooth morph transitions */
 ::view-transition-group(*) {
   animation-duration: 0.3s;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Optional: slide effect for new content */
 ::view-transition-new(root) {
   animation: none;
   opacity: 1;
