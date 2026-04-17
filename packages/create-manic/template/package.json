@@ -12,6 +12,7 @@
     "format": "manic fmt"
   },
   "dependencies": {
+    "@manicjs/api-docs": "latest",
     "bun-plugin-tailwind": "^0.1.2",
     "hono": "^4.12.14",
     "manicjs": "latest",
