@@ -86,9 +86,9 @@ ${dim('--- --- --- --- ---')}
   );
   const port = await ask('Port', '6070');
   const isFrontend = mode === 'frontend';
-  const swagger = isFrontend
+  const includeDocs = isFrontend
     ? false
-    : await askYesNo('Include Swagger API docs?', true);
+    : await askYesNo('Include API documentation (Scalar)?', true);
   const viewTransitions = await askYesNo('Enable View Transitions?', true);
 
   console.log(`\n${dim('Creating project...')}\n`);
@@ -109,14 +109,17 @@ ${dim('--- --- --- --- ---')}
   pkg.name = projectName;
 
   if (isFrontend) {
-    delete pkg.dependencies['elysia'];
-    delete pkg.dependencies['@elysiajs/static'];
-    delete pkg.dependencies['@elysiajs/swagger'];
+    delete pkg.dependencies['hono'];
+    delete pkg.dependencies['@manicjs/api-docs'];
+  } else if (!includeDocs) {
+    delete pkg.dependencies['@manicjs/api-docs'];
   }
 
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
 
-  const configContent = `import { defineConfig } from "manicjs/config";
+  const configContent = `import { defineConfig } from "manicjs/config";${
+    includeDocs ? '\nimport { apiDocs } from "@manicjs/api-docs";' : ''
+  }
 
 export default defineConfig({${
     isFrontend
@@ -135,16 +138,7 @@ export default defineConfig({${
 
   router: {
     viewTransitions: ${viewTransitions},
-  },
-
-  swagger: ${
-    swagger
-      ? `{
-    path: "/docs",
-  }`
-      : 'false'
-  },
-});
+  },${includeDocs ? '\n  plugins: [apiDocs()],\n' : ''}});
 `;
 
   await Bun.write(join(projectPath, 'manic.config.ts'), configContent);
