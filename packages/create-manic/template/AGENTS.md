@@ -1,6 +1,6 @@
 # AGENTS.md — Manic Framework Guide
 
-> **Manic** (`manicjs`) is a file-based, client-side React SPA framework built exclusively on **Bun**. It uses **Hono** as the HTTP server, supports **Tailwind CSS v4** natively, and has **no SSR** — all rendering happens in the browser.
+> **Manic** (`manicjs`) is a file-based, client-side React SPA framework built exclusively on **Bun**. It uses **Elysia** as the HTTP server, supports **Tailwind CSS v4** natively, and has **no SSR** — all rendering happens in the browser.
 
 ## Project Structure
 
@@ -19,7 +19,7 @@ portfolio/
     ├── ~routes.generated.ts       # AUTO-GENERATED route manifest — NEVER EDIT
     ├── App.tsx                    # Optional app wrapper component
     ├── routes/                    # Page files — each .tsx = one URL route
-    ├── api/                       # Server-side Hono API routes
+    ├── api/                       # Server-side Elysia API routes
     └── components/                # Shared React components (any structure)
 ```
 
@@ -332,19 +332,19 @@ await createManicServer({ html: app });
 //   port?: number — overrides config (overridden by $PORT env var)
 ```
 
-Internally: loads env files → generates route manifest → loads config → mounts API routes → mounts API docs (if enabled) → serves static assets → registers page routes → starts `Bun.serve()` → watches for route changes in dev.
+Internally: loads env files → generates route manifest → loads config → mounts API routes → mounts Swagger → serves static assets → registers page routes → starts `Bun.serve()` → watches for route changes in dev.
 
 ---
 
 ### `manicjs/plugins`
 
-**`apiLoaderPlugin(apiDir?)`** — Scans `app/api/` for Hono modules and mounts them.
+**`apiLoaderPlugin(apiDir?)`** — Scans `app/api/` for Elysia modules and mounts them.
 
 ```tsx
 import { apiLoaderPlugin } from 'manicjs/plugins';
 
 const { app, routes } = await apiLoaderPlugin('app/api');
-// app: Hono instance with all API routes mounted
+// app: Elysia instance with all API routes mounted
 // routes: string[] — list of mounted route paths
 ```
 
@@ -442,14 +442,17 @@ interface BuildContext {
 
 ## API Routes
 
-API routes live in `app/api/` and must use **folder + index.ts** structure. Each exports a default **Hono** instance:
+API routes live in `app/api/` and must use **folder + index.ts** structure. Each exports a default **Elysia** instance:
 
 ```typescript
 // app/api/hello/index.ts → /api/hello
-import { Hono } from 'hono';
+import { Elysia, t } from 'elysia';
 
-export default new Hono()
-  .get('/', c => c.json({ message: 'Hello!' }));
+export default new Elysia()
+  .get('/', () => ({ message: 'Hello!' }))
+  .post('/', ({ body }) => ({ echo: body.text }), {
+    body: t.Object({ text: t.String() }),
+  });
 ```
 
 **Important:** Never create `app/api/index.ts` at root — always use `app/api/[name]/index.ts`.
@@ -479,7 +482,7 @@ export default defineConfig({
     splitting: true, // Code-splitting per route
     outdir: '.manic',
   },
-  plugins: [], // e.g. [apiDocs()] from @manicjs/api-docs
+  swagger: false, // Set to { path: "/docs", documentation: {...} } to enable
 });
 ```
 

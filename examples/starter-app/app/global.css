@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-accent: #e96464;
+  --color-accent: #F15156;
   --color-background: var(--theme-background);
   --color-foreground: var(--theme-foreground);
 }
 
 :root {
-  --theme-background: #f0eee6;
-  --theme-foreground: #0e0e0e;
+  --theme-background: #FEF6F7;
+  --theme-foreground: #151212;
 
   font-family:
     system-ui,
@@ -25,8 +25,8 @@
 }
 
 .dark {
-  --theme-background: #0e0e0e;
-  --theme-foreground: #f0eee6;
+  --theme-background: #151212;
+  --theme-foreground: #FEF6F7;
 }
 
 body {
@@ -64,38 +64,43 @@ body {
   opacity: 1;
 }
 
-.border-box {
-  border: 2px solid var(--theme-foreground);
+button {
+    @apply cursor-pointer;
 }
 
-.border-box-accent {
-  border: 2px solid var(--color-accent);
-}
 
 .btn-primary {
-  background-color: var(--theme-foreground);
-  color: var(--theme-background);
-  border: 2px solid transparent;
-  padding: 0.75rem 1.25rem;
-  font-weight: 600;
-  transition: all 0.15s;
+    @apply bg-accent text-background border-2 border-background font-semibold rounded-full px-6 py-3 transition-all duration-150;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  @apply scale-105 opacity-90;
+}
+
+.btn-primary:active {
+    @apply scale-95 opacity-50;
+}
+
+.btn-secondary {
+    @apply bg-foreground text-background border-2 border-foreground font-semibold rounded-full px-6 py-3 transition-all duration-150;
+}
+
+.btn-secondary:hover {
+  @apply scale-105 opacity-90;
+}
+
+.btn-secondary:active {
+    @apply scale-95 opacity-50;
 }
 
 .btn-outline {
-  border: 2px solid var(--theme-foreground);
-  padding: 0.75rem 1.25rem;
-  font-weight: 600;
-  transition: all 0.15s;
+  @apply border-2 border-foreground font-semibold rounded-full px-6 py-3 transition-all duration-150;
 }
 
 .btn-outline:hover {
-  background-color: var(--theme-foreground);
-  color: var(--theme-background);
+  @apply bg-foreground text-background;
 }
+
 
 code {
   font-family: 'Google Sans Code', monospace;

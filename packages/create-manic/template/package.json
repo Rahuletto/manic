@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@manicjs/api-docs": "latest",
+    "@manicjs/providers": "latest",
     "bun-plugin-tailwind": "^0.1.2",
     "hono": "^4.12.14",
     "manicjs": "latest",

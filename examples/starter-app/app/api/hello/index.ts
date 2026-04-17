@@ -1,5 +1,11 @@
-import { Elysia } from 'elysia';
+import { Hono } from 'hono';
 
-export default new Elysia().get('/', () => ({
-  message: 'Hello from Manic API!',
-}));
+const route = new Hono();
+
+route.get('/', c =>
+  c.json({
+    message: 'Hello from Manic API!',
+  })
+);
+
+export default route;

@@ -1,4 +1,5 @@
 import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
 
 export default defineConfig({
   app: {
@@ -9,11 +10,5 @@ export default defineConfig({
     port: 6070,
   },
 
-  router: {
-    viewTransitions: true,
-  },
-
-  swagger: {
-    path: '/docs',
-  },
+  plugins: [apiDocs()],
 });
