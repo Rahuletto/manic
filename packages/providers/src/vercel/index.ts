@@ -50,7 +50,7 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       await Bun.write(`${vDist}/config.json`, JSON.stringify(vConfig, null, 2));
 
       const vcConfig: Record<string, unknown> = runtime === 'edge'
-        ? { runtime: 'edge' }
+        ? { runtime: 'edge', entrypoint: 'index.mjs' }
         : {
             runtime: runtime === 'bun' ? 'bun1.x' : runtime,
             handler: 'index.mjs',
