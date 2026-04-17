@@ -14,5 +14,5 @@ export default defineConfig({
 
   plugins: [apiDocs()],
 
-  providers: [vercel(), cloudflare()],
+  providers: [vercel({ runtime: "edge" }), cloudflare()],
 });

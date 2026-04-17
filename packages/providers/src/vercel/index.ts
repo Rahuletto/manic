@@ -3,7 +3,7 @@ import { green, dim, yellow, bold } from 'colorette';
 import type { ManicProvider, BuildContext } from '../types';
 
 export interface VercelOptions {
-  runtime?: 'bun' | 'nodejs20.x' | 'nodejs22.x';
+  runtime?: 'bun' | 'edge' | 'nodejs20.x' | 'nodejs22.x';
   regions?: string[];
   memory?: number;
   maxDuration?: number;
@@ -49,14 +49,16 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       };
       await Bun.write(`${vDist}/config.json`, JSON.stringify(vConfig, null, 2));
 
-      const vcConfig: Record<string, unknown> = {
-        runtime: runtime === 'bun' ? 'bun1.x' : runtime,
-        handler: 'index.mjs',
-        shouldAddHelpers: false,
-        supportsResponseStreaming: true,
-      };
+      const vcConfig: Record<string, unknown> = runtime === 'edge'
+        ? { runtime: 'edge' }
+        : {
+            runtime: runtime === 'bun' ? 'bun1.x' : runtime,
+            handler: 'index.mjs',
+            shouldAddHelpers: false,
+            supportsResponseStreaming: true,
+          };
 
-      if (runtime !== 'bun') {
+      if (runtime !== 'bun' && runtime !== 'edge') {
         vcConfig.launcherType = 'Nodejs';
       }
 
@@ -131,7 +133,7 @@ export default {
       const bundle = await Bun.build({
         entrypoints: [rawEntry],
         outdir: `${vDist}/functions/api.func`,
-        target: 'bun',
+        target: runtime === 'edge' ? 'browser' : 'bun',
         minify: true,
         naming: { entry: 'index.mjs' },
       });
