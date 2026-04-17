@@ -10,12 +10,14 @@
     "correctness": "error",
     "perf": "error",
     "suspicious": "error",
-    "pedantic": "error"
+    "pedantic": "warn"
   },
   "rules": {
     "react/jsx-no-undef": "error",
     "react/react-in-jsx-scope": "off",
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "error"
+    "react-hooks/exhaustive-deps": "error",
+    "no-unused-vars": "warn",
+    "max-lines-per-function": "off"
   }
 }

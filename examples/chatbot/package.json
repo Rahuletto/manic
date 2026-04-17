@@ -7,6 +7,7 @@
     "dev": "manic dev",
     "build": "manic build",
     "start": "manic start",
+    "deploy": "manic deploy",
     "lint": "manic lint",
     "format": "manic fmt"
   },
@@ -15,13 +16,14 @@
     "@ai-sdk/react": "^3.0.3",
     "@manicjs/api-docs": "latest",
     "ai": "^6.0.3",
+    "bun-plugin-tailwind": "^0.1.2",
     "hono": "^4.12.14",
     "lucide-react": "^0.562.0",
     "manicjs": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "streamdown": "^1.6.10",
-    "tailwindcss": "^4.0.0",
+    "tailwindcss": "^4.2.2",
     "zod": "^4.2.1"
   },
   "devDependencies": {
