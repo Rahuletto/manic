@@ -15,11 +15,11 @@
       "name": "manic-app",
       "version": "0.1.1",
       "dependencies": {
-        "@manicjs/api-docs": "latest",
-        "@manicjs/providers": "latest",
+        "@manicjs/api-docs": "workspace:*",
+        "@manicjs/providers": "workspace:*",
         "bun-plugin-tailwind": "^0.1.2",
         "hono": "^4.12.14",
-        "manicjs": "latest",
+        "manicjs": "workspace:*",
         "react": "^19.2.5",
         "react-dom": "^19.2.5",
         "tailwindcss": "^4.2.2",
@@ -79,14 +79,14 @@
     },
     "packages/create-manic": {
       "name": "create-manic",
-      "version": "0.3.6",
+      "version": "0.5.2",
       "bin": {
         "create-manic": "./index.ts",
       },
     },
     "packages/manic": {
       "name": "manicjs",
-      "version": "0.7.7",
+      "version": "0.8.0",
       "bin": {
         "manic": "./src/cli/index.ts",
       },
@@ -115,7 +115,7 @@
     },
     "packages/providers": {
       "name": "@manicjs/providers",
-      "version": "0.3.7",
+      "version": "0.4.0",
       "dependencies": {
         "colorette": "^2.0.20",
       },
@@ -129,20 +129,20 @@
     },
     "plugins/api-docs": {
       "name": "@manicjs/api-docs",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "dependencies": {
         "@scalar/hono-api-reference": "^0.10.8",
         "hono": "^4.7.0",
       },
       "peerDependencies": {
-        "manicjs": "workspace:*",
+        "manicjs": "^0.7.4",
       },
     },
     "plugins/sitemap": {
       "name": "@manicjs/sitemap",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "peerDependencies": {
-        "manicjs": "workspace:*",
+        "manicjs": "^0.7.4",
       },
     },
   },
@@ -1087,12 +1087,6 @@
 
     "d3-sankey/d3-shape": ["d3-shape@1.3.7", "", { "dependencies": { "d3-path": "1" } }, "sha512-EUkvKjqPFUAZyOlhY5gzCxCeI0Aep04LwIRpsZ/mLFelJiUfnK56jo5JMDSE7yyP2kLSb6LtF+S5chMk7uqPqw=="],
 
-    "manic-app/@manicjs/api-docs": ["@manicjs/api-docs@0.1.0", "", { "dependencies": { "@scalar/hono-api-reference": "^0.10.8", "hono": "^4.7.0" }, "peerDependencies": { "manicjs": "workspace:*" } }, "sha512-dldoFO0cipqibJO0Zw4k0NV5K+cU8Y+qms46nb29QDH/63iYpfhtQ0o8o5Rh4wA2/SWpma15NneCK0cV972xpQ=="],
-
-    "manic-app/@manicjs/providers": ["@manicjs/providers@0.3.7", "", { "dependencies": { "colorette": "^2.0.20" }, "peerDependencies": { "manicjs": ">=0.7.2" } }, "sha512-BK1wuh1KSUGof17GU6aEcNGPlZLLZhPG7zNxl6bQI6/FEQKmuRjwUBraF31j0RoMFiT/reUz0kErX5I5JeGRjA=="],
-
-    "manic-app/manicjs": ["manicjs@0.7.7", "", { "dependencies": { "bun-plugin-tailwind": "^0.1.2", "colorette": "^2.0.20", "hono": "^4.7.0", "oxc-minify": "^0.125.0", "oxc-resolver": "^11.19.1", "oxc-transform": "^0.125.0", "oxlint": "^1.60.0" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" }, "bin": { "manic": "src/cli/index.ts" } }, "sha512-Lt8zNf8XicNjG8vsjAnClJM7qr5ATpt0JQ5/RRNYezj1ZvTtI5EGRX7qlRRuY02Z/kKquikAo6i4kNI7fuTojQ=="],
-
     "mlly/pathe": ["pathe@2.0.3", "", {}, "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w=="],
 
     "parse-entities/@types/unist": ["@types/unist@2.0.11", "", {}, "sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA=="],
@@ -1114,7 +1108,5 @@
     "cytoscape-fcose/cose-base/layout-base": ["layout-base@2.0.1", "", {}, "sha512-dp3s92+uNI1hWIpPGH3jK2kxE2lMjdXdr+DH8ynZHpd6PUlH6x6cbuXnoMmiNumznqaNO31xu9e79F0uuZ0JFg=="],
 
     "d3-sankey/d3-shape/d3-path": ["d3-path@1.0.9", "", {}, "sha512-VLaYcn81dtHVTjEHd8B+pbe9yHWpXKZUC87PzoFmsFrJqgFwDe/qxfp5MlfsfM1V5E/iVt0MmEbWQ7FVIXh/bg=="],
-
-    "manic-app/@manicjs/api-docs/manicjs": ["manicjs@workspace:packages/manic"],
   }
 }

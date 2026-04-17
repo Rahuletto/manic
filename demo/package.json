@@ -12,11 +12,11 @@
     "format": "manic fmt"
   },
   "dependencies": {
-    "@manicjs/api-docs": "latest",
-    "@manicjs/providers": "latest",
+    "@manicjs/api-docs": "workspace:*",
+    "@manicjs/providers": "workspace:*",
     "bun-plugin-tailwind": "^0.1.2",
     "hono": "^4.12.14",
-    "manicjs": "latest",
+    "manicjs": "workspace:*",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "tailwindcss": "^4.2.2"
