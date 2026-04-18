@@ -86,14 +86,26 @@ graph LR
 ### Build-Time Plugins (`ManicPlugin`)
 Defined in `manic.config.ts`.
 - `build(ctx)`: Access to `pageRoutes`, `apiRoutes`, `dist`, and `emitClientFile(path, content)`.
+- Use `emitClientFile(relativePath, content)` to write static files into `dist/client/`. These are automatically picked up by **all providers** (Vercel, Cloudflare, Netlify) since every provider copies `dist/client` to its static output directory.
+- **Do not write provider-specific code inside a plugin.** Plugins must be provider-agnostic. If a feature needs to work in production, emit it as a static file via `emitClientFile` or handle it in `configureServer` for the dev server.
 
 ### Runtime/Server Plugins (`ManicPlugin`)
-- `configureServer(ctx)`: Hooks into `Bun.serve`. Can add routes via `addRoute(path, handler)` which maps directly to Bun's native router.
+- `configureServer(ctx)`: Hooks into `Bun.serve`. Can add routes via `addRoute(path, handler)` and inject `Link` headers via `addLinkHeader(value)`.
+- Routes registered here are **dev-only** unless the same content is also emitted as a static file in the `build` hook.
+- **Every plugin that registers a route in `configureServer` should also emit the equivalent static file in `build`** so production deployments work identically.
+
+### Plugin Checklist
+When creating or modifying a plugin, ensure:
+- [ ] `configureServer` registers the route for dev
+- [ ] `build` emits the same content via `emitClientFile` for production
+- [ ] No provider-specific imports or logic inside the plugin
+- [ ] `addLinkHeader` is called for any discovery endpoint (RFC 8288)
 
 ### Deployment Providers (`ManicProvider`)
-Transforms `.manic/` output into platform-specific formats.
-- **Vercel**: Creates `.vercel/output`, maps static files, and generates `config.json` + `.vc-config.json` for serverless functions.
-- **Cloudflare**: Generates `dist/`, `_redirects` for SPA routing, and `wrangler.toml`.
+Transforms `.manic/` output into platform-specific formats. Providers **consume** what plugins emit — they do not duplicate plugin logic.
+- **Vercel**: Creates `.vercel/output`, maps static files, generates `config.json` + `.vc-config.json` for serverless functions.
+- **Cloudflare**: Generates `dist/`, `_worker.js` for edge routing, and `wrangler.toml`.
+- Providers may inject shared middleware (Link headers, markdown negotiation) into the generated worker/function code, but this is infrastructure-level — not plugin logic.
 
 ---
 

@@ -1,6 +1,7 @@
 import { rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
 import { green, dim, yellow, bold } from 'colorette';
 import type { ManicProvider, BuildContext } from '../types';
+import { agentMiddleware } from '../middleware';
 
 export interface VercelOptions {
   runtime?: 'bun' | 'edge' | 'nodejs20.x' | 'nodejs22.x';
@@ -118,6 +119,10 @@ app.get("/openapi.json", (c) => c.json(spec));
 
 app.get("/docs", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
 app.get("/docs/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+
+${agentMiddleware(ctx)}
+
+app.all("/*", async (c) => withAgentSupport(c.req.raw, () => Promise.resolve(new Response("Not found", { status: 404 }))));
 
 ${runtime === 'edge' ? 'export default (req, ctx) => app.fetch(req, { vercel: ctx });' : 'export default { fetch: app.fetch };'}
 `;

@@ -1,8 +1,5 @@
-import type {
-  ManicPlugin,
-  ManicServerPluginContext,
-  ManicBuildPluginContext,
-} from 'manicjs/config';
+import type { ManicPlugin, ManicServerPluginContext, ManicBuildPluginContext } from 'manicjs/config';
+import { generateRobotsTxt } from './robots';
 
 export interface RobotRule {
   userAgent: string;
@@ -12,72 +9,32 @@ export interface RobotRule {
 }
 
 export interface LinkHeader {
-  /** URL or path to the resource */
   href: string;
-  /** Link relation type (e.g. "service-desc", "describedby") */
+  /** IANA link relation type (e.g. "service-desc", "describedby") */
   rel: string;
-  /** Optional MIME type */
   type?: string;
 }
 
 export interface SeoConfig {
-  /** Base URL for the site (e.g. "https://example.com") */
+  /** Base URL of the site, e.g. "https://example.com" */
   hostname: string;
-  /** Robot rules — defaults to allow all */
+  /** Crawler rules. Defaults to allow all. */
   rules?: RobotRule[];
-  /** Additional sitemaps to reference (full URLs) */
+  /** Additional sitemap URLs to include in robots.txt */
   sitemaps?: string[];
-  /** Auto-reference /sitemap.xml if @manicjs/sitemap is also used @default true */
+  /** Auto-add /sitemap.xml when @manicjs/sitemap is used @default true */
   autoSitemap?: boolean;
-  /** Additional Link headers to add to HTML responses (RFC 8288) */
+  /** Extra RFC 8288 Link headers added to all HTML responses */
   linkHeaders?: LinkHeader[];
-}
-
-function generateRobotsTxt(config: SeoConfig): string {
-  const hostname = config.hostname.replace(/\/$/, '');
-  const autoSitemap = config.autoSitemap ?? true;
-
-  const rules: RobotRule[] = config.rules?.length
-    ? config.rules
-    : [{ userAgent: '*', allow: ['/'] }];
-
-  const lines: string[] = [];
-
-  for (const rule of rules) {
-    lines.push(`User-agent: ${rule.userAgent}`);
-
-    if (rule.allow) {
-      for (const path of rule.allow) {
-        lines.push(`Allow: ${path}`);
-      }
-    }
-
-    if (rule.disallow) {
-      for (const path of rule.disallow) {
-        lines.push(`Disallow: ${path}`);
-      }
-    }
-
-    if (rule.crawlDelay != null) {
-      lines.push(`Crawl-delay: ${rule.crawlDelay}`);
-    }
-
-    lines.push('');
-  }
-
-  const sitemaps = config.sitemaps ? [...config.sitemaps] : [];
-  if (autoSitemap) {
-    const sitemapUrl = `${hostname}/sitemap.xml`;
-    if (!sitemaps.includes(sitemapUrl)) {
-      sitemaps.push(sitemapUrl);
-    }
-  }
-
-  for (const s of sitemaps) {
-    lines.push(`Sitemap: ${s}`);
-  }
-
-  return lines.join('\n').trim() + '\n';
+  /**
+   * Content-Signal directives appended to robots.txt.
+   * @see https://contentsignals.org/
+   */
+  contentSignals?: {
+    'ai-train'?: 'yes' | 'no';
+    search?: 'yes' | 'no';
+    'ai-input'?: 'yes' | 'no';
+  };
 }
 
 export function seo(config: SeoConfig): ManicPlugin {
@@ -86,37 +43,22 @@ export function seo(config: SeoConfig): ManicPlugin {
 
     configureServer(ctx: ManicServerPluginContext) {
       const txt = generateRobotsTxt(config);
-      ctx.addRoute(
-        '/robots.txt',
-        () =>
-          new Response(txt, {
-            headers: { 'content-type': 'text/plain; charset=utf-8' },
-          })
-      );
+      ctx.addRoute('/robots.txt', () => new Response(txt, { headers: { 'content-type': 'text/plain; charset=utf-8' } }));
 
-      // Link headers for agent discovery (RFC 8288)
       const hostname = config.hostname.replace(/\/$/, '');
-      const autoSitemap = config.autoSitemap ?? true;
-
-      if (autoSitemap) {
+      if (config.autoSitemap ?? true) {
         ctx.addLinkHeader(`<${hostname}/sitemap.xml>; rel="describedby"; type="application/xml"`);
       }
       for (const s of config.sitemaps ?? []) {
         ctx.addLinkHeader(`<${s}>; rel="describedby"; type="application/xml"`);
       }
-
-      if (config.linkHeaders) {
-        for (const lh of config.linkHeaders) {
-          let value = `<${lh.href}>; rel="${lh.rel}"`;
-          if (lh.type) value += `; type="${lh.type}"`;
-          ctx.addLinkHeader(value);
-        }
+      for (const lh of config.linkHeaders ?? []) {
+        ctx.addLinkHeader(`<${lh.href}>; rel="${lh.rel}"${lh.type ? `; type="${lh.type}"` : ''}`);
       }
     },
 
     async build(ctx: ManicBuildPluginContext) {
-      const txt = generateRobotsTxt(config);
-      await ctx.emitClientFile('robots.txt', txt);
+      await ctx.emitClientFile('robots.txt', generateRobotsTxt(config));
     },
   };
 }

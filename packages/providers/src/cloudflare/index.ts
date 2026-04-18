@@ -1,6 +1,7 @@
 import { rmSync, cpSync, existsSync, mkdirSync } from "node:fs";
-import { green, dim, yellow, bold, red } from "colorette";
+import { green, dim, yellow, bold } from "colorette";
 import type { ManicProvider, BuildContext } from "../types";
+import { agentMiddleware } from "../middleware";
 
 export interface CloudflareOptions {
   /**
@@ -92,13 +93,15 @@ app.get("${docsPath}/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><me
     : ""
 }
 
+${agentMiddleware(ctx)}
+
 // Serve static assets from Cloudflare Pages
 app.get("/*", async (c) => {
-  const res = await c.env.ASSETS.fetch(c.req.raw);
-  if (res.status === 404) {
-    return await c.env.ASSETS.fetch(new URL("/index.html", c.req.url));
-  }
-  return res;
+  return withAgentSupport(c.req.raw, async (req) => {
+    const res = await c.env.ASSETS.fetch(req);
+    if (res.status === 404) return c.env.ASSETS.fetch(new URL("/index.html", req.url));
+    return res;
+  });
 });
 
 export default app;

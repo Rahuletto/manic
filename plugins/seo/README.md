@@ -1,8 +1,8 @@
 # @manicjs/seo
 
-SEO plugin for Manic framework — serves a valid `/robots.txt` per [RFC 9309](https://www.rfc-editor.org/rfc/rfc9309).
+SEO plugin for [Manic](https://github.com/Rahuletto/manic). Generates `robots.txt`, adds RFC 8288 `Link` headers for agent discovery, and supports [Content Signals](https://contentsignals.org/) for AI crawler policy declarations.
 
-## Installation
+## Install
 
 ```bash
 bun add @manicjs/seo
@@ -11,65 +11,41 @@ bun add @manicjs/seo
 ## Usage
 
 ```ts
-import { defineConfig } from 'manicjs/config';
-import { sitemap } from '@manicjs/sitemap';
+// manic.config.ts
+import { defineConfig } from 'manicjs';
 import { seo } from '@manicjs/seo';
 
 export default defineConfig({
   plugins: [
-    sitemap({
-      hostname: 'https://example.com',
-      changefreq: 'weekly',
-      priority: 0.8,
-    }),
     seo({
       hostname: 'https://example.com',
+      contentSignals: { 'ai-train': 'no', search: 'yes', 'ai-input': 'yes' },
     }),
   ],
 });
 ```
 
-This generates a `/robots.txt` that allows all crawlers and references your sitemap:
+## What it does
 
-```
-User-agent: *
-Allow: /
-
-Sitemap: https://example.com/sitemap.xml
-```
+- Serves `/robots.txt` in dev and emits it as a static file in production builds
+- Adds `Link: <hostname/sitemap.xml>; rel="describedby"` to all HTML responses when `@manicjs/sitemap` is also used
+- Appends `Content-Signal` directives to `robots.txt` for AI crawler policy
 
 ## Options
 
 | Option | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `hostname` | `string` | **required** | Base URL of the site |
-| `rules` | `RobotRule[]` | `[{ userAgent: '*', allow: ['/'] }]` | User-agent directives |
-| `sitemaps` | `string[]` | `[]` | Additional sitemap URLs to reference |
-| `autoSitemap` | `boolean` | `true` | Auto-reference `<hostname>/sitemap.xml` |
+|--------|------|---------|-------------|
+| `hostname` | `string` | required | Base URL, e.g. `https://example.com` |
+| `rules` | `RobotRule[]` | allow all | Crawler rules for robots.txt |
+| `sitemaps` | `string[]` | `[]` | Additional sitemap URLs |
+| `autoSitemap` | `boolean` | `true` | Auto-reference `/sitemap.xml` |
+| `linkHeaders` | `LinkHeader[]` | `[]` | Extra RFC 8288 Link headers |
+| `contentSignals` | `object` | — | AI crawler policy (`ai-train`, `search`, `ai-input`) |
 
-### Custom rules
+## File structure
 
-```ts
-seo({
-  hostname: 'https://example.com',
-  rules: [
-    { userAgent: '*', allow: ['/'], disallow: ['/admin', '/api'] },
-    { userAgent: 'GPTBot', disallow: ['/'] },
-  ],
-})
 ```
-
-### Link headers (RFC 8288)
-
-The plugin automatically adds `Link` response headers to all HTML pages for agent discovery. By default it advertises the sitemap. You can add custom Link headers:
-
-```ts
-seo({
-  hostname: 'https://example.com',
-  linkHeaders: [
-    { href: '/docs/api', rel: 'service-doc', type: 'text/html' },
-  ],
-})
+src/
+  index.ts   — plugin entry, ManicPlugin implementation
+  robots.ts  — generateRobotsTxt() pure function
 ```
-
-In fullstack mode, the framework also adds a built-in `Link` header for `/openapi.json` (`rel="service-desc"`).

@@ -14,7 +14,7 @@ export default function Home() {
   const decrement = useCallback(() => setState(s => s - 1), []);
 
   return (
-    <main className="py-32 md:px-24 px-12 mx-auto flex items-start justify-center gap-32 flex-col max-w-screen-lg min-h-screen text-foreground">
+    <main className="py-24 md:px-24 px-12 mx-auto flex items-start justify-center gap-32 flex-col max-w-screen-lg min-h-screen text-foreground">
 
         <div className="flex gap-6 flex-col">
           <img
