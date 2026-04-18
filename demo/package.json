@@ -1,5 +1,5 @@
 {
-  "name": "manic-app",
+  "name": "manic-demo",
   "version": "0.1.1",
   "private": true,
   "type": "module",
@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "@manicjs/api-docs": "workspace:*",
+    "@manicjs/mcp": "workspace:*",
     "@manicjs/providers": "workspace:*",
+    "@manicjs/seo": "workspace:*",
+    "@manicjs/sitemap": "workspace:*",
     "bun-plugin-tailwind": "^0.1.2",
     "hono": "^4.12.14",
     "manicjs": "workspace:*",
