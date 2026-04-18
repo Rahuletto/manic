@@ -1,376 +1,397 @@
+import { red, green, bold, cyan, yellow, gray, dim } from 'colorette';
+import { discoverRoutes, watchRoutes, generateSitemap } from './lib/discovery';
 import {
-  bold,
-  cyan,
-  green,
-  dim,
-  yellow,
-  red,
-  bgYellow,
-  bgCyan,
-  gray,
-} from "colorette";
-import {
-  discoverRoutes,
-  discoverFavicon,
-  generateSitemap,
-  watchRoutes,
-  logRouteChange,
-  writeRoutesManifest,
-} from "./lib/discovery";
-import { loadConfig } from "../config";
-import { loadEnvFiles, getLoadedEnvKeys } from "../env";
-import { setViewTransitions } from "../router/lib/Router";
+  htmlToMarkdown,
+  estimateTokens,
+  prefersMarkdown,
+} from './lib/markdown';
+import { loadConfig, type ManicConfig } from '../config/index';
+import { join } from 'path';
 
-export interface ManicServerOptions {
-  html: string | (() => Response | Promise<Response>);
-  port?: number;
-}
+export async function createManicServer(options: {
+  html: any; // string | HTMLBundle | (() => string)
+  config?: ManicConfig;
+  routes?: any[];
+  envKeys?: string[];
+  startTime?: number;
+}) {
+  const [config, routes] = await Promise.all([
+    options.config ? Promise.resolve(options.config) : loadConfig(),
+    options.routes ? Promise.resolve(options.routes) : discoverRoutes(),
+  ]);
+  const envKeys = options.envKeys || [];
+  const startTime = options.startTime || performance.now();
+  const prod = process.env.NODE_ENV === 'production';
+  const port = config.server?.port ?? 6070;
+  const hostname = '0.0.0.0';
+  const dist = config.build?.outdir ?? '.manic';
 
-export async function createManicServer(
-  options: ManicServerOptions
-): Promise<unknown> {
-  const startTime = performance.now();
-  const nodeEnv = process.env["NODE_ENV"];
-  const prod = nodeEnv === "production";
+  // Detect Bun HTMLBundle (has .index property pointing to the HTML file)
+  const isHtmlBundle =
+    options.html && typeof options.html === 'object' && 'index' in options.html;
 
-  await loadEnvFiles();
-  await writeRoutesManifest();
+  // Link headers collected from plugins (RFC 8288)
+  const linkHeaders: string[] = [];
+  // HTML tags to inject into <head> (collected from plugins)
+  const htmlInjections: string[] = [];
 
-  const config = await loadConfig();
-  const routes = await discoverRoutes();
-  const favicon = await discoverFavicon();
-  const envPort = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
-  const port = options.port ?? envPort ?? config.server?.port ?? 6070;
-  const hostname =
-    process.env.HOST ||
-    (process.env.NETWORK === "true" ? "0.0.0.0" : "localhost");
-  const envKeys = getLoadedEnvKeys();
-
-  if (config.router?.viewTransitions !== undefined) {
-    setViewTransitions(config.router.viewTransitions);
-  }
-
-  if (config.mode === "frontend") {
-    const htmlHandler =
-      typeof options.html === "string"
-        ? () =>
-            new Response(options.html, {
-              headers: {
-                "content-type": "text/html",
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-              },
-            })
-        : options.html;
-
-    const bunRoutes: Record<string, unknown> = {
-      "/": htmlHandler,
+  const serveHtml = async (req?: Request): Promise<Response> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'text/html; charset=utf-8',
     };
+    if (linkHeaders.length) {
+      headers['Link'] = linkHeaders.join(', ');
+    }
 
-    for (const route of routes) {
-      if (route.path !== "/") {
-        bunRoutes[route.path] = htmlHandler;
+    let rawHtml: string;
+    if (isHtmlBundle) {
+      // In dev, serve from app/index.html; in prod, serve from .manic/client/index.html
+      const htmlPath = prod
+        ? join(process.cwd(), dist, 'client', 'index.html')
+        : 'app/index.html';
+      rawHtml = await Bun.file(htmlPath).text();
+    } else {
+      rawHtml =
+        typeof options.html === 'function'
+          ? await options.html()
+          : options.html;
+    }
+
+    // Inject plugin HTML tags into <head>
+    if (htmlInjections.length) {
+      rawHtml = rawHtml.replace(
+        '</head>',
+        `${htmlInjections.join('\n')}\n</head>`
+      );
+    }
+
+    // Markdown content negotiation (RFC 8288 / Markdown for Agents)
+    if (req && prefersMarkdown(req)) {
+      const md = htmlToMarkdown(rawHtml);
+      const tokens = estimateTokens(md);
+      headers['Content-Type'] = 'text/markdown; charset=utf-8';
+      headers['Vary'] = 'Accept';
+      headers['x-markdown-tokens'] = String(tokens);
+      return new Response(md, { headers });
+    }
+
+    // Agent mode — return structured JSON about the app
+    if (req && new URL(req.url).searchParams.get('mode') === 'agent') {
+      const hasMcp = config.plugins?.some(p => p.name === '@manicjs/mcp');
+      const hasApiDocs = config.plugins?.some(
+        p => p.name === '@manicjs/api-docs'
+      );
+      const info = {
+        name: config.app?.name ?? 'Manic App',
+        mcp: hasMcp ? '/.well-known/mcp/server-card.json' : null,
+        openapi: '/openapi.json',
+        docs: hasApiDocs ? '/docs' : null,
+        agentSkills: hasMcp ? '/.well-known/agent-skills/index.json' : null,
+        discovery: '/.well-known/api-catalog',
+      };
+      headers['Content-Type'] = 'application/json';
+      headers['Access-Control-Allow-Origin'] = '*';
+      return new Response(JSON.stringify(info, null, 2), { headers });
+    }
+
+    return new Response(rawHtml, { headers });
+  };
+
+  // Hidden internal route so the catch-all can fetch the processed HTMLBundle
+  // for unknown SPA routes (Bun only processes HTMLBundle on static route values)
+  const htmlBundleNonce =
+    isHtmlBundle && !prod ? `/__manic_html_${crypto.randomUUID()}` : null;
+
+  const handleDynamicRequest = async (req: Request): Promise<Response> => {
+    const url = new URL(req.url);
+    const pathname = url.pathname;
+
+    if (pathname.startsWith('/_manic/open')) {
+      const file = url.searchParams.get('file');
+      if (file) {
+        const line = url.searchParams.get('line') || '1';
+        const col = url.searchParams.get('column') || '1';
+        const finalPath = file.startsWith('/')
+          ? file.replace(/\\/g, '/')
+          : `${process.cwd()}/${file}`.replace(/\\/g, '/');
+        try {
+          const editor = process.env.EDITOR || process.env.VISUAL;
+          if (editor) {
+            const args = editor.includes('code')
+              ? ['-g', `${finalPath}:${line}:${col}`]
+              : [finalPath];
+            Bun.spawn([editor, ...args]).unref();
+          } else {
+            // macOS: open in default editor; Linux: xdg-open
+            const opener = process.platform === 'darwin' ? 'open' : 'xdg-open';
+            Bun.spawn([opener, finalPath]).unref();
+          }
+        } catch {}
+        return new Response('OK');
+      }
+      return new Response('Missing file', { status: 400 });
+    }
+
+    if (prod) {
+      const assetFile = Bun.file(
+        join(
+          process.cwd(),
+          dist,
+          'client',
+          pathname === '/' ? 'index.html' : pathname
+        )
+      );
+      if (await assetFile.exists()) {
+        return new Response(assetFile, {
+          headers: {
+            'Content-Type': assetFile.type,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
+        });
       }
     }
 
-    if (favicon) {
-      const faviconFile = `assets/${favicon.split("/").pop()}`;
-      bunRoutes["/favicon.ico"] = () => {
-        const headers: Record<string, string> = prod
-          ? {}
-          : {
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-              Pragma: "no-cache",
-              Expires: "0",
-            };
-        return new Response(Bun.file(faviconFile), { headers });
-      };
-    }
-
-    if (config.sitemap && config.sitemap !== false) {
-      const sitemapXml = generateSitemap(routes, config.sitemap);
-      bunRoutes["/sitemap.xml"] = () =>
-        new Response(sitemapXml, {
-          headers: { "content-type": "application/xml" },
+    if (pathname.startsWith('/assets/')) {
+      const assetPath = prod
+        ? join(process.cwd(), dist, 'client', pathname.substring(1))
+        : pathname.substring(1);
+      const assetFile = Bun.file(assetPath);
+      if (await assetFile.exists())
+        return new Response(assetFile, {
+          headers: prod
+            ? {
+                'Content-Type': assetFile.type,
+                'Cache-Control': 'public, max-age=3600, must-revalidate',
+              }
+            : {
+                'Content-Type': assetFile.type,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+              },
         });
     }
 
-    bunRoutes["/*"] = async (req: Request) => {
-      const url = new URL(req.url);
-
-      if (url.pathname.startsWith("/assets/")) {
-        const assetPath = `assets${url.pathname.replace("/assets", "")}`;
-        const file = Bun.file(assetPath);
+    // In dev, check if the requested file exists on disk (e.g., main.tsx, .js, .css)
+    // If it exists, serve it directly; otherwise fall through to SPA handler
+    if (!prod) {
+      // Skip index.html — let serveHtml handle it so Link headers, markdown
+      // negotiation, and ?mode=agent all work correctly
+      if (pathname !== '/') {
+        const file = Bun.file(pathname);
         if (await file.exists()) {
           return new Response(file, {
-            headers: prod
-              ? { "Cache-Control": "public, max-age=31536000, immutable" }
-              : {
-                  "Cache-Control": "no-cache, no-store, must-revalidate",
-                  Pragma: "no-cache",
-                  Expires: "0",
-                },
+            headers: {
+              'Content-Type': file.type,
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+            },
           });
         }
       }
 
-      return typeof htmlHandler === "function" ? htmlHandler() : htmlHandler;
-    };
+      if (htmlBundleNonce) {
+        if (
+          prefersMarkdown(req) ||
+          new URL(req.url).searchParams.get('mode') === 'agent'
+        ) {
+          return serveHtml(req);
+        }
+        const res = await fetch(new Request(`${url.origin}${htmlBundleNonce}`));
+        if (linkHeaders.length) {
+          const h = new Headers(res.headers);
+          h.set('Link', linkHeaders.join(', '));
+          return new Response(res.body, { status: res.status, headers: h });
+        }
+        return res;
+      }
+    }
+
+    return serveHtml(req);
+  };
+
+  const bunRoutes: Record<string, any> = {};
+  if (isHtmlBundle && !prod) {
+    // Only register the nonce route — Bun needs one static HTMLBundle route to
+    // process assets (Tailwind, HMR, .tsx imports). All page routes go through
+    // /* so Link headers, markdown, and ?mode=agent work correctly.
+    if (htmlBundleNonce) bunRoutes[htmlBundleNonce] = options.html;
+  } else {
+    const pageHandler = (req: Request) => serveHtml(req);
+    bunRoutes['/'] = pageHandler;
+    for (const route of routes) {
+      if (route.path !== '/') bunRoutes[route.path] = pageHandler;
+    }
+  }
+
+  if (config.mode === 'frontend') {
+    if (config.sitemap && !prod) {
+      const sitemapXml = generateSitemap(routes, config.sitemap);
+      bunRoutes['/sitemap.xml'] = () =>
+        new Response(sitemapXml, {
+          headers: { 'content-type': 'application/xml' },
+        });
+    }
+
+    if (config.plugins?.length) {
+      const ctx = {
+        config,
+        prod,
+        cwd: process.cwd(),
+        dist,
+        pageRoutes: routes.map(r => ({
+          path: r.path,
+          filePath: r.filePath,
+          dynamic: r.path.includes(':'),
+        })),
+        apiRoutes: [] as any[],
+        addRoute: (
+          path: string,
+          handler: (req: Request) => Response | Promise<Response>
+        ) => {
+          bunRoutes[path] = handler;
+        },
+        addLinkHeader: (value: string) => {
+          linkHeaders.push(value);
+        },
+        injectHtml: (tags: string) => {
+          htmlInjections.push(tags);
+        },
+      };
+      for (const plugin of config.plugins) {
+        if (plugin.configureServer) await plugin.configureServer(ctx);
+      }
+    }
 
     const server = Bun.serve({
       port,
       hostname,
-      routes: bunRoutes,
-      fetch: () => new Response("Not Found", { status: 404 }),
+      static: undefined,
+      routes: { ...bunRoutes, '/*': handleDynamicRequest },
       development:
         !prod && config.server?.hmr !== false ? { hmr: true } : undefined,
     });
 
-    if (!prod) {
-      watchRoutes("app/routes", logRouteChange).catch(() => {});
-    }
-
-    const duration = Math.round(performance.now() - startTime);
-    const serverPort = server.port ?? port;
-    const displayHost = hostname === "0.0.0.0" ? "localhost" : hostname;
-    const url = `http://${displayHost}:${serverPort}/`;
-
-    console.log(
-      `\n\n\t\t${red(bold("■ MANIC"))}            ${
-        prod
-          ? yellow(`${bgYellow(" PROD ")} Server`)
-          : cyan(` ${bgCyan(" DEV ")} Server`)
-      }\n\t\t--- --- --- --- --- ---  --- ---`
-    );
-
-    console.log(`\n\t\t${cyan(bold("URL"))}:      ${green(url)}`);
-
-    if (process.env.NETWORK === "true") {
-      const nets = await import("os").then((os) => os.networkInterfaces());
-      for (const name of Object.keys(nets)) {
-        for (const net of nets[name] ?? []) {
-          if (net.family === "IPv4" && !net.internal) {
-            console.log(
-              `\t\t${cyan(bold("Network"))}:  ${green(
-                `http://${net.address}:${serverPort}/`
-              )}`
-            );
-          }
-        }
-      }
-    }
-
-    console.log(`\n\t\t${green("Ready in")} ${bold(duration + "ms")}`);
-
-    if (envKeys.length > 0) {
-      const publicEnvs = envKeys.filter((k) => k.startsWith("PUBLIC_")).length;
-      const privateEnvs = envKeys.length - publicEnvs;
-      console.log(
-        `\n\t\t${dim(gray(`Loaded ${bold(envKeys.length)} env vars`))} ${dim(
-          `(${publicEnvs} public, ${privateEnvs} private)`
-        )}`
-      );
-    }
-
-    console.log("");
-
-    return;
+    if (!prod) watchRoutes('app/routes', () => {}).catch(() => {});
+    logServerInfo(server, port, hostname, prod, startTime, envKeys, config);
+    return server;
   }
 
-  // Fullstack mode — dynamically import Elysia dependencies
-  const { Elysia } = await import("elysia");
-  const { swagger } = await import("@elysiajs/swagger");
-  const { staticPlugin } = await import("@elysiajs/static");
-  const { apiLoaderPlugin } = await import("../plugins");
-
-  const { app: apiApp } = await apiLoaderPlugin();
-
-  if (config.swagger !== false) {
-    const swaggerConfig = config.swagger ?? {};
-    apiApp.use(
-      swagger({
-        path: swaggerConfig.path ?? "/docs",
-        exclude: [
-          "/",
-          "/assets",
-          "/favicon.ico",
-          "/api/docs",
-          swaggerConfig.path ?? "/docs",
-        ],
-        documentation: {
-          info: {
-            title:
-              swaggerConfig.documentation?.info?.title ??
-              config.app?.name ??
-              "Manic API",
-            description:
-              swaggerConfig.documentation?.info?.description ??
-              "API documentation powered by Manic",
-            version: swaggerConfig.documentation?.info?.version ?? "1.0.0",
-          },
-        },
-      })
-    );
-  }
-
-  apiApp.use(
-    staticPlugin({
-      assets: "assets",
-      prefix: "/assets",
-      headers: prod
-        ? undefined
-        : {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-    })
+  // Fullstack mode (Hono)
+  const { apiLoaderPlugin } = await import('../plugins/lib/api');
+  const { app: apiApp, openApiSpec } = await apiLoaderPlugin(
+    prod ? `${dist}/api` : 'app/api'
   );
 
-  if (prod) {
-    const dist = config.build?.outdir ?? ".manic";
-    apiApp.use(
-      staticPlugin({
-        assets: `${dist}/client`,
-        prefix: "/",
-        headers: {
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
-      })
-    );
-  }
+  const specJson = JSON.stringify(openApiSpec);
+  bunRoutes['/api'] = (req: Request) => apiApp.fetch(req);
+  bunRoutes['/api/*'] = (req: Request) => apiApp.fetch(req);
+  bunRoutes['/openapi.json'] = () =>
+    new Response(specJson, { headers: { 'Content-Type': 'application/json' } });
 
-  if (favicon) {
-    const faviconFile = `assets/${favicon.split("/").pop()}`;
-    apiApp.get("/favicon.ico", () => {
-      const headers: Record<string, string> = prod
-        ? {}
-        : {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          };
-      return new Response(Bun.file(faviconFile), { headers });
+  // API catalog (RFC 9727) — /.well-known/api-catalog
+  const apiCatalog = {
+    linkset: [
+      {
+        anchor: '/api',
+        'service-desc': [{ href: '/openapi.json', type: 'application/json' }],
+      },
+    ],
+  };
+  const apiCatalogJson = JSON.stringify(apiCatalog);
+  bunRoutes['/.well-known/api-catalog'] = () =>
+    new Response(apiCatalogJson, {
+      headers: {
+        'Content-Type':
+          'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+      },
     });
-  }
 
-  const htmlHandler =
-    typeof options.html === "string"
-      ? () =>
-          new Response(options.html, {
-            headers: {
-              "content-type": "text/html",
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-            },
-          })
-      : options.html;
+  // Built-in Link headers (RFC 8288 / RFC 9727)
+  linkHeaders.push(
+    '</openapi.json>; rel="service-desc"; type="application/json"'
+  );
+  linkHeaders.push(
+    '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"'
+  );
 
-  const bunRoutes: Record<string, unknown> = {
-    "/": htmlHandler,
-  };
+  // MCP auto-discovery — advertise if the plugin registers the endpoint
+  // The plugin itself adds the route; we pre-add the Link header so agents
+  // see it on every HTML response regardless of plugin load order.
+  linkHeaders.push(
+    '</.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"'
+  );
 
-  for (const route of routes) {
-    if (route.path !== "/") {
-      bunRoutes[route.path] = htmlHandler;
+  if (config.plugins?.length) {
+    const ctx = {
+      config,
+      prod,
+      cwd: process.cwd(),
+      dist,
+      pageRoutes: routes.map(r => ({
+        path: r.path,
+        filePath: r.filePath,
+        dynamic: r.path.includes(':'),
+      })),
+      apiRoutes: [] as any[],
+      addRoute: (
+        path: string,
+        handler: (req: Request) => Response | Promise<Response>
+      ) => {
+        bunRoutes[path] = handler;
+      },
+      addLinkHeader: (value: string) => {
+        linkHeaders.push(value);
+      },
+      injectHtml: (tags: string) => {
+        htmlInjections.push(tags);
+      },
+    };
+    for (const plugin of config.plugins) {
+      if (plugin.configureServer) await plugin.configureServer(ctx);
     }
   }
-
-  bunRoutes["/api/*"] = (req: Request) => apiApp.handle(req);
-  bunRoutes["/_manic/*"] = (req: Request) => apiApp.handle(req);
-  bunRoutes["/assets/*"] = (req: Request) => apiApp.handle(req);
-  bunRoutes["/favicon.ico"] = (req: Request) => apiApp.handle(req);
-
-  if (config.swagger !== false) {
-    const docsPath = config.swagger?.path ?? "/docs";
-    bunRoutes[docsPath] = (req: Request) => apiApp.handle(req);
-    bunRoutes[`${docsPath}/*`] = (req: Request) => apiApp.handle(req);
-  }
-
-  if (config.sitemap && config.sitemap !== false) {
-    const sitemapXml = generateSitemap(routes, config.sitemap);
-    bunRoutes["/sitemap.xml"] = () =>
-      new Response(sitemapXml, {
-        headers: { "content-type": "application/xml" },
-      });
-  }
-
-  bunRoutes["/*"] = (req: Request) => {
-    const url = new URL(req.url);
-    const hasExtension = url.pathname
-      .slice(url.pathname.lastIndexOf("/"))
-      .includes(".");
-
-    if (prod && hasExtension) {
-      return apiApp.handle(req);
-    }
-
-    return typeof htmlHandler === "function" ? htmlHandler() : htmlHandler;
-  };
 
   const server = Bun.serve({
     port,
     hostname,
-    routes: bunRoutes,
-    fetch: () => new Response("Not Found", { status: 404 }),
+    static: undefined,
+    routes: { ...bunRoutes, '/*': handleDynamicRequest },
     development:
       !prod && config.server?.hmr !== false ? { hmr: true } : undefined,
   });
 
-  if (!prod) {
-    watchRoutes("app/routes", logRouteChange).catch(() => {});
-  }
+  if (!prod) watchRoutes('app/routes', () => {}).catch(() => {});
+  logServerInfo(server, port, hostname, prod, startTime, envKeys, config);
+  return server;
+}
 
+function logServerInfo(
+  server: any,
+  port: number,
+  hostname: string,
+  prod: boolean,
+  startTime: number,
+  envKeys: string[],
+  config: ManicConfig
+) {
   const duration = Math.round(performance.now() - startTime);
-  const serverPort = server.port ?? port;
-  const protocol = "http";
-  const displayHost = hostname === "0.0.0.0" ? "localhost" : hostname;
-  const url = `${protocol}://${displayHost}:${serverPort}/`;
-  const docsPath =
-    config.swagger !== false ? config.swagger?.path ?? "/docs" : null;
-
+  const displayHost = hostname === '0.0.0.0' ? 'localhost' : hostname;
+  const url = `http://${displayHost}:${server.port ?? port}/`;
   console.log(
-    `\n\n\t\t${red(bold("■ MANIC"))}            ${
-      prod
-        ? yellow(`${bgYellow(" PROD ")} Server`)
-        : cyan(` ${bgCyan(" DEV ")} Server`)
-    }\n\t\t--- --- --- --- --- ---  --- ---`
+    `\n\n\t\t${red(bold('■ MANIC'))}            ${prod ? yellow(' PROD Server') : cyan(' DEV Server')}\n\t\t--- --- --- --- --- ---  --- ---`
   );
+  console.log(`\n\t\t${cyan(bold('URL'))}:      ${green(url)}`);
 
-  console.log(`\n\t\t${cyan(bold("URL"))}:      ${green(url)}`);
-
-  if (process.env.NETWORK === "true") {
-    const nets = await import("os").then((os) => os.networkInterfaces());
-    for (const name of Object.keys(nets)) {
-      for (const net of nets[name] ?? []) {
-        if (net.family === "IPv4" && !net.internal) {
-          console.log(
-            `\t\t${cyan(bold("Network"))}:  ${green(
-              `http://${net.address}:${serverPort}/`
-            )}`
-          );
-        }
-      }
-    }
-  }
-
-  if (docsPath) {
+  const mcpPlugin = config.plugins?.find(p => p.name === '@manicjs/mcp');
+  if (mcpPlugin) {
+    const mcpPath = (mcpPlugin as any).path ?? '/mcp';
     console.log(
-      `\t\t${cyan(bold("Docs"))}:     ${green(url.slice(0, -1) + docsPath)}`
+      `\n\t\t${cyan(bold('MCP'))}:      ${green(`${url.replace(/\/$/, '')}${mcpPath}`)}`
     );
   }
 
-  console.log(`\n\t\t${green("Ready in")} ${bold(duration + "ms")}`);
-
-  if (envKeys.length > 0) {
-    const publicEnvs = envKeys.filter((k) => k.startsWith("PUBLIC_")).length;
-    const privateEnvs = envKeys.length - publicEnvs;
+  console.log(`\n\t\t${green('Ready in')} ${bold(duration + 'ms')}`);
+  if (envKeys.length > 0)
     console.log(
-      `\n\t\t${dim(gray(`Loaded ${bold(envKeys.length)} env vars`))} ${dim(
-        `(${publicEnvs} public, ${privateEnvs} private)`
-      )}`
+      `\n\t\t${dim(gray(`Loaded ${bold(envKeys.length)} env vars`))}`
     );
-  }
-
-  console.log("");
-
-  return apiApp;
+  console.log('');
 }

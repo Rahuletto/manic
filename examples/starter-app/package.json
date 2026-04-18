@@ -1,27 +1,29 @@
 {
-  "name": "starter-app",
-  "version": "0.1.0",
+  "name": "manic-app",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "manic dev",
     "build": "manic build",
     "start": "manic start",
-    "deploy": "manic deploy"
+    "deploy": "manic deploy",
+    "lint": "manic lint",
+    "format": "manic fmt"
   },
   "dependencies": {
-    "@elysiajs/static": "^1.4.7",
-    "@elysiajs/swagger": "^1.3.1",
-    "@manicjs/providers": "^0.2.0",
+    "@manicjs/api-docs": "latest",
     "bun-plugin-tailwind": "^0.1.2",
-    "elysia": "latest",
-    "manicjs": "^0.6.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.0"
+    "hono": "^4.12.14",
+    "manicjs": "latest",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "oxfmt": "latest",
+    "oxlint": "latest"
   }
 }

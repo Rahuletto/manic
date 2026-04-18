@@ -1,7 +1,9 @@
-import { useTheme, ThemeToggle } from "manicjs/theme";
-import { useRef } from "react";
-import { Sun, MoonStar, ArrowUp, SlidersHorizontal } from "lucide-react";
-import { Link, ViewTransitions } from "manicjs";
+import { useTheme, ThemeToggle } from 'manicjs/theme';
+import { useRef } from 'react';
+import { Sun, MoonStar, ArrowUp, SlidersHorizontal } from 'lucide-react';
+import { Link, ViewTransitions } from 'manicjs';
+
+const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
 
 export default function Landing() {
   const { isDark } = useTheme();
@@ -11,14 +13,14 @@ export default function Landing() {
     <main>
       <header className="fixed top-0 left-0 right-0 flex items-center justify-between w-full px-12 py-6 z-50">
         <img
-          src={isDark ? "/assets/wordmark.svg" : "/assets/wordmark-dark.svg"}
+          src={isDark ? '/assets/wordmark.svg' : '/assets/wordmark-dark.svg'}
           alt=""
           className="h-6 opacity-0"
         />
 
         <ThemeToggle className="active:-rotate-16 transition-transform cursor-pointer">
-          {(theme) =>
-            theme === "dark" ? <Sun size={20} /> : <MoonStar size={20} />
+          {theme =>
+            theme === 'dark' ? <Sun size={20} /> : <MoonStar size={20} />
           }
         </ThemeToggle>
       </header>
@@ -26,21 +28,18 @@ export default function Landing() {
       <section className="px-22 flex items-center justify-center flex-col h-[80vh]">
         <ViewTransitions.div name="logo">
           <img
-            src={isDark ? "/assets/wordmark.svg" : "/assets/wordmark-dark.svg"}
+            src={isDark ? '/assets/wordmark.svg' : '/assets/wordmark-dark.svg'}
             alt="Wordmark"
-            className="h-32"
+            className="max-md:w-54 max-sm:w-54 transition-all duration-250"
           />
         </ViewTransitions.div>
-        <p
-          className="md:text-3xl text-xl font-semibold"
-          style={{ viewTransitionName: "subtitle" }}
-        >
-          Stupidly fast, Crazy light.
+        <p className="md:text-2xl text-xl font-medium" style={SUBTITLE_STYLE}>
+          Stupidly fast, Crazy light React framework.
         </p>
 
         <div className="flex mt-16 items-center justify-center gap-8">
           <Link
-            to="/chat"
+            to="/chats"
             className="btn-primary flex items-center justify-center"
           >
             Chat
@@ -56,7 +55,7 @@ export default function Landing() {
         </div>
 
         <Link
-          to="/chat"
+          to="/chats"
           className="max-w-xl w-full mx-auto fixed bottom-64 left-0 right-0 px-4"
         >
           <ViewTransitions.div

@@ -1,44 +1,67 @@
-import { Elysia } from "elysia";
-import { join } from "node:path";
-import { existsSync } from "node:fs";
+import { Hono } from 'hono';
+import { existsSync } from 'fs';
+import { join, isAbsolute } from 'path';
 
-export const apiLoaderPlugin = async (apiDir: string = "app/api") => {
-  const app = new Elysia({ name: "manic.api" });
+export const apiLoaderPlugin = async (apiDir: string = 'app/api') => {
+  const app = new Hono().basePath('/api');
   const routes: string[] = [];
+  const apiRoot = isAbsolute(apiDir) ? apiDir : join(process.cwd(), apiDir);
 
-  if (!existsSync(apiDir)) {
-    return { app, routes };
-  }
+  if (!existsSync(apiRoot))
+    return { app, routes, openApiSpec: buildSpec(app, routes) };
 
-  const explorer = new Bun.Glob("**/*.{ts,tsx}");
+  const glob = new Bun.Glob('**/*.{ts,tsx,js}');
+  const files: string[] = [];
+  for await (const file of glob.scan({ cwd: apiRoot })) files.push(file);
 
-  for await (const file of explorer.scan({ cwd: apiDir })) {
-    const fullPath = join(process.cwd(), apiDir, file);
+  await Promise.all(
+    files.map(async file => {
+      try {
+        const mod = await import(join(apiRoot, file));
+        if (!mod.default) return;
 
-    try {
-      const mod = await import(fullPath);
+        const routePath = (
+          '/' +
+          file
+            .replace(/\.(?:tsx?|js)$/, '')
+            .replace(/\/index$/, '')
+            .replace(/^index$/, '')
+        )
+          .replace(/\/+/g, '/')
+          .replace(/\[([^\]]+)\]/g, ':$1');
 
-      if (mod.default) {
-        let routePath = file
-          .replace(/\.tsx?$/, "")
-          .replace(/\/index$/, "")
-          .replace(/^index$/, "");
+        routes.push(`/api${routePath === '/' ? '' : routePath}`);
 
-        if (routePath === "") {
-          console.warn(
-            `[Manic API] Skipping ${file} - use folder structure like api/hello/index.ts`
-          );
-          continue;
+        const h = mod.default;
+        // Hono instance has .fetch; plain functions don't
+        if (typeof h.fetch === 'function') {
+          app.route(routePath, h);
+        } else if (typeof h === 'function') {
+          app.all(routePath, c => h(c));
         }
-
-        const mountPath = `/api/${routePath}`;
-        routes.push(mountPath);
-        app.group(mountPath, (g) => g.use(mod.default));
+      } catch (err) {
+        console.error(`[Manic API] Failed to load ${file}:`, err);
       }
-    } catch (err) {
-      console.error(`[Manic API] Failed to load ${file}:`, err);
-    }
-  }
+    })
+  );
 
-  return { app, routes };
+  return { app, routes, openApiSpec: buildSpec(app, routes) };
 };
+
+function buildSpec(app: any, registeredRoutes: string[]) {
+  const paths: Record<string, any> = {};
+  // Use the registered routes array which already includes the /api prefix,
+  // rather than app.routes which stores paths relative to the basePath.
+  for (const route of registeredRoutes) {
+    const oaPath = route.replace(/:([^/]+)/g, '{$1}');
+    if (!paths[oaPath]) paths[oaPath] = {};
+    paths[oaPath]['get'] = {
+      responses: { 200: { description: 'OK' } },
+    };
+  }
+  return {
+    openapi: '3.0.0',
+    info: { title: 'Manic API', version: '1.0.0' },
+    paths,
+  };
+}

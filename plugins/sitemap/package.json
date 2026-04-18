@@ -1,0 +1,35 @@
+{
+  "name": "@manicjs/sitemap",
+  "version": "0.6.0",
+  "description": "Sitemap generation for Manic framework",
+  "keywords": [
+    "manic",
+    "seo",
+    "sitemap"
+  ],
+  "license": "GPL-3.0",
+  "author": "Rahuletto",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rahuletto/manic"
+  },
+  "files": [
+    "src/**/*",
+    "README.md"
+  ],
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "manicjs": "^0.7.4"
+  }
+}

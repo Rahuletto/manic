@@ -1,62 +1,67 @@
-import { rmSync, mkdirSync, cpSync, existsSync } from "node:fs";
-import { green, dim, yellow, bold } from "colorette";
-import type { ManicProvider, BuildContext } from "../types";
+import { rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
+import { green, dim, yellow, bold } from 'colorette';
+import type { ManicProvider, BuildContext } from '../types';
+import { agentMiddleware } from '../middleware';
 
 export interface VercelOptions {
-  runtime?: "bun" | "nodejs20.x" | "nodejs22.x";
+  runtime?: 'bun' | 'edge' | 'nodejs20.x' | 'nodejs22.x';
   regions?: string[];
   memory?: number;
   maxDuration?: number;
 }
 
 export function vercel(options: VercelOptions = {}): ManicProvider {
-  const runtime = options.runtime ?? "bun";
+  const runtime = options.runtime ?? 'bun';
 
   return {
-    name: "vercel",
+    name: 'vercel',
     async build(ctx: BuildContext) {
-      process.stdout.write(dim("● Exporting to Vercel..."));
+      process.stdout.write(dim('● Exporting to Vercel...'));
 
-      const vDist = ".vercel/output";
+      const vDist = '.vercel/output';
       rmSync(vDist, { recursive: true, force: true });
       mkdirSync(`${vDist}/static`, { recursive: true });
       mkdirSync(`${vDist}/functions/api.func`, { recursive: true });
 
       cpSync(`${ctx.dist}/client`, `${vDist}/static`, { recursive: true });
 
-      const faviconFiles = ["favicon.ico", "favicon.svg", "favicon.png"];
+      const faviconFiles = ['favicon.ico', 'favicon.svg', 'favicon.png'];
       for (const favicon of faviconFiles) {
         if (existsSync(`${vDist}/static/assets/${favicon}`)) {
-          cpSync(`${vDist}/static/assets/${favicon}`, `${vDist}/static/${favicon}`);
+          cpSync(
+            `${vDist}/static/assets/${favicon}`,
+            `${vDist}/static/${favicon}`
+          );
           break;
         }
       }
 
-      const docsPath =
-        ctx.config.swagger !== false
-          ? ctx.config.swagger?.path ?? "/docs"
-          : null;
+      const docsPath = '/docs';
 
       const vConfig = {
         version: 3,
         routes: [
-          { handle: "filesystem" },
-          { src: "/api/(.*)", dest: "api" },
-          ...(docsPath ? [{ src: `${docsPath}(.*)`, dest: "api" }] : []),
-          { src: "/(.*)", dest: "/index.html" },
+          { handle: 'filesystem' },
+          { src: '/api/(.*)', dest: '/api' },
+          { src: '/openapi.json', dest: '/api' },
+          { src: '/docs(.*)', dest: '/api' },
+          { src: '/(.*)', dest: '/index.html' },
         ],
       };
       await Bun.write(`${vDist}/config.json`, JSON.stringify(vConfig, null, 2));
 
-      const vcConfig: Record<string, unknown> = {
-        runtime: runtime === "bun" ? "bun1.x" : runtime,
-        handler: "index.mjs",
-        shouldAddHelpers: false,
-        supportsResponseStreaming: true,
-      };
+      const vcConfig: Record<string, unknown> =
+        runtime === 'edge'
+          ? { runtime: 'edge', entrypoint: 'index.mjs' }
+          : {
+              runtime: runtime === 'bun' ? 'bun1.x' : runtime,
+              handler: 'index.mjs',
+              shouldAddHelpers: false,
+              supportsResponseStreaming: true,
+            };
 
-      if (runtime !== "bun") {
-        vcConfig.launcherType = "Nodejs";
+      if (runtime !== 'bun' && runtime !== 'edge') {
+        vcConfig.launcherType = 'Nodejs';
       }
 
       if (options.regions) vcConfig.regions = options.regions;
@@ -69,108 +74,110 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       );
 
       const apiImports: string[] = [];
+      const apiMounts: string[] = [];
       const apiRoutes: string[] = [];
-      const cwd = process.cwd();
 
       if (existsSync(`${ctx.dist}/api`)) {
+        mkdirSync(`${vDist}/functions/api.func/api`, { recursive: true });
+        cpSync(`${ctx.dist}/api`, `${vDist}/functions/api.func/api`, {
+          recursive: true,
+        });
+
         for (const entry of ctx.apiEntries) {
           const name = entry
-            .replace("app/api/", "")
-            .replace("/index.ts", "")
-            .replace("index.ts", "root");
+            .replace('app/api/', '')
+            .replace('/index.ts', '')
+            .replace('index.ts', 'root');
 
-          apiImports.push(
-            `import api_${name.replace(/-/g, "_")} from "${cwd}/${entry}";`
-          );
-          const routePath = name === "root" ? "" : `/${name}`;
-          apiRoutes.push(
-            `app.group("/api${routePath}", (g) => g.use(api_${name.replace(
-              /-/g,
-              "_"
-            )}));`
-          );
+          const safeName = name.replace(/-/g, '_');
+          apiImports.push(`import api_${safeName} from "./api/${name}.js";`);
+          const routePath = name === 'root' ? '/' : `/${name}`;
+          apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
+          apiRoutes.push(routePath);
         }
       }
 
-      const serverCode = `import { Elysia } from "elysia";
-${
-  ctx.config.swagger !== false
-    ? 'import { swagger } from "@elysiajs/swagger";'
-    : ""
-}
-${apiImports.join("\n")}
+      // Detect if apiDocs plugin is configured
+      const hasApiDocs = ctx.config.plugins?.some(
+        p => p.name === '@manicjs/api-docs'
+      );
 
-const app = new Elysia();
+      const serverCode = `import { Hono } from "hono";
+${apiImports.join('\n')}
 
-${apiRoutes.join("\n")}
+const app = new Hono();
+const apiApp = new Hono();
 
-${
-  ctx.config.swagger !== false
-    ? `app.use(swagger({ 
-  path: "${docsPath}",
-  exclude: ["/", "/assets", "/favicon.ico"],
-  documentation: {
-    info: {
-      title: "${
-        ctx.config.swagger?.documentation?.info?.title ??
-        ctx.config.app?.name ??
-        "Manic API"
-      }",
-      description: "${
-        ctx.config.swagger?.documentation?.info?.description ??
-        "API documentation powered by Manic"
-      }",
-      version: "${ctx.config.swagger?.documentation?.info?.version ?? "1.0.0"}"
-    }
-  }
-}));`
-    : ""
-}
+${apiMounts.join('\n')}
 
-export default app;
+app.route("/api", apiApp);
+
+// OpenAPI spec
+const paths = {};
+${apiRoutes.map(route => `paths["/api${route === '/' ? '' : route}"] = { get: { responses: { 200: { description: "OK" } } } };`).join('\n')}
+const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? 'Manic'} API", version: "1.0.0" }, paths };
+app.get("/openapi.json", (c) => c.json(spec));
+
+app.get("/docs", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+app.get("/docs/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+
+${agentMiddleware(ctx)}
+
+app.all("/*", async (c) => withAgentSupport(c.req.raw, () => Promise.resolve(new Response("Not found", { status: 404 }))));
+
+${runtime === 'edge' ? 'export default (req, ctx) => app.fetch(req, { vercel: ctx });' : 'export default { fetch: app.fetch };'}
 `;
 
-      const tempEntry = `${vDist}/functions/api.func/_entry.ts`;
-      await Bun.write(tempEntry, serverCode);
+      // Write raw source, then bundle so all deps (hono, etc.) are inlined.
+      // Without this, Bun on Vercel tries to auto-install missing packages
+      // and hits ReadOnlyFileSystem.
+      const rawEntry = `${vDist}/functions/api.func/_entry.mjs`;
+      await Bun.write(rawEntry, serverCode);
 
-      const buildResult = await Bun.build({
-        entrypoints: [tempEntry],
+      const bundle = await Bun.build({
+        entrypoints: [rawEntry],
         outdir: `${vDist}/functions/api.func`,
-        target: runtime === "bun" ? "bun" : "node",
-        format: "esm",
+        target: 'bun',
         minify: true,
-        naming: "index.mjs",
+        naming: { entry: 'index.mjs' },
       });
 
-      if (!buildResult.success) {
-        console.error("\nVercel build failed:");
-        buildResult.logs.forEach((log) => console.error(log));
-        return;
+      if (!bundle.success) {
+        console.error('\n  Failed to bundle Vercel function:');
+        bundle.logs.forEach(l => console.error(' ', l));
       }
 
-      rmSync(tempEntry, { force: true });
+      // Clean up raw entry
+      const { unlinkSync } = await import('node:fs');
+      try {
+        unlinkSync(rawEntry);
+      } catch {}
 
       await Bun.write(
         `${vDist}/functions/api.func/package.json`,
-        JSON.stringify({ type: "module" }, null, 2)
+        JSON.stringify({ type: 'module' }, null, 2)
       );
 
       // Create vercel.json if it doesn't exist (for GitHub integration)
-      if (!existsSync("vercel.json")) {
+      if (!existsSync('vercel.json')) {
         const vercelJson = {
-          buildCommand: "bun run build",
-          installCommand: "bun install",
+          buildCommand: 'bun run build',
+          installCommand: 'bun install',
           framework: null,
         };
-        await Bun.write("vercel.json", JSON.stringify(vercelJson, null, 2));
-        console.log(dim("\n  Created vercel.json - commit this to your repo for GitHub integration"));
+        await Bun.write('vercel.json', JSON.stringify(vercelJson, null, 2));
+        console.log(
+          dim(
+            '\n  Created vercel.json - commit this to your repo for GitHub integration'
+          )
+        );
       }
 
       process.stdout.write(
-        `\r${dim(green("● Exporting to Vercel... done"))}\n`
+        `\r${dim(green('● Exporting to Vercel... done'))}\n`
       );
-      console.log(yellow(bold("ℹ Deploy: manic deploy --run")));
-      console.log(dim("  For GitHub CI/CD: commit vercel.json and push"));
+      console.log(yellow(bold('ℹ Deploy: manic deploy --run')));
+      console.log(dim('  For GitHub CI/CD: commit vercel.json and push'));
     },
   };
 }
