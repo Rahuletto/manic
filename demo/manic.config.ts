@@ -16,7 +16,10 @@ export default defineConfig({
 
   plugins: [
     apiDocs(),
-    seo({ hostname: 'https://manic.js.org' }),
+    seo({
+      hostname: 'https://manic.js.org',
+      contentSignals: { 'ai-train': 'no', search: 'yes', 'ai-input': 'yes' },
+    }),
     sitemap({ hostname: 'https://manic.js.org' }),
     mcp({ name: 'manic-demo' }),
   ],
