@@ -250,7 +250,7 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
   return {
     name: '@manicjs/mcp',
 
-    configureServer(ctx: ManicServerPluginContext) {
+    async configureServer(ctx: ManicServerPluginContext) {
       const tools = [...buildDefaultTools(ctx), ...userTools];
 
       // ── /mcp/console — dev only ──
@@ -294,8 +294,91 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
         new Response(serverCard, { headers: { 'content-type': 'application/json' } })
       );
 
-      // ── Link header for auto-discovery ──
+      // ── Agent Skills Discovery (RFC v0.2.0) ──
+      const toolDocs = tools.map(t => {
+        const props = t.inputSchema.properties ?? {};
+        const required = new Set(t.inputSchema.required ?? []);
+        const params = Object.entries(props)
+          .map(([k, v]: [string, any]) => {
+            const req = required.has(k) ? '' : '?';
+            return `  - \`${k}${req}\` (${v.type ?? 'string'})${v.description ? ': ' + v.description : ''}`;
+          })
+          .join('\n');
+        return [
+          `### \`${t.name}\``,
+          t.description,
+          ...(params ? ['', '**Parameters:**', params] : ['', '_No parameters._']),
+        ].join('\n');
+      }).join('\n\n');
+
+      const skillContent = `# ${serverName} — MCP Server Skill
+
+## Overview
+
+This server implements the [Model Context Protocol](https://modelcontextprotocol.io) (MCP ${PROTOCOL_VERSION}) using the **Streamable HTTP** transport. It exposes tools that AI agents can call to inspect and interact with the running application.
+
+## Connection
+
+**Endpoint:** \`${endpoint}\`
+**Transport:** Streamable HTTP (POST + optional SSE)
+**Discovery:** \`/.well-known/mcp/server-card.json\`
+
+### Initialization sequence
+
+1. \`POST ${endpoint}\` with \`initialize\` request (no \`Mcp-Session-Id\` header)
+2. Server responds with \`InitializeResult\` and an \`Mcp-Session-Id\` response header
+3. \`POST ${endpoint}\` with \`notifications/initialized\` notification (include \`Mcp-Session-Id\`)
+4. All subsequent requests must include the \`Mcp-Session-Id\` header
+
+### Request format
+
+\`\`\`http
+POST ${endpoint}
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: <session-id>
+
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"<tool>","arguments":{...}}}
+\`\`\`
+
+## Available tools
+
+${toolDocs}
+
+## Ending a session
+
+\`\`\`http
+DELETE ${endpoint}
+Mcp-Session-Id: <session-id>
+\`\`\`
+`;
+
+      const skillBytes = new TextEncoder().encode(skillContent);
+      const hashBuf = await crypto.subtle.digest('SHA-256', skillBytes);
+      const digest = 'sha256:' + Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const skillUrl = '/.well-known/agent-skills/use-mcp/SKILL.md';
+      const agentSkillsIndex = JSON.stringify({
+        $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
+        skills: [{
+          name: 'use-mcp',
+          type: 'skill-md',
+          description: `How to connect to and use the ${serverName} MCP server`,
+          url: skillUrl,
+          digest,
+        }],
+      });
+
+      ctx.addRoute(skillUrl, () =>
+        new Response(skillContent, { headers: { 'content-type': 'text/markdown; charset=utf-8' } })
+      );
+      ctx.addRoute('/.well-known/agent-skills/index.json', () =>
+        new Response(agentSkillsIndex, { headers: { 'content-type': 'application/json' } })
+      );
+
+      // ── Link headers for auto-discovery ──
       ctx.addLinkHeader('</.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"');
+      ctx.addLinkHeader('</.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"');
 
       // ── JSON-RPC message handler ──
       function handleMessage(
