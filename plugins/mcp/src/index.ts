@@ -27,6 +27,7 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
 
   return {
     name: '@manicjs/mcp',
+    mcpPath: endpoint,
 
     async configureServer(ctx: ManicServerPluginContext) {
       const tools = [...defaultTools(ctx), ...userTools];
@@ -41,12 +42,13 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
       const { skillContent, skillUrl, wellKnown, serverCard, agentSkillsIndex } =
         await buildDiscoveryDocs(serverName, serverVersion, endpoint, tools);
 
-      ctx.addRoute('/.well-known/mcp', () => new Response(wellKnown, { headers: { 'content-type': 'application/json' } }));
+      ctx.addRoute('/.well-known/mcp.json', () => new Response(wellKnown, { headers: { 'content-type': 'application/json' } }));
       ctx.addRoute('/.well-known/mcp/server-card.json', () => new Response(serverCard, { headers: { 'content-type': 'application/json' } }));
       ctx.addRoute(skillUrl, () => new Response(skillContent, { headers: { 'content-type': 'text/markdown; charset=utf-8' } }));
       ctx.addRoute('/.well-known/agent-skills/index.json', () => new Response(agentSkillsIndex, { headers: { 'content-type': 'application/json' } }));
 
       ctx.addLinkHeader('</.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"');
+      ctx.addLinkHeader('</.well-known/mcp.json>; rel="mcp-discovery"; type="application/json"');
       ctx.addLinkHeader('</.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"');
 
       ctx.addRoute(endpoint, async (req: Request) => {
@@ -122,7 +124,7 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
       const { skillContent, skillUrl, wellKnown, serverCard, agentSkillsIndex } =
         await buildDiscoveryDocs(serverName, serverVersion, endpoint, tools);
       await Promise.all([
-        ctx.emitClientFile('.well-known/mcp', wellKnown),
+        ctx.emitClientFile('.well-known/mcp.json', wellKnown),
         ctx.emitClientFile('.well-known/mcp/server-card.json', serverCard),
         ctx.emitClientFile('.well-known/agent-skills/index.json', agentSkillsIndex),
         ctx.emitClientFile(skillUrl.slice(1), skillContent),
