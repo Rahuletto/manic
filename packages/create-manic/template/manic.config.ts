@@ -1,5 +1,6 @@
 import { defineConfig } from 'manicjs/config';
 import { apiDocs } from '@manicjs/api-docs';
+import { mcp } from '@manicjs/mcp';
 
 export default defineConfig({
   app: {
@@ -8,5 +9,5 @@ export default defineConfig({
   server: {
     port: 6070,
   },
-  plugins: [apiDocs()],
+  plugins: [apiDocs(), mcp()],
 });
