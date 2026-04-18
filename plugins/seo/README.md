@@ -33,14 +33,14 @@ export default defineConfig({
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `hostname` | `string` | required | Base URL, e.g. `https://example.com` |
-| `rules` | `RobotRule[]` | allow all | Crawler rules for robots.txt |
-| `sitemaps` | `string[]` | `[]` | Additional sitemap URLs |
-| `autoSitemap` | `boolean` | `true` | Auto-reference `/sitemap.xml` |
-| `linkHeaders` | `LinkHeader[]` | `[]` | Extra RFC 8288 Link headers |
-| `contentSignals` | `object` | — | AI crawler policy (`ai-train`, `search`, `ai-input`) |
+| Option           | Type           | Default   | Description                                          |
+| ---------------- | -------------- | --------- | ---------------------------------------------------- |
+| `hostname`       | `string`       | required  | Base URL, e.g. `https://example.com`                 |
+| `rules`          | `RobotRule[]`  | allow all | Crawler rules for robots.txt                         |
+| `sitemaps`       | `string[]`     | `[]`      | Additional sitemap URLs                              |
+| `autoSitemap`    | `boolean`      | `true`    | Auto-reference `/sitemap.xml`                        |
+| `linkHeaders`    | `LinkHeader[]` | `[]`      | Extra RFC 8288 Link headers                          |
+| `contentSignals` | `object`       | —         | AI crawler policy (`ai-train`, `search`, `ai-input`) |
 
 ## File structure
 

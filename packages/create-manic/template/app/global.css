@@ -3,13 +3,13 @@
 @source '../../node_modules/manicjs/src/**/*.ts';
 
 @theme {
-  --color-accent: #F15156;
+  --color-accent: #f15156;
   --color-background: var(--theme-background);
   --color-foreground: var(--theme-foreground);
 }
 
 :root {
-  --theme-background: #FEF6F7;
+  --theme-background: #fef6f7;
   --theme-foreground: #151212;
 
   font-family:
@@ -28,7 +28,7 @@
 
 .dark {
   --theme-background: #151212;
-  --theme-foreground: #FEF6F7;
+  --theme-foreground: #fef6f7;
 }
 
 body {
@@ -67,12 +67,11 @@ body {
 }
 
 button {
-    @apply cursor-pointer;
+  @apply cursor-pointer;
 }
 
-
 .btn-primary {
-    @apply bg-accent text-background border-2 border-background font-semibold rounded-full px-6 py-3 transition-all duration-150;
+  @apply bg-accent text-background border-2 border-background font-semibold rounded-full px-6 py-3 transition-all duration-150;
 }
 
 .btn-primary:hover {
@@ -80,11 +79,11 @@ button {
 }
 
 .btn-primary:active {
-    @apply scale-95 opacity-50;
+  @apply scale-95 opacity-50;
 }
 
 .btn-secondary {
-    @apply bg-foreground text-background border-2 border-foreground font-semibold rounded-full px-6 py-3 transition-all duration-150;
+  @apply bg-foreground text-background border-2 border-foreground font-semibold rounded-full px-6 py-3 transition-all duration-150;
 }
 
 .btn-secondary:hover {
@@ -92,7 +91,7 @@ button {
 }
 
 .btn-secondary:active {
-    @apply scale-95 opacity-50;
+  @apply scale-95 opacity-50;
 }
 
 .btn-outline {
@@ -102,7 +101,6 @@ button {
 .btn-outline:hover {
   @apply bg-foreground text-background;
 }
-
 
 code {
   font-family: 'Google Sans Code', monospace;

@@ -26,23 +26,24 @@ plugins/mcp/             → @manicjs/mcp (MCP server endpoint for AI agents)
 
 ### Core Exports (manicjs)
 
-| Export Path | What | Key Symbols |
-|---|---|---|
-| `manicjs` | Root barrel | `Router`, `Link`, `NotFound`, `ServerError`, `navigate`, `useRouter`, `useQueryParams`, `defineConfig`, `loadConfig`, `ThemeProvider`, `useTheme`, `ThemeToggle`, `ViewTransitions`, `createClient` |
-| `manicjs/router` | Full router | `Router`, `Link`, `RouterContext`, `useRouter`, `useQueryParams`, `navigate`, `setViewTransitions`, `preloadRoute`, types |
-| `manicjs/server` | Server bootstrap | `createManicServer` |
-| `manicjs/config` | Config + types | `defineConfig`, `loadConfig`, `ManicConfig`, `ManicPlugin`, `ManicPluginContext`, `ManicServerPluginContext`, `ManicBuildPluginContext`, `ManicProvider`, `BuildContext`, `PageRoute`, `ApiRoute` |
-| `manicjs/plugins` | Internal plugins | `apiLoaderPlugin`, `fileImporterPlugin` |
-| `manicjs/theme` | Dark/light mode | `ThemeProvider`, `useTheme`, `ThemeToggle`, `initTheme` |
-| `manicjs/transitions` | View Transitions | `ViewTransitions` object with HTML element wrappers |
-| `manicjs/env` | Env access | `getEnv`, `getPublicEnv` |
-| `manicjs/client` | Hono RPC client | `createClient` |
+| Export Path           | What             | Key Symbols                                                                                                                                                                                         |
+| --------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `manicjs`             | Root barrel      | `Router`, `Link`, `NotFound`, `ServerError`, `navigate`, `useRouter`, `useQueryParams`, `defineConfig`, `loadConfig`, `ThemeProvider`, `useTheme`, `ThemeToggle`, `ViewTransitions`, `createClient` |
+| `manicjs/router`      | Full router      | `Router`, `Link`, `RouterContext`, `useRouter`, `useQueryParams`, `navigate`, `setViewTransitions`, `preloadRoute`, types                                                                           |
+| `manicjs/server`      | Server bootstrap | `createManicServer`                                                                                                                                                                                 |
+| `manicjs/config`      | Config + types   | `defineConfig`, `loadConfig`, `ManicConfig`, `ManicPlugin`, `ManicPluginContext`, `ManicServerPluginContext`, `ManicBuildPluginContext`, `ManicProvider`, `BuildContext`, `PageRoute`, `ApiRoute`   |
+| `manicjs/plugins`     | Internal plugins | `apiLoaderPlugin`, `fileImporterPlugin`                                                                                                                                                             |
+| `manicjs/theme`       | Dark/light mode  | `ThemeProvider`, `useTheme`, `ThemeToggle`, `initTheme`                                                                                                                                             |
+| `manicjs/transitions` | View Transitions | `ViewTransitions` object with HTML element wrappers                                                                                                                                                 |
+| `manicjs/env`         | Env access       | `getEnv`, `getPublicEnv`                                                                                                                                                                            |
+| `manicjs/client`      | Hono RPC client  | `createClient`                                                                                                                                                                                      |
 
 ---
 
 ## 3. How a Manic App is Structured (from demo/)
 
 Required files:
+
 - `~manic.ts` — Server entry. Imports HTML, calls `createManicServer({ html })`.
 - `manic.config.ts` — Config. Uses `defineConfig()`.
 - `app/index.html` — HTML shell. Contains `<div id="root">`, script pointing to `main.tsx`, stylesheet `href="tailwindcss"`.
@@ -50,9 +51,11 @@ Required files:
 - `app/global.css` — Tailwind entry with `@import "tailwindcss"`.
 
 Auto-generated:
+
 - `app/~routes.generated.ts` — Route manifest with dynamic imports. Never edit manually.
 
 Conventions:
+
 - `app/routes/*.tsx` — Each file = one URL route. Default export = React component.
 - `app/routes/~*.tsx` — Excluded from routing. Use for layouts, helpers.
 - `app/routes/~404.tsx` — Custom 404 page (optional, auto-discovered).
@@ -62,6 +65,7 @@ Conventions:
 - `app/manic.d.ts` — Type augmentation for `__MANIC_ROUTES__`.
 
 The `~manic.ts` entry in the demo:
+
 ```ts
 import { createManicServer } from 'manicjs/server';
 import app from './app/index.html';
@@ -88,6 +92,7 @@ The `manic build` command in `cli/commands/build.ts`:
 10. **Provider Export**: Each provider in `config.providers` runs its `build(ctx)` — generates platform-specific output (`.vercel/output/`, `dist/` for CF, etc.).
 
 Build output:
+
 ```
 .manic/
   client/
@@ -106,6 +111,7 @@ Build output:
 ### OXC Plugin (cli/plugins/oxc.ts)
 
 A `BunPlugin` that intercepts `.tsx`, `.ts`, `.jsx` files (excluding `node_modules`). Uses `oxc-transform`'s `transformSync`:
+
 - Dev: `target: esnext`, sourcemaps on, React Fast Refresh enabled, appends HMR `import.meta.hot.accept()` for jsx/tsx files.
 - Prod: `target: es2022`, no sourcemaps, no refresh.
 - Always: `jsx.runtime: 'automatic'`, `typescript.onlyRemoveTypeImports: true`, `typescript.rewriteImportExtensions: true`.
@@ -131,10 +137,12 @@ A `BunPlugin` that intercepts `.tsx`, `.ts`, `.jsx` files (excluding `node_modul
 10. Watches `app/routes/` for file changes to regenerate the route manifest.
 
 Two modes of operation:
+
 - **frontend**: No Hono API, just SPA serving. Still runs plugins.
 - **fullstack** (default): Full Hono API + SPA serving.
 
 The server handles:
+
 - `/_manic/open` — Opens file in editor (dev only). Uses `$EDITOR` or defaults to `code`.
 - `/assets/*` — Static file serving with appropriate cache headers.
 - SPA catch-all — Returns the HTML shell for any unmatched route (client router handles it).
@@ -146,6 +154,7 @@ The server handles:
 ### Route Registry (router/lib/matcher.ts)
 
 Routes are compiled to regex once, scored by specificity:
+
 - Static segment: 100 points
 - Dynamic `:param` or `[param]`: 10 points
 - Catch-all `:...param` or `[...param]`: 1 point
@@ -157,6 +166,7 @@ Supports: static routes, dynamic segments (`:id`, `[id]`), catch-all segments (`
 ### Router Component (router/lib/Router.tsx)
 
 State machine that manages:
+
 - Current path, loaded component, route params, error state
 - `AbortController` for cancelling in-flight navigations
 - Component cache (`Map<string, ComponentType>`) — once loaded, never re-fetched
@@ -164,6 +174,7 @@ State machine that manages:
 - Custom error page discovery (`~404.tsx`, `~500.tsx`)
 
 Navigation flow:
+
 1. `loadAndTransition(path, isPopState, replace)`
 2. Match route via `RouteRegistry`
 3. Lazy load component (or use cache)
@@ -194,7 +205,10 @@ interface ManicPlugin {
 
 ```ts
 interface ManicServerPluginContext extends ManicPluginContext {
-  addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
+  addRoute(
+    path: string,
+    handler: (req: Request) => Response | Promise<Response>
+  ): void;
   addLinkHeader(value: string): void;
 }
 ```
@@ -207,7 +221,10 @@ interface ManicServerPluginContext extends ManicPluginContext {
 
 ```ts
 interface ManicBuildPluginContext extends ManicPluginContext {
-  emitClientFile(relativePath: string, content: string | Uint8Array): Promise<void>;
+  emitClientFile(
+    relativePath: string,
+    content: string | Uint8Array
+  ): Promise<void>;
 }
 ```
 
@@ -216,6 +233,7 @@ interface ManicBuildPluginContext extends ManicPluginContext {
 ### How to Create a Plugin
 
 Minimal plugin:
+
 ```ts
 import type { ManicPlugin } from 'manicjs/config';
 
@@ -225,7 +243,7 @@ export function myPlugin(options: MyOptions = {}): ManicPlugin {
 
     configureServer(ctx) {
       // Register dev routes
-      ctx.addRoute('/my-endpoint', (req) => new Response('hello'));
+      ctx.addRoute('/my-endpoint', req => new Response('hello'));
       ctx.addLinkHeader('</my-endpoint>; rel="my-relation"');
     },
 
@@ -238,6 +256,7 @@ export function myPlugin(options: MyOptions = {}): ManicPlugin {
 ```
 
 Plugin rules:
+
 1. **Always implement both hooks** if you register a route in `configureServer`. The route only exists in dev otherwise. `build` must emit the same content via `emitClientFile`.
 2. **No provider-specific code** inside plugins. Plugins are provider-agnostic. Providers consume what plugins emit.
 3. **Use `addLinkHeader`** for any discovery endpoint so AI agents can find it.
@@ -252,6 +271,7 @@ Plugin rules:
 ### How Users Add Plugins
 
 In `manic.config.ts`:
+
 ```ts
 import { defineConfig } from 'manicjs/config';
 import { myPlugin } from 'my-manic-plugin';
@@ -262,6 +282,7 @@ export default defineConfig({
 ```
 
 Plugin packages should:
+
 - Export a factory function that returns `ManicPlugin`
 - Declare `manicjs` as a `peerDependency`
 - Import types from `manicjs/config`
@@ -296,7 +317,7 @@ Plugin packages should:
 
 Most complex plugin. Implements a full MCP (Model Context Protocol) server.
 
-- **configureServer**: 
+- **configureServer**:
   - Registers `/mcp` endpoint handling `GET` (SSE keepalive), `POST` (JSON-RPC), `DELETE` (session cleanup), `OPTIONS` (CORS).
   - Registers discovery docs: `/.well-known/mcp.json`, `/.well-known/mcp/server-card.json`, `/.well-known/agent-skills/index.json`, SKILL.md.
   - Registers `/webmcp.js` — browser script that registers tools via `navigator.modelContext` (WebMCP API).
@@ -311,6 +332,7 @@ Most complex plugin. Implements a full MCP (Model Context Protocol) server.
 - **Default tools**: `get_routes`, `get_api_routes`, `get_page_meta`, `get_rendered_elements`, `get_console_logs` (dev only).
 
 - **Custom tools**: Use `defineTool()` with Zod schema:
+
   ```ts
   import { defineTool } from '@manicjs/mcp';
   import { z } from 'zod';
@@ -321,7 +343,7 @@ Most complex plugin. Implements a full MCP (Model Context Protocol) server.
     execute: async ({ query }) => ({ result: query }),
   });
 
-  mcp({ tools: [myTool] })
+  mcp({ tools: [myTool] });
   ```
 
 - `defineTool` converts Zod schema to JSON Schema manually (no zod-to-json-schema dependency). Handles string, number, boolean, array types. Validates input with `schema.parse()`.
@@ -339,11 +361,11 @@ interface ManicProvider {
 }
 
 interface BuildContext {
-  dist: string;        // ".manic"
+  dist: string; // ".manic"
   config: ManicConfig;
   apiEntries: string[]; // Original source paths like "app/api/hello/index.ts"
-  clientDir: string;    // ".manic/client"
-  serverFile: string;   // ".manic/server.js"
+  clientDir: string; // ".manic/client"
+  serverFile: string; // ".manic/server.js"
 }
 ```
 
@@ -352,6 +374,7 @@ interface BuildContext {
 Providers run after the main build. They take the `.manic/` output and transform it into platform-specific deployment format.
 
 All providers:
+
 1. Copy `.manic/client/` to their static directory
 2. Copy favicon to root level
 3. Generate a Hono-based worker/function that imports API routes
@@ -362,6 +385,7 @@ All providers:
 ### Agent Middleware (providers/src/middleware.ts)
 
 `agentMiddleware(ctx)` generates JavaScript code string injected into provider workers. It:
+
 - Adds RFC 8288 Link headers to all HTML responses
 - Handles `Accept: text/markdown` — converts HTML to markdown inline (lightweight converter)
 - Handles `?mode=agent` — returns JSON describing the app
@@ -415,6 +439,7 @@ export function myCloud(options = {}): ManicProvider {
 `manic dev` spawns `bun --watch ~manic.ts` as a child process. That's it. No custom dev server. Bun's built-in watcher handles reloads. HMR is handled by `Bun.serve({ development: { hmr: true } })`.
 
 The `HTMLBundle` import (`import app from './app/index.html'`) gives Bun control over:
+
 - Tailwind compilation
 - JSX/TS transformation
 - Module resolution
@@ -423,6 +448,7 @@ The `HTMLBundle` import (`import app from './app/index.html'`) gives Bun control
 The framework adds a nonce route (`/__manic_html_[uuid]`) so the catch-all handler can proxy to the HTMLBundle processing while adding custom headers.
 
 Route watching: `watchRoutes()` uses `fs/promises watch()` with recursive flag. On `.tsx`/`.ts` file rename events:
+
 1. Regenerates `app/~routes.generated.ts`
 2. Touches `~manic.ts` (appends timestamp comment) to trigger Bun's `--watch` restart
 3. Debounced at 50ms
@@ -432,6 +458,7 @@ Route watching: `watchRoutes()` uses `fs/promises watch()` with recursive flag. 
 ## 11. create-manic Scaffolding
 
 `bun create manic [name]` runs an interactive CLI:
+
 - Asks: project name, app name, mode (fullstack/frontend), port, API docs, view transitions
 - Copies `packages/create-manic/template/` to target directory
 - Removes `app/api/` in frontend mode
@@ -469,6 +496,7 @@ Works with Tailwind's `dark:` variant since it toggles the `dark` class on `<htm
 ## 14. View Transitions
 
 `ViewTransitions` object provides element wrappers that set `viewTransitionName` CSS property:
+
 ```tsx
 <ViewTransitions.div name="hero">content</ViewTransitions.div>
 ```
@@ -476,6 +504,7 @@ Works with Tailwind's `dark:` variant since it toggles the `dark` class on `<htm
 Available tags: div, span, main, section, article, header, footer, nav, aside, h1-h3, p, img, button, a, ul, li.
 
 Navigation triggers `document.startViewTransition` when:
+
 - `viewTransitionsEnabled` is true (default)
 - Browser supports the API
 - Not a popstate (back/forward)
@@ -490,6 +519,7 @@ Can be toggled globally: `setViewTransitions(false)`.
 ### ServerError Component (components/ServerError/)
 
 Full-featured error overlay (dev-oriented):
+
 - Parses stack traces from multiple formats
 - Resolves source maps (inline base64 + external `.map` files)
 - VLQ decoder for source map mapping
@@ -519,6 +549,7 @@ The server handles three types of agent/AI interactions:
 1. **Markdown negotiation**: If `Accept: text/markdown`, converts HTML to markdown using a hand-rolled converter. Returns `Content-Type: text/markdown`, `Vary: Accept`, `x-markdown-tokens` header.
 
 2. **Agent mode**: `?mode=agent` query param returns JSON:
+
    ```json
    {
      "name": "App Name",
@@ -543,11 +574,12 @@ API routes use Hono. Each `app/api/[name]/index.ts` exports a default Hono insta
 ```ts
 import { Hono } from 'hono';
 const app = new Hono();
-app.get('/', (c) => c.json({ message: 'hello' }));
+app.get('/', c => c.json({ message: 'hello' }));
 export default app;
 ```
 
 `apiLoaderPlugin` scans the API directory, imports each module, mounts it on the Hono app with basePath `/api`. Supports:
+
 - Hono instances (detected by `.fetch` method)
 - Plain functions (wrapped with `app.all`)
 - Dynamic route params via `[param]` in filenames
@@ -562,17 +594,17 @@ In production builds, each API route is bundled separately to `.manic/api/`. Pro
 
 `ManicConfig` interface with these sections:
 
-| Section | Key Fields | Defaults |
-|---|---|---|
-| `mode` | `'fullstack' \| 'frontend'` | `'fullstack'` |
-| `app` | `name` | `'Manic App'` |
-| `server` | `port`, `hmr` | `6070`, `true` |
-| `router` | `viewTransitions`, `preserveScroll`, `scrollBehavior` | `true`, `false`, `'auto'` |
-| `build` | `minify`, `sourcemap`, `splitting`, `outdir` | `true`, `'inline'`, `true`, `'.manic'` |
-| `oxc` | `target`, `rewriteImportExtensions`, `refresh` | `'esnext'`, `true`, `true` |
-| `sitemap` | `SitemapConfig \| false` | undefined |
-| `providers` | `ManicProvider[]` | undefined |
-| `plugins` | `ManicPlugin[]` | undefined |
+| Section     | Key Fields                                            | Defaults                               |
+| ----------- | ----------------------------------------------------- | -------------------------------------- |
+| `mode`      | `'fullstack' \| 'frontend'`                           | `'fullstack'`                          |
+| `app`       | `name`                                                | `'Manic App'`                          |
+| `server`    | `port`, `hmr`                                         | `6070`, `true`                         |
+| `router`    | `viewTransitions`, `preserveScroll`, `scrollBehavior` | `true`, `false`, `'auto'`              |
+| `build`     | `minify`, `sourcemap`, `splitting`, `outdir`          | `true`, `'inline'`, `true`, `'.manic'` |
+| `oxc`       | `target`, `rewriteImportExtensions`, `refresh`        | `'esnext'`, `true`, `true`             |
+| `sitemap`   | `SitemapConfig \| false`                              | undefined                              |
+| `providers` | `ManicProvider[]`                                     | undefined                              |
+| `plugins`   | `ManicPlugin[]`                                       | undefined                              |
 
 `loadConfig()` tries `manic.config.ts` then `manic.config.js`. Merges with defaults via spread. Cached after first load.
 
@@ -664,6 +696,7 @@ In production builds, each API route is bundled separately to `.manic/api/`. Pro
 ### Adding a New Router Feature
 
 The router is in `packages/manic/src/router/lib/`. Key integration points:
+
 - `Router.tsx`: Main component, navigation logic
 - `matcher.ts`: Route matching
 - `context.ts`: React context
@@ -773,10 +806,12 @@ export function analytics(config: AnalyticsConfig): ManicPlugin {
 
     configureServer(ctx: ManicServerPluginContext) {
       // Serve the analytics script
-      ctx.addRoute('/analytics.js', () =>
-        new Response(`console.log("tracking: ${config.trackingId}")`, {
-          headers: { 'content-type': 'application/javascript' },
-        })
+      ctx.addRoute(
+        '/analytics.js',
+        () =>
+          new Response(`console.log("tracking: ${config.trackingId}")`, {
+            headers: { 'content-type': 'application/javascript' },
+          })
       );
 
       // Add discovery header
@@ -812,6 +847,7 @@ export function analytics(config: AnalyticsConfig): ManicPlugin {
 ### What You Can Access
 
 In `configureServer`:
+
 - `ctx.config` — full ManicConfig
 - `ctx.pageRoutes` — `{ path, filePath, dynamic }[]`
 - `ctx.apiRoutes` — `{ mountPath, filePath }[]`
@@ -822,6 +858,7 @@ In `configureServer`:
 - `ctx.addLinkHeader(value)` — add Link header
 
 In `build`:
+
 - Same as above minus `addRoute`/`addLinkHeader`
 - Plus `ctx.emitClientFile(relativePath, content)`
 
@@ -884,7 +921,12 @@ export function myCloud(): ManicProvider {
       }
 
       // 3. Platform config
-      await Bun.write(`${out}/config.json`, JSON.stringify({ /* ... */ }));
+      await Bun.write(
+        `${out}/config.json`,
+        JSON.stringify({
+          /* ... */
+        })
+      );
     },
   };
 }
@@ -912,15 +954,15 @@ Publishing: `publish.ts` at root handles version bumps and npm publish (not anal
 
 ## 28. Standards Compliance
 
-| Standard | Implementation |
-|---|---|
-| RFC 8288 | Link headers on all HTML responses |
-| RFC 9727 | `/.well-known/api-catalog` with linkset format |
-| MCP 2025-03-26 | Streamable HTTP transport, JSON-RPC 2.0 |
-| OpenAPI 3.0.0 | Auto-generated (minimal) at `/openapi.json` |
-| Content-Signal | `ai-train`, `search`, `ai-input` in robots.txt |
-| WebMCP | `navigator.modelContext.registerTool()` browser API |
-| View Transitions API | `document.startViewTransition` integration |
+| Standard             | Implementation                                      |
+| -------------------- | --------------------------------------------------- |
+| RFC 8288             | Link headers on all HTML responses                  |
+| RFC 9727             | `/.well-known/api-catalog` with linkset format      |
+| MCP 2025-03-26       | Streamable HTTP transport, JSON-RPC 2.0             |
+| OpenAPI 3.0.0        | Auto-generated (minimal) at `/openapi.json`         |
+| Content-Signal       | `ai-train`, `search`, `ai-input` in robots.txt      |
+| WebMCP               | `navigator.modelContext.registerTool()` browser API |
+| View Transitions API | `document.startViewTransition` integration          |
 
 ---
 
@@ -928,59 +970,59 @@ Publishing: `publish.ts` at root handles version bumps and npm publish (not anal
 
 ### packages/manic/src/
 
-| File | Lines | Purpose |
-|---|---|---|
-| `cli/index.ts` | 101 | CLI entry, command routing, help text |
-| `cli/commands/build.ts` | 404 | Production build pipeline |
-| `cli/commands/dev.ts` | 35 | Dev server (spawns bun --watch) |
-| `cli/commands/start.ts` | 35 | Production server launcher |
-| `cli/commands/deploy.ts` | 122 | Multi-provider deploy orchestrator |
-| `cli/commands/lint.ts` | 14 | oxlint wrapper |
-| `cli/commands/fmt.ts` | 10 | oxfmt wrapper |
-| `cli/plugins/oxc.ts` | 56 | OXC transform Bun plugin |
-| `server/index.ts` | 354 | Server bootstrap, routing, agent support |
-| `server/lib/discovery.ts` | 212 | Route scanning, manifest generation, file watching |
-| `server/lib/markdown.ts` | 110 | HTML to Markdown converter |
-| `router/lib/Router.tsx` | 370 | Main router component |
-| `router/lib/matcher.ts` | 147 | Route regex compilation and matching |
-| `router/lib/Link.tsx` | 63 | Navigation link component |
-| `router/lib/context.ts` | 12 | Router React context |
-| `router/lib/types.ts` | 20 | Router type definitions |
-| `plugins/lib/api.ts` | 64 | Hono API route loader |
-| `plugins/lib/static.ts` | 8 | Static file serving (unused) |
-| `config/index.ts` | 212 | Config types, defaults, loading |
-| `config/client.ts` | 12 | Hono RPC client helper |
-| `env/client.ts` | 36 | Client-safe env access |
-| `theme/index.ts` | 135 | Theme provider, hook, toggle |
-| `transitions/index.ts` | 60 | View Transition element wrappers |
-| `components/NotFound/index.tsx` | 17 | 404 page |
-| `components/ServerError/index.tsx` | 670 | Error overlay with source maps |
+| File                               | Lines | Purpose                                            |
+| ---------------------------------- | ----- | -------------------------------------------------- |
+| `cli/index.ts`                     | 101   | CLI entry, command routing, help text              |
+| `cli/commands/build.ts`            | 404   | Production build pipeline                          |
+| `cli/commands/dev.ts`              | 35    | Dev server (spawns bun --watch)                    |
+| `cli/commands/start.ts`            | 35    | Production server launcher                         |
+| `cli/commands/deploy.ts`           | 122   | Multi-provider deploy orchestrator                 |
+| `cli/commands/lint.ts`             | 14    | oxlint wrapper                                     |
+| `cli/commands/fmt.ts`              | 10    | oxfmt wrapper                                      |
+| `cli/plugins/oxc.ts`               | 56    | OXC transform Bun plugin                           |
+| `server/index.ts`                  | 354   | Server bootstrap, routing, agent support           |
+| `server/lib/discovery.ts`          | 212   | Route scanning, manifest generation, file watching |
+| `server/lib/markdown.ts`           | 110   | HTML to Markdown converter                         |
+| `router/lib/Router.tsx`            | 370   | Main router component                              |
+| `router/lib/matcher.ts`            | 147   | Route regex compilation and matching               |
+| `router/lib/Link.tsx`              | 63    | Navigation link component                          |
+| `router/lib/context.ts`            | 12    | Router React context                               |
+| `router/lib/types.ts`              | 20    | Router type definitions                            |
+| `plugins/lib/api.ts`               | 64    | Hono API route loader                              |
+| `plugins/lib/static.ts`            | 8     | Static file serving (unused)                       |
+| `config/index.ts`                  | 212   | Config types, defaults, loading                    |
+| `config/client.ts`                 | 12    | Hono RPC client helper                             |
+| `env/client.ts`                    | 36    | Client-safe env access                             |
+| `theme/index.ts`                   | 135   | Theme provider, hook, toggle                       |
+| `transitions/index.ts`             | 60    | View Transition element wrappers                   |
+| `components/NotFound/index.tsx`    | 17    | 404 page                                           |
+| `components/ServerError/index.tsx` | 670   | Error overlay with source maps                     |
 
 ### plugins/
 
-| File | Lines | Purpose |
-|---|---|---|
-| `sitemap/src/index.ts` | 28 | Sitemap plugin entry |
-| `sitemap/src/generate.ts` | 22 | XML generation |
-| `seo/src/index.ts` | 64 | SEO plugin entry |
-| `seo/src/robots.ts` | 31 | robots.txt generation |
-| `api-docs/src/index.ts` | 33 | Scalar API docs mount |
-| `mcp/src/index.ts` | 178 | MCP server plugin |
-| `mcp/src/handler.ts` | 70 | JSON-RPC message handler |
-| `mcp/src/tool.ts` | 60 | Tool definition with Zod |
-| `mcp/src/default-tools.ts` | 79 | Built-in MCP tools |
-| `mcp/src/discovery.ts` | 98 | Well-known discovery docs |
-| `mcp/src/console.ts` | 38 | Browser console log capture |
+| File                       | Lines | Purpose                     |
+| -------------------------- | ----- | --------------------------- |
+| `sitemap/src/index.ts`     | 28    | Sitemap plugin entry        |
+| `sitemap/src/generate.ts`  | 22    | XML generation              |
+| `seo/src/index.ts`         | 64    | SEO plugin entry            |
+| `seo/src/robots.ts`        | 31    | robots.txt generation       |
+| `api-docs/src/index.ts`    | 33    | Scalar API docs mount       |
+| `mcp/src/index.ts`         | 178   | MCP server plugin           |
+| `mcp/src/handler.ts`       | 70    | JSON-RPC message handler    |
+| `mcp/src/tool.ts`          | 60    | Tool definition with Zod    |
+| `mcp/src/default-tools.ts` | 79    | Built-in MCP tools          |
+| `mcp/src/discovery.ts`     | 98    | Well-known discovery docs   |
+| `mcp/src/console.ts`       | 38    | Browser console log capture |
 
 ### packages/providers/src/
 
-| File | Lines | Purpose |
-|---|---|---|
-| `vercel/index.ts` | 180 | Vercel Build Output API |
-| `cloudflare/index.ts` | 140 | Cloudflare Pages + Worker |
-| `netlify/index.ts` | 167 | Netlify Functions |
-| `middleware.ts` | 173 | Shared agent middleware code generator |
-| `types.ts` | 12 | Provider type definitions |
+| File                  | Lines | Purpose                                |
+| --------------------- | ----- | -------------------------------------- |
+| `vercel/index.ts`     | 180   | Vercel Build Output API                |
+| `cloudflare/index.ts` | 140   | Cloudflare Pages + Worker              |
+| `netlify/index.ts`    | 167   | Netlify Functions                      |
+| `middleware.ts`       | 173   | Shared agent middleware code generator |
+| `types.ts`            | 12    | Provider type definitions              |
 
 ---
 
@@ -1006,7 +1048,15 @@ export { navigate } from './src/router';
 
 // Config
 export { defineConfig, loadConfig } from './src/config';
-export type { ManicConfig, ManicPlugin, ManicPluginContext, ManicServerPluginContext, ManicBuildPluginContext, PageRoute, ApiRoute } from './src/config';
+export type {
+  ManicConfig,
+  ManicPlugin,
+  ManicPluginContext,
+  ManicServerPluginContext,
+  ManicBuildPluginContext,
+  PageRoute,
+  ApiRoute,
+} from './src/config';
 
 // Theme
 export { ThemeProvider, useTheme, ThemeToggle } from './src/theme';
@@ -1029,16 +1079,17 @@ Source: `packages/manic/src/router/`
 ```tsx
 import { Router } from 'manicjs/router';
 
-<Router routes={optionalRouteMap} />
+<Router routes={optionalRouteMap} />;
 ```
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
+| Prop     | Type                                                        | Default                   | Description                                                          |
+| -------- | ----------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------- |
 | `routes` | `Record<string, () => Promise<{ default: ComponentType }>>` | `window.__MANIC_ROUTES__` | Route map. Keys are path patterns, values are lazy import functions. |
 
 **Behavior:**
+
 - Reads `window.__MANIC_ROUTES__` if no `routes` prop provided.
 - Reads `window.__MANIC_ERROR_PAGES__` for custom 404/500 pages.
 - Compiles all routes into a `RouteRegistry` (memoized via `useMemo`).
@@ -1052,17 +1103,19 @@ import { Router } from 'manicjs/router';
 
 **Internal State:**
 
-| State | Type | Purpose |
-|---|---|---|
-| `currentPath` | `string` | Current URL pathname |
-| `LoadedComponent` | `ComponentType \| null` | Currently rendered page component |
-| `routeParams` | `Record<string, string>` | Extracted dynamic params |
-| `errorDetails` | `Error \| null` | Caught error for error boundary |
+| State             | Type                     | Purpose                           |
+| ----------------- | ------------------------ | --------------------------------- |
+| `currentPath`     | `string`                 | Current URL pathname              |
+| `LoadedComponent` | `ComponentType \| null`  | Currently rendered page component |
+| `routeParams`     | `Record<string, string>` | Extracted dynamic params          |
+| `errorDetails`    | `Error \| null`          | Caught error for error boundary   |
 
 **Globals Set:**
+
 - `window.__MANIC_NAVIGATE__` — set on mount, deleted on unmount. Used by `navigate()` and `<Link>`.
 
 **Scroll Behavior:**
+
 - `window.history.scrollRestoration = 'manual'` — set on mount.
 - New navigation: `window.scrollTo(0, 0)`.
 - Popstate: restores from `history.state.scrollY`.
@@ -1082,20 +1135,20 @@ import { Link } from 'manicjs/router';
   style={{ color: 'red' }}
 >
   About
-</Link>
+</Link>;
 ```
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `to` | `string` | *required* | Target path |
-| `children` | `ReactNode` | *required* | Link content |
-| `className` | `string` | `undefined` | CSS class |
-| `style` | `CSSProperties` | `undefined` | Inline styles |
-| `viewTransitionName` | `string` | `undefined` | Sets `viewTransitionName` on the `<a>` element style |
-| `prefetch` | `boolean` | `true` | Preload target route chunk on hover/focus |
-| `replace` | `boolean` | `false` | Replace current history entry instead of pushing |
+| Prop                 | Type            | Default     | Description                                          |
+| -------------------- | --------------- | ----------- | ---------------------------------------------------- |
+| `to`                 | `string`        | _required_  | Target path                                          |
+| `children`           | `ReactNode`     | _required_  | Link content                                         |
+| `className`          | `string`        | `undefined` | CSS class                                            |
+| `style`              | `CSSProperties` | `undefined` | Inline styles                                        |
+| `viewTransitionName` | `string`        | `undefined` | Sets `viewTransitionName` on the `<a>` element style |
+| `prefetch`           | `boolean`       | `true`      | Preload target route chunk on hover/focus            |
+| `replace`            | `boolean`       | `false`     | Replace current history entry instead of pushing     |
 
 **Renders:** `<a href={to}>` with `onClick` preventing default and calling `navigate(to, { replace })`.
 
@@ -1113,11 +1166,11 @@ const { path, navigate, params } = useRouter();
 
 **Returns: `RouterContextValue`**
 
-| Property | Type | Description |
-|---|---|---|
-| `path` | `string` | Current URL pathname (e.g. `"/blog/hello"`) |
-| `navigate` | `(to: string, options?: { replace?: boolean }) => void` | Navigate to a new path |
-| `params` | `Record<string, string>` | Dynamic route parameters (e.g. `{ slug: "hello" }`) |
+| Property   | Type                                                    | Description                                         |
+| ---------- | ------------------------------------------------------- | --------------------------------------------------- |
+| `path`     | `string`                                                | Current URL pathname (e.g. `"/blog/hello"`)         |
+| `navigate` | `(to: string, options?: { replace?: boolean }) => void` | Navigate to a new path                              |
+| `params`   | `Record<string, string>`                                | Dynamic route parameters (e.g. `{ slug: "hello" }`) |
 
 **Throws:** `Error('useRouter must be used within a <Router>')` if called outside Router context.
 
@@ -1147,6 +1200,7 @@ navigate('/settings', { replace: true });
 **Signature:** `navigate(to: string, options?: { replace?: boolean }): void`
 
 **Behavior:**
+
 - Delegates to `window.__MANIC_NAVIGATE__` which is set by the `<Router>` component.
 - If Router is not mounted, this is a no-op.
 - Loads the target component before updating the URL.
@@ -1166,6 +1220,7 @@ preloadRoute('/about');
 **Signature:** `preloadRoute(path: string): void`
 
 **Behavior:**
+
 - Creates a temporary `RouteRegistry` from `window.__MANIC_ROUTES__`.
 - Matches the path to find the loader function.
 - Calls the loader (`import()`) and stores the result in the component cache.
@@ -1178,7 +1233,7 @@ preloadRoute('/about');
 import { setViewTransitions } from 'manicjs/router';
 
 setViewTransitions(false); // Disable globally
-setViewTransitions(true);  // Re-enable
+setViewTransitions(true); // Re-enable
 ```
 
 **Signature:** `setViewTransitions(enabled: boolean): void`
@@ -1206,15 +1261,15 @@ import { RouterContext } from 'manicjs/router';
 import type { RouteDef, RouterContextValue } from 'manicjs/router';
 
 interface RouteDef {
-  path: string;                                      // URL pattern like "/blog/:slug"
-  component: ComponentType | null;                   // Resolved component or null if lazy
+  path: string; // URL pattern like "/blog/:slug"
+  component: ComponentType | null; // Resolved component or null if lazy
   loader?: () => Promise<{ default: ComponentType }>; // Lazy loader function
 }
 
 interface RouterContextValue {
-  path: string;                                      // Current pathname
+  path: string; // Current pathname
   navigate: (to: string, options?: { replace?: boolean }) => void;
-  params: Record<string, string>;                    // Dynamic route params
+  params: Record<string, string>; // Dynamic route params
 }
 ```
 
@@ -1228,31 +1283,33 @@ import { RouteRegistry } from 'manicjs/router/lib/matcher'; // Internal, not exp
 
 **Methods:**
 
-| Method | Signature | Description |
-|---|---|---|
-| `register` | `(def: RouteDef): void` | Add a route. Deduplicates by path. |
-| `match` | `(currentPath: string): RouteMatch \| null` | Match a URL path. Sorts routes on first call (lazy). |
+| Method     | Signature                                   | Description                                          |
+| ---------- | ------------------------------------------- | ---------------------------------------------------- |
+| `register` | `(def: RouteDef): void`                     | Add a route. Deduplicates by path.                   |
+| `match`    | `(currentPath: string): RouteMatch \| null` | Match a URL path. Sorts routes on first call (lazy). |
 
 **`RouteMatch` type:**
+
 ```ts
 interface RouteMatch {
-  path: string;                      // The matched route pattern
-  component: ComponentType | null;   // Component (or null if lazy)
-  params: Record<string, string>;    // Extracted parameters
+  path: string; // The matched route pattern
+  component: ComponentType | null; // Component (or null if lazy)
+  params: Record<string, string>; // Extracted parameters
 }
 ```
 
 **Scoring system:**
 
-| Segment Type | Points | Example |
-|---|---|---|
-| Static | 100 | `/about` |
-| Dynamic | 10 | `/:id`, `/[id]` |
-| Catch-all | 1 | `/:...slug`, `/[...slug]` |
+| Segment Type | Points | Example                   |
+| ------------ | ------ | ------------------------- |
+| Static       | 100    | `/about`                  |
+| Dynamic      | 10     | `/:id`, `/[id]`           |
+| Catch-all    | 1      | `/:...slug`, `/[...slug]` |
 
 Higher score wins. Ties broken by path length (longer wins).
 
 **Supported patterns:**
+
 ```
 /                          → exact match
 /about                     → static segment
@@ -1299,17 +1356,18 @@ const server = await createManicServer({
 
 **Options:**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `html` | `any` | *required* | HTML shell. Can be a string, a Bun HTMLBundle (from `import app from './app/index.html'`), or a function returning a string. |
-| `config` | `ManicConfig` | auto-loaded | If not provided, calls `loadConfig()` automatically. |
-| `routes` | `RouteInfo[]` | auto-discovered | If not provided, calls `discoverRoutes()`. |
-| `envKeys` | `string[]` | `[]` | List of loaded env var keys (for console display). |
-| `startTime` | `number` | `performance.now()` | Start time for "Ready in Xms" display. |
+| Option      | Type          | Default             | Description                                                                                                                  |
+| ----------- | ------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `html`      | `any`         | _required_          | HTML shell. Can be a string, a Bun HTMLBundle (from `import app from './app/index.html'`), or a function returning a string. |
+| `config`    | `ManicConfig` | auto-loaded         | If not provided, calls `loadConfig()` automatically.                                                                         |
+| `routes`    | `RouteInfo[]` | auto-discovered     | If not provided, calls `discoverRoutes()`.                                                                                   |
+| `envKeys`   | `string[]`    | `[]`                | List of loaded env var keys (for console display).                                                                           |
+| `startTime` | `number`      | `performance.now()` | Start time for "Ready in Xms" display.                                                                                       |
 
 **Returns:** The `Bun.serve()` server instance.
 
 **Internal Flow:**
+
 1. Loads config and discovers routes (in parallel if not provided).
 2. Detects HTMLBundle vs string HTML.
 3. Sets up `serveHtml()` function with:
@@ -1327,22 +1385,22 @@ const server = await createManicServer({
 
 **Built-in Routes:**
 
-| Route | Method | Description |
-|---|---|---|
-| `/_manic/open` | GET | Opens file in editor. Params: `file`, `line`, `column`. Dev only. |
-| `/assets/*` | GET | Static file serving from `assets/` directory. |
-| `/api/*` | ALL | Hono API routes (fullstack mode only). |
-| `/openapi.json` | GET | Auto-generated OpenAPI 3.0.0 spec (fullstack only). |
-| `/.well-known/api-catalog` | GET | RFC 9727 API catalog (fullstack only). |
-| `/*` | GET | SPA catch-all. Returns HTML shell for client-side routing. |
+| Route                      | Method | Description                                                       |
+| -------------------------- | ------ | ----------------------------------------------------------------- |
+| `/_manic/open`             | GET    | Opens file in editor. Params: `file`, `line`, `column`. Dev only. |
+| `/assets/*`                | GET    | Static file serving from `assets/` directory.                     |
+| `/api/*`                   | ALL    | Hono API routes (fullstack mode only).                            |
+| `/openapi.json`            | GET    | Auto-generated OpenAPI 3.0.0 spec (fullstack only).               |
+| `/.well-known/api-catalog` | GET    | RFC 9727 API catalog (fullstack only).                            |
+| `/*`                       | GET    | SPA catch-all. Returns HTML shell for client-side routing.        |
 
 **Cache Headers:**
 
-| Context | Header Value |
-|---|---|
-| Production static assets | `public, max-age=31536000, immutable` |
-| Production `/assets/*` | `public, max-age=3600, must-revalidate` |
-| Dev static files | `no-cache, no-store, must-revalidate` |
+| Context                  | Header Value                            |
+| ------------------------ | --------------------------------------- |
+| Production static assets | `public, max-age=31536000, immutable`   |
+| Production `/assets/*`   | `public, max-age=3600, must-revalidate` |
+| Dev static files         | `no-cache, no-store, must-revalidate`   |
 
 ### `serveHtml()` Internal Function
 
@@ -1353,12 +1411,14 @@ Returns the HTML shell with `Content-Type: text/html; charset=utf-8` and Link he
 
 **2. Markdown (when `Accept: text/markdown`):**
 Converts HTML to markdown via `htmlToMarkdown()`. Returns:
+
 - `Content-Type: text/markdown; charset=utf-8`
 - `Vary: Accept`
 - `x-markdown-tokens: <count>` (estimated at ~4 chars/token)
 
 **3. Agent mode (when `?mode=agent`):**
 Returns JSON:
+
 ```json
 {
   "name": "App Name",
@@ -1369,6 +1429,7 @@ Returns JSON:
   "discovery": "/.well-known/api-catalog"
 }
 ```
+
 With `Access-Control-Allow-Origin: *`.
 
 ---
@@ -1382,7 +1443,9 @@ Source: `packages/manic/src/config/index.ts`
 ```ts
 import { defineConfig } from 'manicjs/config';
 
-export default defineConfig({ /* ... */ });
+export default defineConfig({
+  /* ... */
+});
 ```
 
 **Signature:** `defineConfig(config: ManicConfig): ManicConfig`
@@ -1401,6 +1464,7 @@ const config2 = await loadConfig('/other/path');
 **Signature:** `loadConfig(cwd?: string): Promise<ManicConfig>`
 
 **Behavior:**
+
 1. Returns cached config if already loaded (singleton pattern).
 2. Tries `manic.config.ts` first, then `manic.config.js`.
 3. Uses `import()` to load the config file.
@@ -1409,6 +1473,7 @@ const config2 = await loadConfig('/other/path');
 6. Caches the result.
 
 **Default values when no config file exists:**
+
 ```ts
 {
   mode: 'fullstack',
@@ -1533,7 +1598,10 @@ interface ManicPluginContext {
 ```ts
 interface ManicServerPluginContext extends ManicPluginContext {
   /** Register a route handler. Dev only unless also emitted in build(). */
-  addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
+  addRoute(
+    path: string,
+    handler: (req: Request) => Response | Promise<Response>
+  ): void;
 
   /** Add an RFC 8288 Link header to all HTML page responses. */
   addLinkHeader(value: string): void;
@@ -1541,11 +1609,13 @@ interface ManicServerPluginContext extends ManicPluginContext {
 ```
 
 **`addRoute` details:**
+
 - `path`: URL path pattern (e.g. `"/my-endpoint"`, `"/.well-known/something"`).
 - `handler`: Receives raw `Request`, must return `Response`. NOT a Hono handler — no `c` context object.
 - Routes registered here are added to the `Bun.serve({ routes })` object.
 
 **`addLinkHeader` details:**
+
 - `value`: Full Link header value (e.g. `'</sitemap.xml>; rel="describedby"; type="application/xml"'`).
 - Appended to array. All values joined with `', '` in the response header.
 
@@ -1554,11 +1624,15 @@ interface ManicServerPluginContext extends ManicPluginContext {
 ```ts
 interface ManicBuildPluginContext extends ManicPluginContext {
   /** Write a static file to the client output directory. */
-  emitClientFile(relativePath: string, content: string | Uint8Array): Promise<void>;
+  emitClientFile(
+    relativePath: string,
+    content: string | Uint8Array
+  ): Promise<void>;
 }
 ```
 
 **`emitClientFile` details:**
+
 - `relativePath`: Relative to `.manic/client/`. E.g. `"sitemap.xml"`, `".well-known/mcp.json"`.
 - Creates parent directories automatically.
 - All providers copy `.manic/client/` to their static output — so emitted files are automatically deployed.
@@ -1622,7 +1696,14 @@ interface SitemapConfig {
   /** Base URL (e.g. "https://example.com") */
   hostname: string;
   /** @default "weekly" */
-  changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+  changefreq?:
+    | 'always'
+    | 'hourly'
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'yearly'
+    | 'never';
   /** @default 0.8 */
   priority?: number;
   /** Routes to exclude (e.g. ["/admin"]) */
@@ -1641,18 +1722,17 @@ Source: `packages/manic/src/theme/index.ts`
 ```tsx
 import { ThemeProvider } from 'manicjs/theme';
 
-<ThemeProvider>
-  {children}
-</ThemeProvider>
+<ThemeProvider>{children}</ThemeProvider>;
 ```
 
 **Props:**
 
-| Prop | Type | Description |
-|---|---|---|
+| Prop       | Type        | Description |
+| ---------- | ----------- | ----------- |
 | `children` | `ReactNode` | App content |
 
 **Behavior:**
+
 - Reads initial theme from `localStorage('manic-theme')`. Defaults to `'system'`.
 - Applies `dark` class on `document.documentElement` if resolved theme is dark.
 - Subscribes to `window.matchMedia('(prefers-color-scheme: dark)')` change events.
@@ -1669,14 +1749,14 @@ const { theme, resolvedTheme, setTheme, toggle, isDark, isLight } = useTheme();
 
 **Returns: `ThemeContextValue`**
 
-| Property | Type | Description |
-|---|---|---|
-| `theme` | `'light' \| 'dark' \| 'system'` | Stored user preference |
-| `resolvedTheme` | `'light' \| 'dark'` | Actual applied theme (never `'system'`) |
-| `setTheme` | `(theme: 'light' \| 'dark' \| 'system') => void` | Set theme preference. Persists to localStorage. |
-| `toggle` | `() => void` | Toggle between light and dark (ignores system) |
-| `isDark` | `boolean` | `resolvedTheme === 'dark'` |
-| `isLight` | `boolean` | `resolvedTheme === 'light'` |
+| Property        | Type                                             | Description                                     |
+| --------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `theme`         | `'light' \| 'dark' \| 'system'`                  | Stored user preference                          |
+| `resolvedTheme` | `'light' \| 'dark'`                              | Actual applied theme (never `'system'`)         |
+| `setTheme`      | `(theme: 'light' \| 'dark' \| 'system') => void` | Set theme preference. Persists to localStorage. |
+| `toggle`        | `() => void`                                     | Toggle between light and dark (ignores system)  |
+| `isDark`        | `boolean`                                        | `resolvedTheme === 'dark'`                      |
+| `isLight`       | `boolean`                                        | `resolvedTheme === 'light'`                     |
 
 **Throws:** `Error('useTheme must be used within a ThemeProvider')` if called outside.
 
@@ -1698,11 +1778,11 @@ import { ThemeToggle } from 'manicjs/theme';
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `className` | `string` | `undefined` | CSS class for the button |
-| `style` | `CSSProperties` | `undefined` | Inline styles |
-| `children` | `ReactNode \| ((theme: 'light' \| 'dark') => ReactNode)` | emoji fallback | Content or render function |
+| Prop        | Type                                                     | Default        | Description                |
+| ----------- | -------------------------------------------------------- | -------------- | -------------------------- |
+| `className` | `string`                                                 | `undefined`    | CSS class for the button   |
+| `style`     | `CSSProperties`                                          | `undefined`    | Inline styles              |
+| `children`  | `ReactNode \| ((theme: 'light' \| 'dark') => ReactNode)` | emoji fallback | Content or render function |
 
 **Renders:** `<button>` with `onClick={toggle}` and `aria-label` toggling between "Switch to light mode" / "Switch to dark mode".
 
@@ -1739,20 +1819,22 @@ import { ViewTransitions } from 'manicjs/transitions';
 
 **Props (all elements):**
 
-| Prop | Type | Description |
-|---|---|---|
-| `name` | `string` | *required* — Sets `viewTransitionName` CSS property |
-| `children` | `ReactNode` | Element content |
-| `className` | `string` | CSS class |
-| `style` | `CSSProperties` | Merged with `{ viewTransitionName: name }` |
-| `...rest` | `HTMLAttributes<HTMLElement>` | Any standard HTML attribute |
+| Prop        | Type                          | Description                                         |
+| ----------- | ----------------------------- | --------------------------------------------------- |
+| `name`      | `string`                      | _required_ — Sets `viewTransitionName` CSS property |
+| `children`  | `ReactNode`                   | Element content                                     |
+| `className` | `string`                      | CSS class                                           |
+| `style`     | `CSSProperties`               | Merged with `{ viewTransitionName: name }`          |
+| `...rest`   | `HTMLAttributes<HTMLElement>` | Any standard HTML attribute                         |
 
 **Re-exports:**
+
 ```ts
 export { navigate, setViewTransitions } from '../router/lib/Router';
 ```
 
 **Alternative (no component needed):**
+
 ```tsx
 <div style={{ viewTransitionName: 'my-element' }}>content</div>
 ```
@@ -1775,10 +1857,12 @@ const dbUrl = getEnv('DATABASE_URL'); // Server only — warns on client
 **Signature:** `getEnv(key: string): string | undefined`
 
 **Client behavior:**
+
 - If key doesn't start with `MANIC_PUBLIC_`, logs `console.warn` and returns `undefined`.
 - Reads from `window.__MANIC_ENV__` (currently not injected by the framework — see known issues).
 
 **Server behavior:**
+
 - Reads from `process.env[key]` directly. Any key works.
 
 ### `getPublicEnv()`
@@ -1825,6 +1909,7 @@ const res = await client.api.hello.$get();
 **Signature:** `createClient<T>(baseUrl?: string): ReturnType<typeof hc<T>>`
 
 **Default `baseUrl`:**
+
 - Browser: `window.location.origin`
 - Server: `'http://localhost:6070'`
 
@@ -1848,25 +1933,27 @@ const { app, routes, openApiSpec } = await apiLoaderPlugin('app/api');
 
 **Parameters:**
 
-| Param | Type | Default | Description |
-|---|---|---|---|
+| Param    | Type     | Default     | Description                           |
+| -------- | -------- | ----------- | ------------------------------------- |
 | `apiDir` | `string` | `'app/api'` | Directory to scan for API route files |
 
 **Returns:**
 
-| Property | Type | Description |
-|---|---|---|
-| `app` | `Hono` | Hono instance with basePath `/api` and all routes mounted |
-| `routes` | `string[]` | List of mounted route paths (e.g. `["/api/hello", "/api/users"]`) |
-| `openApiSpec` | `object` | Minimal OpenAPI 3.0.0 spec object |
+| Property      | Type       | Description                                                       |
+| ------------- | ---------- | ----------------------------------------------------------------- |
+| `app`         | `Hono`     | Hono instance with basePath `/api` and all routes mounted         |
+| `routes`      | `string[]` | List of mounted route paths (e.g. `["/api/hello", "/api/users"]`) |
+| `openApiSpec` | `object`   | Minimal OpenAPI 3.0.0 spec object                                 |
 
 **Route scanning:**
+
 - Uses `Bun.Glob('**/*.{ts,tsx,js}')` to find all files.
 - Converts file paths to route paths: `hello/index.ts` → `/hello`, `users/[id].ts` → `/users/:id`.
 - Supports both Hono instances (detected by `.fetch` method) and plain functions.
 - Mounts Hono instances via `app.route()`. Wraps plain functions with `app.all()`.
 
 **OpenAPI spec generation:**
+
 - Creates one GET entry per route path.
 - Converts `:param` to `{param}` in paths.
 - Only registers GET — does not detect actual HTTP methods.
@@ -1883,8 +1970,8 @@ const staticApp = fileImporterPlugin('public');
 
 **Parameters:**
 
-| Param | Type | Default | Description |
-|---|---|---|---|
+| Param       | Type     | Default    | Description                          |
+| ----------- | -------- | ---------- | ------------------------------------ |
 | `publicDir` | `string` | `'public'` | Directory to serve static files from |
 
 **Returns:** A Hono instance with `serveStatic` middleware from `hono/bun`.
@@ -1908,6 +1995,7 @@ import { discoverRoutes } from 'manicjs/server'; // Internal — not in public e
 **Default:** `routesDir = 'app/routes'`
 
 **Behavior:**
+
 - Scans with `Bun.Glob('**/*.{tsx,ts}')`.
 - Skips files starting with `~`.
 - Converts file paths to URL paths:
@@ -1919,9 +2007,10 @@ import { discoverRoutes } from 'manicjs/server'; // Internal — not in public e
   - `(admin)/dashboard.tsx` → `/dashboard` (route groups stripped)
 
 **Returns:** `RouteInfo[]`
+
 ```ts
 interface RouteInfo {
-  path: string;    // URL path (e.g. "/blog/:slug")
+  path: string; // URL path (e.g. "/blog/:slug")
   filePath: string; // Source file (e.g. "app/routes/blog/[slug].tsx")
 }
 ```
@@ -1943,14 +2032,16 @@ interface RouteInfo {
 **Default:** `routesDir = 'app/routes'`
 
 **Checks for:**
+
 - `app/routes/~404.tsx` → custom 404 page
 - `app/routes/~500.tsx` → custom error page
 
 **Returns:**
+
 ```ts
 interface ErrorPages {
   notFound?: string; // File path to custom 404 page
-  error?: string;    // File path to custom error page
+  error?: string; // File path to custom error page
 }
 ```
 
@@ -1959,13 +2050,14 @@ interface ErrorPages {
 **Signature:** `generateRoutesManifest(routesDir?: string): Promise<string>`
 
 **Returns:** TypeScript source code string like:
+
 ```ts
 export const routes = {
-  "/": () => import("./routes/index.tsx"),
-  "/about": () => import("./routes/about.tsx"),
+  '/': () => import('./routes/index.tsx'),
+  '/about': () => import('./routes/about.tsx'),
 };
 
-export const notFoundPage = () => import("./routes/~404.tsx");
+export const notFoundPage = () => import('./routes/~404.tsx');
 export const errorPage = undefined;
 ```
 
@@ -1976,6 +2068,7 @@ export const errorPage = undefined;
 **Default:** `outPath = 'app/~routes.generated.ts'`
 
 **Behavior:**
+
 1. Calls `generateRoutesManifest()`.
 2. Writes to `outPath`.
 3. If `touch` is true: appends timestamp comment to `~manic.ts` to trigger Bun's `--watch` restart.
@@ -1985,6 +2078,7 @@ export const errorPage = undefined;
 **Signature:** `watchRoutes(routesDir: string, onChange: (filename?: string, duration?: number) => void): Promise<void>`
 
 **Behavior:**
+
 - Uses `fs/promises watch()` with `{ recursive: true }`.
 - Filters for `.tsx`/`.ts` files not starting with `~`.
 - On `rename` events (file add/delete): regenerates manifest with touch.
@@ -2004,6 +2098,7 @@ export const errorPage = undefined;
 **Signature:** `htmlToMarkdown(html: string): string`
 
 **Converts:**
+
 - `<h1>` → `# `, `<h2>` → `## `, etc.
 - `<p>` → double newline wrapped text
 - `<strong>`, `<b>` → `**bold**`
@@ -2040,23 +2135,23 @@ Source: `packages/manic/src/cli/`
 
 ### All Commands
 
-| Command | Function | File | Args |
-|---|---|---|---|
-| `manic dev` | `dev({ port?, network? })` | `commands/dev.ts` | `--port PORT`, `--network` |
-| `manic build` | `build()` | `commands/build.ts` | none |
-| `manic start` | `start({ port?, network? })` | `commands/start.ts` | `--port PORT`, `--network` |
-| `manic deploy` | `deploy()` | `commands/deploy.ts` | `--run` / `-r` |
-| `manic lint` | `lint()` | `commands/lint.ts` | none |
-| `manic fmt` | `fmt()` | `commands/fmt.ts` | none |
+| Command        | Function                     | File                 | Args                       |
+| -------------- | ---------------------------- | -------------------- | -------------------------- |
+| `manic dev`    | `dev({ port?, network? })`   | `commands/dev.ts`    | `--port PORT`, `--network` |
+| `manic build`  | `build()`                    | `commands/build.ts`  | none                       |
+| `manic start`  | `start({ port?, network? })` | `commands/start.ts`  | `--port PORT`, `--network` |
+| `manic deploy` | `deploy()`                   | `commands/deploy.ts` | `--run` / `-r`             |
+| `manic lint`   | `lint()`                     | `commands/lint.ts`   | none                       |
+| `manic fmt`    | `fmt()`                      | `commands/fmt.ts`    | none                       |
 
 ### Global Options
 
-| Flag | Description |
-|---|---|
-| `-h`, `--help` | Show help text |
-| `-v`, `--version` | Show version (currently hardcoded `v0.6.0`) |
-| `-p PORT`, `--port PORT` | Override server port (dev, start) |
-| `--network` | Bind to `0.0.0.0` (dev only) |
+| Flag                     | Description                                 |
+| ------------------------ | ------------------------------------------- |
+| `-h`, `--help`           | Show help text                              |
+| `-v`, `--version`        | Show version (currently hardcoded `v0.6.0`) |
+| `-p PORT`, `--port PORT` | Override server port (dev, start)           |
+| `--network`              | Bind to `0.0.0.0` (dev only)                |
 
 ### `manic dev`
 
@@ -2081,6 +2176,7 @@ manic build
 ```
 
 **Steps (in order):**
+
 1. Load config
 2. Run `oxlint` — fail build if lint errors
 3. Delete and recreate output directory
@@ -2118,6 +2214,7 @@ manic deploy --run  # Actually runs the deploy commands
 ```
 
 **Behavior:**
+
 1. Checks providers in config. Exits if none configured.
 2. Builds if output directory doesn't exist.
 3. For each provider, shows the deploy command:
@@ -2155,11 +2252,11 @@ import { apiDocs } from '@manicjs/api-docs';
 
 **`apiDocs(options?)`**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `path` | `string` | `"/docs"` | Mount path for the docs UI |
-| `specUrl` | `string` | `"/openapi.json"` | OpenAPI spec URL |
-| `theme` | `string` | `"default"` | Scalar theme name |
+| Option    | Type     | Default           | Description                |
+| --------- | -------- | ----------------- | -------------------------- |
+| `path`    | `string` | `"/docs"`         | Mount path for the docs UI |
+| `specUrl` | `string` | `"/openapi.json"` | OpenAPI spec URL           |
+| `theme`   | `string` | `"default"`       | Scalar theme name          |
 
 **configureServer:** Creates a Hono sub-app, registers Scalar API reference via `@scalar/hono-api-reference`. Registers `path` and `path/*` routes.
 
@@ -2179,35 +2276,38 @@ import { seo } from '@manicjs/seo';
 
 **`seo(config)`**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `hostname` | `string` | *required* | Base URL (e.g. `"https://example.com"`) |
-| `rules` | `RobotRule[]` | `[{ userAgent: '*', allow: ['/'] }]` | Robot crawl rules |
-| `sitemaps` | `string[]` | `[]` | Additional sitemap URLs for robots.txt |
-| `autoSitemap` | `boolean` | `true` | Auto-add `/sitemap.xml` to robots.txt |
-| `linkHeaders` | `LinkHeader[]` | `[]` | Extra RFC 8288 Link headers |
-| `contentSignals` | `object` | `undefined` | Content-Signal directives |
+| Option           | Type           | Default                              | Description                             |
+| ---------------- | -------------- | ------------------------------------ | --------------------------------------- |
+| `hostname`       | `string`       | _required_                           | Base URL (e.g. `"https://example.com"`) |
+| `rules`          | `RobotRule[]`  | `[{ userAgent: '*', allow: ['/'] }]` | Robot crawl rules                       |
+| `sitemaps`       | `string[]`     | `[]`                                 | Additional sitemap URLs for robots.txt  |
+| `autoSitemap`    | `boolean`      | `true`                               | Auto-add `/sitemap.xml` to robots.txt   |
+| `linkHeaders`    | `LinkHeader[]` | `[]`                                 | Extra RFC 8288 Link headers             |
+| `contentSignals` | `object`       | `undefined`                          | Content-Signal directives               |
 
 **`RobotRule` interface:**
+
 ```ts
 interface RobotRule {
-  userAgent: string;       // e.g. "*", "Googlebot"
-  allow?: string[];        // Paths to allow
-  disallow?: string[];     // Paths to disallow
-  crawlDelay?: number;     // Seconds between crawls
+  userAgent: string; // e.g. "*", "Googlebot"
+  allow?: string[]; // Paths to allow
+  disallow?: string[]; // Paths to disallow
+  crawlDelay?: number; // Seconds between crawls
 }
 ```
 
 **`LinkHeader` interface:**
+
 ```ts
 interface LinkHeader {
-  href: string;   // URL
-  rel: string;    // Link relation type
-  type?: string;  // MIME type
+  href: string; // URL
+  rel: string; // Link relation type
+  type?: string; // MIME type
 }
 ```
 
 **`contentSignals` options:**
+
 ```ts
 contentSignals?: {
   'ai-train'?: 'yes' | 'no';  // Allow AI training on content
@@ -2221,6 +2321,7 @@ contentSignals?: {
 **build:** Emits `robots.txt` via `emitClientFile`.
 
 **Generated robots.txt example:**
+
 ```
 User-agent: *
 Allow: /
@@ -2242,12 +2343,12 @@ import { sitemap } from '@manicjs/sitemap';
 
 **`sitemap(config)`**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `hostname` | `string` | *required* | Base URL |
-| `changefreq` | `string` | `'weekly'` | How often pages change |
-| `priority` | `number` | `0.8` | URL priority (0.0 to 1.0) |
-| `exclude` | `string[]` | `[]` | Route paths to exclude |
+| Option       | Type       | Default    | Description               |
+| ------------ | ---------- | ---------- | ------------------------- |
+| `hostname`   | `string`   | _required_ | Base URL                  |
+| `changefreq` | `string`   | `'weekly'` | How often pages change    |
+| `priority`   | `number`   | `0.8`      | URL priority (0.0 to 1.0) |
+| `exclude`    | `string[]` | `[]`       | Route paths to exclude    |
 
 **configureServer:** Generates XML from `ctx.pageRoutes`, registers `/sitemap.xml`.
 
@@ -2256,6 +2357,7 @@ import { sitemap } from '@manicjs/sitemap';
 **Filters:** Excludes dynamic routes (containing `:`) and explicitly excluded paths.
 
 **Generated XML example:**
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -2285,29 +2387,30 @@ import type { McpTool, McpConfig } from '@manicjs/mcp';
 
 **`mcp(config?)`**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `name` | `string` | `'manic-mcp'` | Server name in MCP responses |
-| `version` | `string` | `'1.0.0'` | Server version |
-| `path` | `string` | `'/mcp'` | Endpoint path |
-| `tools` | `McpTool[]` | `[]` | Additional custom tools |
+| Option    | Type        | Default       | Description                  |
+| --------- | ----------- | ------------- | ---------------------------- |
+| `name`    | `string`    | `'manic-mcp'` | Server name in MCP responses |
+| `version` | `string`    | `'1.0.0'`     | Server version               |
+| `path`    | `string`    | `'/mcp'`      | Endpoint path                |
+| `tools`   | `McpTool[]` | `[]`          | Additional custom tools      |
 
 **Protocol:** MCP 2025-03-26, Streamable HTTP transport, JSON-RPC 2.0.
 
 **Registered Routes (configureServer):**
 
-| Route | Description |
-|---|---|
-| `{path}` | Main MCP endpoint (GET/POST/DELETE/OPTIONS) |
-| `/.well-known/mcp.json` | MCP discovery document |
-| `/.well-known/mcp/server-card.json` | MCP server card |
-| `/.well-known/agent-skills/index.json` | Agent skills discovery |
-| `/.well-known/agent-skills/use-mcp/SKILL.md` | Skill documentation |
-| `/webmcp.js` | Browser WebMCP registration script |
-| `/mcp/console` | Browser console log receiver (dev only) |
-| `/mcp/console.js` | Browser console log capture script (dev only) |
+| Route                                        | Description                                   |
+| -------------------------------------------- | --------------------------------------------- |
+| `{path}`                                     | Main MCP endpoint (GET/POST/DELETE/OPTIONS)   |
+| `/.well-known/mcp.json`                      | MCP discovery document                        |
+| `/.well-known/mcp/server-card.json`          | MCP server card                               |
+| `/.well-known/agent-skills/index.json`       | Agent skills discovery                        |
+| `/.well-known/agent-skills/use-mcp/SKILL.md` | Skill documentation                           |
+| `/webmcp.js`                                 | Browser WebMCP registration script            |
+| `/mcp/console`                               | Browser console log receiver (dev only)       |
+| `/mcp/console.js`                            | Browser console log capture script (dev only) |
 
 **Link Headers Added:**
+
 ```
 </.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"
 </.well-known/mcp.json>; rel="mcp-discovery"; type="application/json"
@@ -2316,32 +2419,32 @@ import type { McpTool, McpConfig } from '@manicjs/mcp';
 
 **MCP Endpoint Methods:**
 
-| HTTP Method | Accept Header | Behavior |
-|---|---|---|
-| `OPTIONS` | any | CORS preflight response |
-| `DELETE` | any | Close session. Requires `Mcp-Session-Id` header. |
-| `GET` | `text/event-stream` | SSE keepalive stream (ping every 15s) |
-| `POST` | `application/json` | Process JSON-RPC request(s), return JSON |
-| `POST` | `text/event-stream` | Process JSON-RPC, return SSE events |
+| HTTP Method | Accept Header       | Behavior                                         |
+| ----------- | ------------------- | ------------------------------------------------ |
+| `OPTIONS`   | any                 | CORS preflight response                          |
+| `DELETE`    | any                 | Close session. Requires `Mcp-Session-Id` header. |
+| `GET`       | `text/event-stream` | SSE keepalive stream (ping every 15s)            |
+| `POST`      | `application/json`  | Process JSON-RPC request(s), return JSON         |
+| `POST`      | `text/event-stream` | Process JSON-RPC, return SSE events              |
 
 **JSON-RPC Methods:**
 
-| Method | Params | Response |
-|---|---|---|
-| `initialize` | none | `{ protocolVersion, capabilities: { tools: {} }, serverInfo }`. Returns `Mcp-Session-Id` header. |
-| `notifications/initialized` | none | No response (202). Marks session as initialized. |
-| `tools/list` | none | `{ tools: [{ name, description, inputSchema }] }` |
-| `tools/call` | `{ name, arguments }` | `{ content: [{ type: 'text', text: JSON.stringify(result) }] }` |
+| Method                      | Params                | Response                                                                                         |
+| --------------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| `initialize`                | none                  | `{ protocolVersion, capabilities: { tools: {} }, serverInfo }`. Returns `Mcp-Session-Id` header. |
+| `notifications/initialized` | none                  | No response (202). Marks session as initialized.                                                 |
+| `tools/list`                | none                  | `{ tools: [{ name, description, inputSchema }] }`                                                |
+| `tools/call`                | `{ name, arguments }` | `{ content: [{ type: 'text', text: JSON.stringify(result) }] }`                                  |
 
 **Default Tools:**
 
-| Tool | Description | Input |
-|---|---|---|
-| `get_routes` | Returns all page routes | none |
-| `get_api_routes` | Returns all API routes | none |
-| `get_page_meta` | Fetches page, extracts title/meta/canonical | `{ url: string }` |
-| `get_rendered_elements` | Fetches page, returns element list | `{ url: string, selector?: string }` |
-| `get_console_logs` | Browser console logs (dev only) | `{ level?: string, limit?: number }` |
+| Tool                    | Description                                 | Input                                |
+| ----------------------- | ------------------------------------------- | ------------------------------------ |
+| `get_routes`            | Returns all page routes                     | none                                 |
+| `get_api_routes`        | Returns all API routes                      | none                                 |
+| `get_page_meta`         | Fetches page, extracts title/meta/canonical | `{ url: string }`                    |
+| `get_rendered_elements` | Fetches page, returns element list          | `{ url: string, selector?: string }` |
+| `get_console_logs`      | Browser console logs (dev only)             | `{ level?: string, limit?: number }` |
 
 **`defineTool()` Function:**
 
@@ -2364,15 +2467,17 @@ const myTool = defineTool('search', {
 **Signature:** `defineTool<S extends ZodObject>(name: string, def: ToolDef<S>): McpTool`
 
 **`ToolDef` type:**
+
 ```ts
 type ToolDef<S extends ZodObject<ZodRawShape>> = {
   description: string;
-  input: S;                                            // Zod object schema
+  input: S; // Zod object schema
   execute(args: ZodInfer<S>): Promise<unknown> | unknown; // Handler
 };
 ```
 
 **Zod to JSON Schema conversion:**
+
 - `ZodString` → `{ type: 'string' }`
 - `ZodNumber` → `{ type: 'number' }`
 - `ZodBoolean` → `{ type: 'boolean' }`
@@ -2383,6 +2488,7 @@ type ToolDef<S extends ZodObject<ZodRawShape>> = {
 **Input validation:** Calls `schema.parse(args)` before executing. Throws Zod errors on invalid input.
 
 **`McpTool` interface:**
+
 ```ts
 interface McpTool {
   name: string;
@@ -2401,6 +2507,7 @@ interface McpTool {
 The `/mcp/console.js` script overrides `console.log/warn/error/info/debug` in the browser. Each call POSTs the log entry to `/mcp/console`. The `get_console_logs` tool returns captured entries.
 
 Log entry format:
+
 ```ts
 { level: string; args: unknown[]; ts: number }
 ```
@@ -2426,14 +2533,15 @@ import { vercel } from '@manicjs/providers';
 // or: import { vercel } from '@manicjs/providers/vercel';
 ```
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `runtime` | `'bun' \| 'edge' \| 'nodejs20.x' \| 'nodejs22.x'` | `'bun'` | Vercel function runtime |
-| `regions` | `string[]` | `undefined` | Deployment regions |
-| `memory` | `number` | `undefined` | Function memory (MB) |
-| `maxDuration` | `number` | `undefined` | Max execution duration (seconds) |
+| Option        | Type                                              | Default     | Description                      |
+| ------------- | ------------------------------------------------- | ----------- | -------------------------------- |
+| `runtime`     | `'bun' \| 'edge' \| 'nodejs20.x' \| 'nodejs22.x'` | `'bun'`     | Vercel function runtime          |
+| `regions`     | `string[]`                                        | `undefined` | Deployment regions               |
+| `memory`      | `number`                                          | `undefined` | Function memory (MB)             |
+| `maxDuration` | `number`                                          | `undefined` | Max execution duration (seconds) |
 
 **Output structure:**
+
 ```
 .vercel/output/
   config.json                 # Vercel Build Output v3 config
@@ -2449,6 +2557,7 @@ import { vercel } from '@manicjs/providers';
 ```
 
 **Route config (`config.json`):**
+
 ```json
 {
   "version": 3,
@@ -2471,12 +2580,13 @@ import { cloudflare } from '@manicjs/providers';
 // or: import { cloudflare } from '@manicjs/providers/cloudflare';
 ```
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `compatibilityDate` | `string` | `'2025-06-01'` | Worker compatibility date |
-| `projectName` | `string` | derived from `app.name` | Cloudflare Pages project name |
+| Option              | Type     | Default                 | Description                   |
+| ------------------- | -------- | ----------------------- | ----------------------------- |
+| `compatibilityDate` | `string` | `'2025-06-01'`          | Worker compatibility date     |
+| `projectName`       | `string` | derived from `app.name` | Cloudflare Pages project name |
 
 **Output structure:**
+
 ```
 dist/
   index.html
@@ -2488,12 +2598,14 @@ wrangler.toml
 ```
 
 **Worker behavior:**
+
 - API routes mounted on Hono with `/api` prefix.
 - Static assets served via `c.env.ASSETS.fetch(req)`.
 - 404 fallback: `c.env.ASSETS.fetch(new URL("/index.html", req.url))` (SPA catch-all).
 - If no API routes and no API docs: uses `_redirects` file instead of worker.
 
 **Falls back to `_redirects` when no API:**
+
 ```
 /*    /index.html   200
 ```
@@ -2505,11 +2617,12 @@ import { netlify } from '@manicjs/providers';
 // or: import { netlify } from '@manicjs/providers/netlify';
 ```
 
-| Option | Type | Default | Description |
-|---|---|---|---|
+| Option | Type      | Default | Description                                       |
+| ------ | --------- | ------- | ------------------------------------------------- |
 | `edge` | `boolean` | `false` | Use edge functions (Deno) vs serverless (Node.js) |
 
 **Output structure:**
+
 ```
 dist/                        # Static files
   index.html
@@ -2523,6 +2636,7 @@ netlify/
 **Function bundling:** `Bun.build({ target: 'node', format: 'esm', minify: true })`.
 
 **netlify.toml generation:**
+
 ```toml
 [build]
   command = "bun run build"
@@ -2550,6 +2664,7 @@ netlify/
 **Signature:** `agentMiddleware(ctx: BuildContext): string`
 
 **Returns:** JavaScript code string to inject into provider workers. Contains:
+
 - `htmlToMarkdown()` — lightweight HTML-to-markdown function
 - `withAgentSupport(req, fetchAsset)` — middleware wrapper that:
   - Routes MCP requests to `_handleMcp()`
@@ -2576,19 +2691,24 @@ Source: `packages/manic/src/cli/plugins/oxc.ts`
 
 **Transform options (via `oxc-transform` `transformSync`):**
 
-| Option | Dev | Prod |
-|---|---|---|
-| `target` | Config's `oxc.target` or `'esnext'` | `'es2022'` |
-| `sourcemap` | `true` | `false` |
-| `jsx.runtime` | `'automatic'` | `'automatic'` |
-| `jsx.development` | `true` | `false` |
-| `jsx.refresh` | Config's `oxc.refresh` (default `true`) | `false` |
-| `typescript.rewriteImportExtensions` | Config's value (default `true`) | same |
-| `typescript.onlyRemoveTypeImports` | `true` | `true` |
+| Option                               | Dev                                     | Prod          |
+| ------------------------------------ | --------------------------------------- | ------------- |
+| `target`                             | Config's `oxc.target` or `'esnext'`     | `'es2022'`    |
+| `sourcemap`                          | `true`                                  | `false`       |
+| `jsx.runtime`                        | `'automatic'`                           | `'automatic'` |
+| `jsx.development`                    | `true`                                  | `false`       |
+| `jsx.refresh`                        | Config's `oxc.refresh` (default `true`) | `false`       |
+| `typescript.rewriteImportExtensions` | Config's value (default `true`)         | same          |
+| `typescript.onlyRemoveTypeImports`   | `true`                                  | `true`        |
 
 **HMR injection (dev only, tsx/jsx):**
+
 ```js
-if(import.meta.hot){import.meta.hot.accept(()=>{window.__react_refresh_library__?.performRefresh?.();});}
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    window.__react_refresh_library__?.performRefresh?.();
+  });
+}
 ```
 
 ---
@@ -2606,6 +2726,7 @@ import { NotFound } from 'manicjs';
 **Props:** None.
 
 **Renders:** Full-screen page with:
+
 - `BlinkingAsciiDots` animated canvas background (Braille unicode characters with wave animation, mouse-reactive)
 - Centered 404 message with illustration
 - Reads `--theme-background` and `--theme-foreground` CSS variables
@@ -2617,10 +2738,10 @@ import { NotFound } from 'manicjs';
 
 **Props:**
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `density` | `number` | `0.5` | Grid density (lower = fewer dots) |
-| `animationSpeed` | `number` | `0.2` | Wave animation speed |
+| Prop             | Type     | Default | Description                       |
+| ---------------- | -------- | ------- | --------------------------------- |
+| `density`        | `number` | `0.5`   | Grid density (lower = fewer dots) |
+| `animationSpeed` | `number` | `0.2`   | Wave animation speed              |
 
 **Implementation:** Canvas-based animation using `requestAnimationFrame`. Uses Braille unicode characters (`⠁⠂⠄...`) with wave functions for organic movement. Mouse interaction increases wave amplitude near cursor.
 
@@ -2631,16 +2752,17 @@ import { NotFound } from 'manicjs';
 ```tsx
 import { ServerError } from 'manicjs';
 
-<ServerError error={new Error('Something broke')} />
+<ServerError error={new Error('Something broke')} />;
 ```
 
 **Props:**
 
-| Prop | Type | Description |
-|---|---|---|
+| Prop    | Type                 | Description             |
+| ------- | -------------------- | ----------------------- |
 | `error` | `Error \| undefined` | The caught error object |
 
 **Features:**
+
 - Full-screen dark overlay (`z-index: 99999`)
 - Error name + message display
 - Source code preview with syntax highlighting
@@ -2655,29 +2777,36 @@ import { ServerError } from 'manicjs';
 - Manic logo SVG in footer
 
 **Internal helpers:**
+
 - `parseAllFrames(stack)` — parses various stack trace formats (`at fn (file:line:col)`, `fn — file:line:col`, etc.)
 - `firstAppFrame(frames)` — finds first non-node_modules frame
 - `resolveFrame(loc)` — fetches source file, resolves source map, returns source context
 - `tokenize(code)` — simple regex-based syntax highlighter
 
 **"Copy for AI" format:**
-```markdown
+
+````markdown
 # Error: TypeError
 
 ## Message
+
 Cannot read property 'foo' of undefined
 
 ## Location
+
 app/routes/index.tsx:15:3
 
 ## Source
+
 ```tsx
   14 | const data = response.data;
 > 15 | console.log(data.foo);
   16 | return <div>{data}</div>;
 ```
+````
 
 ## Stack
+
 <full stack trace>
 ```
 
@@ -2687,14 +2816,15 @@ app/routes/index.tsx:15:3
 
 These globals are set/read by the framework at runtime:
 
-| Global | Type | Set By | Read By | Description |
-|---|---|---|---|---|
-| `window.__MANIC_ROUTES__` | `Record<string, () => Promise<{ default: ComponentType }>>` | `app/main.tsx` | `Router` component | Route manifest |
-| `window.__MANIC_ERROR_PAGES__` | `{ notFound?: LazyLoader, error?: LazyLoader }` | `app/main.tsx` | `Router` component | Custom error page loaders |
-| `window.__MANIC_NAVIGATE__` | `(to: string, options?) => void` | `Router` component | `navigate()`, `Link` | Navigation function |
-| `window.__MANIC_ENV__` | `Record<string, string>` | NOT SET (gap) | `getEnv()`, `getPublicEnv()` | Public environment variables |
+| Global                         | Type                                                        | Set By             | Read By                      | Description                  |
+| ------------------------------ | ----------------------------------------------------------- | ------------------ | ---------------------------- | ---------------------------- |
+| `window.__MANIC_ROUTES__`      | `Record<string, () => Promise<{ default: ComponentType }>>` | `app/main.tsx`     | `Router` component           | Route manifest               |
+| `window.__MANIC_ERROR_PAGES__` | `{ notFound?: LazyLoader, error?: LazyLoader }`             | `app/main.tsx`     | `Router` component           | Custom error page loaders    |
+| `window.__MANIC_NAVIGATE__`    | `(to: string, options?) => void`                            | `Router` component | `navigate()`, `Link`         | Navigation function          |
+| `window.__MANIC_ENV__`         | `Record<string, string>`                                    | NOT SET (gap)      | `getEnv()`, `getPublicEnv()` | Public environment variables |
 
 **Type augmentation file (`app/manic.d.ts`):**
+
 ```ts
 declare global {
   interface Window {
@@ -2716,6 +2846,7 @@ Note: `__MANIC_ERROR_PAGES__` and `__MANIC_NAVIGATE__` are declared in `Router.t
 ### Required in every Manic project:
 
 **`~manic.ts`** — Server entry point:
+
 ```ts
 import { createManicServer } from 'manicjs/server';
 import app from './app/index.html';
@@ -2724,6 +2855,7 @@ const _server = await createManicServer({ html: app });
 ```
 
 **`manic.config.ts`** — Framework config:
+
 ```ts
 import { defineConfig } from 'manicjs/config';
 
@@ -2734,6 +2866,7 @@ export default defineConfig({
 ```
 
 **`app/index.html`** — HTML shell:
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -2753,11 +2886,13 @@ export default defineConfig({
 ```
 
 Key points:
+
 - `href="tailwindcss"` — magic string replaced by Bun's Tailwind plugin in dev, replaced with actual CSS filename in build.
 - `src="./main.tsx"` — Bun processes this as a module, replaced with hashed filename in build.
 - `<div id="root">` — React mount point.
 
 **`app/main.tsx`** — React entry:
+
 ```tsx
 import { createRoot } from 'react-dom/client';
 import { Router } from 'manicjs/router';
@@ -2779,34 +2914,39 @@ root.render(
 ```
 
 **`app/global.css`** — Tailwind entry:
+
 ```css
 @import 'tailwindcss';
 @source '../../node_modules/manicjs/src/**/*.tsx';
 @source '../../node_modules/manicjs/src/**/*.ts';
 
 @theme {
-  --color-accent: #F15156;
+  --color-accent: #f15156;
   --color-background: var(--theme-background);
   --color-foreground: var(--theme-foreground);
 }
 
 :root {
-  --theme-background: #FEF6F7;
+  --theme-background: #fef6f7;
   --theme-foreground: #151212;
 }
 
 .dark {
   --theme-background: #151212;
-  --theme-foreground: #FEF6F7;
+  --theme-foreground: #fef6f7;
 }
 
 body {
   background-color: var(--theme-background);
   color: var(--theme-foreground);
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
-@view-transition { navigation: auto; }
+@view-transition {
+  navigation: auto;
+}
 ```
 
 The `@source` directives tell Tailwind v4 to scan framework component source files for class names (needed for built-in components like NotFound, ServerError).
@@ -2814,13 +2954,16 @@ The `@source` directives tell Tailwind v4 to scan framework component source fil
 ### Supporting config files:
 
 **`bunfig.toml`**:
+
 ```toml
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
 ```
+
 Enables Tailwind processing for Bun's static file serving in dev.
 
 **`tsconfig.json`**:
+
 ```json
 {
   "compilerOptions": {
@@ -2847,9 +2990,15 @@ Enables Tailwind processing for Bun's static file serving in dev.
 Key: `"paths": { "@/*": ["app/*"] }` enables the `@/` import alias.
 
 **`.oxlintrc.json`**:
+
 ```json
 {
-  "ignorePatterns": ["**/node_modules/**", "**/.manic/**", "**/dist/**", "**/build/**"],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.manic/**",
+    "**/dist/**",
+    "**/build/**"
+  ],
   "plugins": ["react", "react-hooks", "react-perf"],
   "categories": {
     "correctness": "error",
@@ -2869,6 +3018,7 @@ Key: `"paths": { "@/*": ["app/*"] }` enables the `@/` import alias.
 ```
 
 **`.oxfmt.json`**:
+
 ```json
 {
   "arrowParens": "avoid",
@@ -2885,6 +3035,7 @@ Key: `"paths": { "@/*": ["app/*"] }` enables the `@/` import alias.
 ```
 
 **`.gitignore`**:
+
 ```
 node_modules
 .manic
@@ -2906,29 +3057,29 @@ wrangler
 
 ### File-to-URL Mapping
 
-| File Path | URL | Type |
-|---|---|---|
-| `app/routes/index.tsx` | `/` | Static |
-| `app/routes/about.tsx` | `/about` | Static |
-| `app/routes/blog/index.tsx` | `/blog` | Static |
-| `app/routes/blog/[slug].tsx` | `/blog/:slug` | Dynamic |
-| `app/routes/blog/[...path].tsx` | `/blog/:...path` | Catch-all |
-| `app/routes/(admin)/dashboard.tsx` | `/dashboard` | Route group (group stripped) |
-| `app/routes/(admin)/settings.tsx` | `/settings` | Route group |
-| `app/routes/~layout.tsx` | *excluded* | Tilde prefix → not a route |
-| `app/routes/~404.tsx` | *custom 404 page* | Auto-discovered |
-| `app/routes/~500.tsx` | *custom error page* | Auto-discovered |
+| File Path                          | URL                 | Type                         |
+| ---------------------------------- | ------------------- | ---------------------------- |
+| `app/routes/index.tsx`             | `/`                 | Static                       |
+| `app/routes/about.tsx`             | `/about`            | Static                       |
+| `app/routes/blog/index.tsx`        | `/blog`             | Static                       |
+| `app/routes/blog/[slug].tsx`       | `/blog/:slug`       | Dynamic                      |
+| `app/routes/blog/[...path].tsx`    | `/blog/:...path`    | Catch-all                    |
+| `app/routes/(admin)/dashboard.tsx` | `/dashboard`        | Route group (group stripped) |
+| `app/routes/(admin)/settings.tsx`  | `/settings`         | Route group                  |
+| `app/routes/~layout.tsx`           | _excluded_          | Tilde prefix → not a route   |
+| `app/routes/~404.tsx`              | _custom 404 page_   | Auto-discovered              |
+| `app/routes/~500.tsx`              | _custom error page_ | Auto-discovered              |
 
 ### Route Pattern Syntax
 
-| Pattern | Regex | Example Match |
-|---|---|---|
-| `/` | `^/$` | `/` |
-| `/about` | `^/about$` | `/about` |
-| `/blog/:slug` | `^/blog/([^/]+)$` | `/blog/hello` → `{ slug: "hello" }` |
-| `/blog/[slug]` | `^/blog/([^/]+)$` | `/blog/hello` → `{ slug: "hello" }` |
-| `/docs/:...path` | `^/docs/(.+)$` | `/docs/a/b/c` → `{ path: "a/b/c" }` |
-| `/docs/[...path]` | `^/docs/(.+)$` | `/docs/a/b/c` → `{ path: "a/b/c" }` |
+| Pattern           | Regex             | Example Match                       |
+| ----------------- | ----------------- | ----------------------------------- |
+| `/`               | `^/$`             | `/`                                 |
+| `/about`          | `^/about$`        | `/about`                            |
+| `/blog/:slug`     | `^/blog/([^/]+)$` | `/blog/hello` → `{ slug: "hello" }` |
+| `/blog/[slug]`    | `^/blog/([^/]+)$` | `/blog/hello` → `{ slug: "hello" }` |
+| `/docs/:...path`  | `^/docs/(.+)$`    | `/docs/a/b/c` → `{ path: "a/b/c" }` |
+| `/docs/[...path]` | `^/docs/(.+)$`    | `/docs/a/b/c` → `{ path: "a/b/c" }` |
 
 Both `:param` and `[param]` syntaxes work. The file system uses `[param]` (bracket) syntax, the internal router uses `:param` (colon) syntax.
 
@@ -2946,6 +3097,7 @@ When multiple routes could match a URL, the highest-scoring route wins:
 ### Custom Error Pages
 
 Create in `app/routes/`:
+
 - `~404.tsx` — Custom 404 page. Must export default React component.
 - `~500.tsx` — Custom error page. Receives `{ error: Error }` prop.
 
@@ -2990,9 +3142,9 @@ import { Hono } from 'hono';
 
 const route = new Hono();
 
-route.get('/', (c) => c.json({ message: 'Hello!' }));
+route.get('/', c => c.json({ message: 'Hello!' }));
 
-route.post('/', async (c) => {
+route.post('/', async c => {
   const body = await c.req.json();
   return c.json({ echo: body });
 });
@@ -3008,7 +3160,7 @@ import { Hono } from 'hono';
 
 const route = new Hono();
 
-route.get('/', (c) => {
+route.get('/', c => {
   const id = c.req.param('id');
   return c.json({ userId: id });
 });
@@ -3039,16 +3191,16 @@ const route = new Hono();
 route.use('/*', cors());
 route.use('/*', bearerAuth({ token: process.env.API_TOKEN! }));
 
-route.get('/', (c) => c.json({ protected: true }));
+route.get('/', c => c.json({ protected: true }));
 
 export default route;
 ```
 
 ### Auto-Generated Endpoints
 
-| Endpoint | Content-Type | Description |
-|---|---|---|
-| `/openapi.json` | `application/json` | OpenAPI 3.0.0 spec |
+| Endpoint                   | Content-Type               | Description          |
+| -------------------------- | -------------------------- | -------------------- |
+| `/openapi.json`            | `application/json`         | OpenAPI 3.0.0 spec   |
 | `/.well-known/api-catalog` | `application/linkset+json` | RFC 9727 API catalog |
 
 ---
@@ -3065,14 +3217,14 @@ bunx create-manic my-app
 
 ### Interactive Prompts
 
-| Prompt | Type | Default | Description |
-|---|---|---|---|
-| Project name | text | `my-manic-app` | Directory name |
-| App name | text | project name | Display name |
-| Project mode | choice | `fullstack` | `fullstack` or `frontend` |
-| Port | text | `6070` | Dev server port |
-| Include API docs? | yes/no | yes | Adds `@manicjs/api-docs` (fullstack only) |
-| Enable View Transitions? | yes/no | yes | Sets `router.viewTransitions` |
+| Prompt                   | Type   | Default        | Description                               |
+| ------------------------ | ------ | -------------- | ----------------------------------------- |
+| Project name             | text   | `my-manic-app` | Directory name                            |
+| App name                 | text   | project name   | Display name                              |
+| Project mode             | choice | `fullstack`    | `fullstack` or `frontend`                 |
+| Port                     | text   | `6070`         | Dev server port                           |
+| Include API docs?        | yes/no | yes            | Adds `@manicjs/api-docs` (fullstack only) |
+| Enable View Transitions? | yes/no | yes            | Sets `router.viewTransitions`             |
 
 ### Template Contents
 
@@ -3110,6 +3262,7 @@ template/
 ### Template Customization
 
 The `create-manic` script:
+
 1. Copies entire `template/` directory to target.
 2. If `frontend` mode: deletes `app/api/` directory.
 3. Removes `hono` dependency if `frontend` mode.
@@ -3148,31 +3301,32 @@ Source: `publish.ts` (monorepo root)
 
 ### Package Registry
 
-| npm Package | Source Path | Group |
-|---|---|---|
-| `manicjs` | `packages/manic` | Core |
-| `@manicjs/providers` | `packages/providers` | Core |
-| `create-manic` | `packages/create-manic` | Core |
-| `@manicjs/mcp` | `plugins/mcp` | Plugins |
-| `@manicjs/seo` | `plugins/seo` | Plugins |
-| `@manicjs/sitemap` | `plugins/sitemap` | Plugins |
-| `@manicjs/api-docs` | `plugins/api-docs` | Plugins |
+| npm Package          | Source Path             | Group   |
+| -------------------- | ----------------------- | ------- |
+| `manicjs`            | `packages/manic`        | Core    |
+| `@manicjs/providers` | `packages/providers`    | Core    |
+| `create-manic`       | `packages/create-manic` | Core    |
+| `@manicjs/mcp`       | `plugins/mcp`           | Plugins |
+| `@manicjs/seo`       | `plugins/seo`           | Plugins |
+| `@manicjs/sitemap`   | `plugins/sitemap`       | Plugins |
+| `@manicjs/api-docs`  | `plugins/api-docs`      | Plugins |
 
 ### Current Versions
 
-| Package | Version |
-|---|---|
-| `manicjs` | 0.12.0 |
-| `@manicjs/providers` | 0.8.0 |
-| `create-manic` | 0.9.0 |
-| `@manicjs/mcp` | 0.5.0 |
-| `@manicjs/seo` | 0.5.0 |
-| `@manicjs/sitemap` | 0.6.0 |
-| `@manicjs/api-docs` | 0.6.0 |
+| Package              | Version |
+| -------------------- | ------- |
+| `manicjs`            | 0.12.0  |
+| `@manicjs/providers` | 0.8.0   |
+| `create-manic`       | 0.9.0   |
+| `@manicjs/mcp`       | 0.5.0   |
+| `@manicjs/seo`       | 0.5.0   |
+| `@manicjs/sitemap`   | 0.6.0   |
+| `@manicjs/api-docs`  | 0.6.0   |
 
 ### Publish Process
 
 Interactive TUI (`bun run publish.ts`):
+
 1. Arrow-key multi-select packages to publish.
 2. Choose bump type: `patch`, `minor`, `major`, or `none`.
 3. Preview version changes.
@@ -3186,6 +3340,7 @@ Interactive TUI (`bun run publish.ts`):
 ## 51. Dependency Graph
 
 ### `manicjs` depends on:
+
 - `hono` (server, API routing)
 - `colorette` (CLI output coloring)
 - `bun-plugin-tailwind` (CSS compilation)
@@ -3195,26 +3350,32 @@ Interactive TUI (`bun run publish.ts`):
 - `oxlint` (linting binary)
 
 ### `manicjs` peer deps:
+
 - `react >= 18.0.0`
 - `react-dom >= 18.0.0`
 
 ### `@manicjs/providers` depends on:
+
 - `colorette`
 - Peer: `manicjs >= 0.7.2`
 
 ### `@manicjs/mcp` depends on:
+
 - Peer: `manicjs >= 0.7.4`
 - Peer: `zod >= 3.0.0 || >= 4.0.0`
 
 ### `@manicjs/api-docs` depends on:
+
 - `@scalar/hono-api-reference`
 - `hono`
 - Peer: `manicjs >= 0.7.4`
 
 ### `@manicjs/seo` depends on:
+
 - Peer: `manicjs >= 0.7.4`
 
 ### `@manicjs/sitemap` depends on:
+
 - Peer: `manicjs >= 0.7.4`
 
 ---
@@ -3257,22 +3418,27 @@ The template includes recommended CSS for View Transitions:
 ### Using View Transitions in Pages
 
 **Option 1: Style prop (recommended):**
+
 ```tsx
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 
-<img src="/logo.svg" style={LOGO_STYLE} />
+<img src="/logo.svg" style={LOGO_STYLE} />;
 ```
 
 **Option 2: ViewTransitions component:**
+
 ```tsx
 import { ViewTransitions } from 'manicjs/transitions';
 
-<ViewTransitions.img name="logo" src="/logo.svg" />
+<ViewTransitions.img name="logo" src="/logo.svg" />;
 ```
 
 **Option 3: CSS class:**
+
 ```css
-.hero-image { view-transition-name: hero; }
+.hero-image {
+  view-transition-name: hero;
+}
 ```
 
 Elements with the same `view-transition-name` on different pages will animate between positions during navigation.
@@ -3285,26 +3451,32 @@ The default theme uses CSS custom properties:
 
 ```css
 :root {
-  --theme-background: #FEF6F7;   /* Light mode background */
-  --theme-foreground: #151212;    /* Light mode text */
+  --theme-background: #fef6f7; /* Light mode background */
+  --theme-foreground: #151212; /* Light mode text */
 }
 
 .dark {
-  --theme-background: #151212;   /* Dark mode background */
-  --theme-foreground: #FEF6F7;   /* Dark mode text */
+  --theme-background: #151212; /* Dark mode background */
+  --theme-foreground: #fef6f7; /* Dark mode text */
 }
 ```
 
 Tailwind theme mapping (in `@theme` block):
+
 ```css
 @theme {
-  --color-accent: #F15156;                    /* Brand color */
-  --color-background: var(--theme-background); /* Maps to Tailwind's bg-background */
-  --color-foreground: var(--theme-foreground); /* Maps to Tailwind's text-foreground */
+  --color-accent: #f15156; /* Brand color */
+  --color-background: var(
+    --theme-background
+  ); /* Maps to Tailwind's bg-background */
+  --color-foreground: var(
+    --theme-foreground
+  ); /* Maps to Tailwind's text-foreground */
 }
 ```
 
 Usage in components:
+
 ```tsx
 <div className="bg-background text-foreground">    {/* Tailwind classes */}
 <div style={{ color: 'var(--theme-foreground)' }}>  {/* Raw CSS */}
@@ -3321,21 +3493,31 @@ The template's `global.css` includes pre-built button classes:
   @apply bg-accent text-background border-2 border-background font-semibold
          rounded-full px-6 py-3 transition-all duration-150;
 }
-.btn-primary:hover { @apply scale-105 opacity-90; }
-.btn-primary:active { @apply scale-95 opacity-50; }
+.btn-primary:hover {
+  @apply scale-105 opacity-90;
+}
+.btn-primary:active {
+  @apply scale-95 opacity-50;
+}
 
 .btn-secondary {
   @apply bg-foreground text-background border-2 border-foreground font-semibold
          rounded-full px-6 py-3 transition-all duration-150;
 }
-.btn-secondary:hover { @apply scale-105 opacity-90; }
-.btn-secondary:active { @apply scale-95 opacity-50; }
+.btn-secondary:hover {
+  @apply scale-105 opacity-90;
+}
+.btn-secondary:active {
+  @apply scale-95 opacity-50;
+}
 
 .btn-outline {
   @apply border-2 border-foreground font-semibold rounded-full px-6 py-3
          transition-all duration-150;
 }
-.btn-outline:hover { @apply bg-foreground text-background; }
+.btn-outline:hover {
+  @apply bg-foreground text-background;
+}
 ```
 
 ---
@@ -3345,6 +3527,7 @@ The template's `global.css` includes pre-built button classes:
 The Router wraps all rendered page components in an `ErrorBoundary` class component.
 
 **Error flow:**
+
 1. Page component throws during render.
 2. `ErrorBoundary.getDerivedStateFromError()` sets `hasError: true`.
 3. `ErrorBoundary.componentDidCatch()` logs error and calls `onError` callback.
@@ -3366,10 +3549,12 @@ The Router wraps all rendered page components in an `ErrorBoundary` class compon
 5. This forces the Router to re-import page components on next render.
 
 **What triggers HMR:**
+
 - Any `.tsx`/`.ts`/`.jsx` file change in `app/`.
 - CSS changes via Tailwind (processed by `bun-plugin-tailwind`).
 
 **What triggers full restart (via `bun --watch`):**
+
 - Changes to `~manic.ts` (the server entry).
 - Route file additions/deletions (the file watcher touches `~manic.ts`).
 
@@ -3417,18 +3602,20 @@ import app from './app/index.html';
 ```
 
 This import returns a `HTMLBundle` object (has `.index` property). When used with `Bun.serve`, Bun automatically:
+
 - Processes `<script>` tags (compiles TSX/TS).
 - Processes `<link href="tailwindcss">` (runs Tailwind).
 - Injects HMR client code in dev.
 - Handles module resolution for all imports.
 
 In the build pipeline, this import is replaced:
+
 ```ts
 // Before (source):
 import app from './app/index.html';
 
 // After (build transform):
-const html = await Bun.file(".manic/client/index.html").text();
+const html = await Bun.file('.manic/client/index.html').text();
 ```
 
 ---
@@ -3439,6 +3626,7 @@ const html = await Bun.file(".manic/client/index.html").text();
 Bun automatically loads `.env` and `.env.local` files. No framework code needed.
 
 **Order of precedence:**
+
 1. `process.env` (system environment)
 2. `.env.local` (local overrides, gitignored)
 3. `.env` (shared defaults)

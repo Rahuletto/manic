@@ -1,15 +1,7 @@
 import { google } from '@ai-sdk/google';
 import { streamText, convertToModelMessages } from 'ai';
 import { Hono } from 'hono';
-
-const manicCtx = await Bun.file('app/system/manic.md').text();
-const benchmarksCtx = await Bun.file('app/system/benchmarks.md').text();
-
-const BASE_PROMPT = `You are an intelligent assistant, you can do anything you want. You have full flexibility with markdown aswell, from heading1 to paragraph to code blocks, code, pre, tables, etc..
-
-You are inside a ManicJS Framework project, Users are interested to ask you about this awesome framework.
-
-Also you dont have to dump everything to the user.`;
+import { buildSystemPrompt } from '../../contexts/context-cache';
 
 const THINKING_MODELS = [
   'gemini-2.5-flash',
@@ -17,25 +9,6 @@ const THINKING_MODELS = [
   'gemini-3-flash-preview',
   'gemini-3-pro-preview',
 ];
-
-type ContextSettings = {
-  manicDocs: boolean;
-  benchmarks: boolean;
-};
-
-function buildSystemPrompt(context: ContextSettings): string {
-  let prompt = BASE_PROMPT;
-
-  if (context.manicDocs) {
-    prompt += `\n\n## ManicJS Documentation\n${manicCtx}`;
-  }
-
-  if (context.benchmarks) {
-    prompt += `\n\n## Benchmark Context\n${benchmarksCtx}`;
-  }
-
-  return prompt;
-}
 
 const route = new Hono();
 
@@ -46,6 +19,18 @@ route.post('/', async c => {
   const systemPrompt = buildSystemPrompt(context);
 
   try {
+    const apiKey =
+      process.env.MANIC_GOOGLE_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY;
+
+    if (!apiKey) {
+      return c.json(
+        { error: 'Google API key not configured' },
+        { status: 401 }
+      );
+    }
+
     const result = streamText({
       model: google(model),
       system: systemPrompt,

@@ -25,7 +25,9 @@ export default defineConfig({
           description: 'Full-text search across the site',
           input: z.object({ query: z.string().describe('Search query') }),
           async execute({ query }) {
-            return fetch(`/api/search?q=${encodeURIComponent(query)}`).then(r => r.json());
+            return fetch(`/api/search?q=${encodeURIComponent(query)}`).then(r =>
+              r.json()
+            );
           },
         }),
       ],
@@ -38,17 +40,18 @@ export default defineConfig({
 
 Always available — no configuration needed:
 
-| Tool | Description |
-|------|-------------|
-| `get_routes` | All page routes (path + file path) |
-| `get_api_routes` | All API routes under `/api` |
-| `get_page_meta` | `<title>`, meta tags, canonical for any URL |
+| Tool                    | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `get_routes`            | All page routes (path + file path)               |
+| `get_api_routes`        | All API routes under `/api`                      |
+| `get_page_meta`         | `<title>`, meta tags, canonical for any URL      |
 | `get_rendered_elements` | Simplified DOM element list from a rendered page |
-| `get_console_logs` | Browser console logs (dev only) |
+| `get_console_logs`      | Browser console logs (dev only)                  |
 
 ## Agent discovery
 
 Every response includes:
+
 - `Link: </.well-known/mcp/server-card.json>; rel="mcp"` — MCP Server Card (SEP-1649)
 - `Link: </.well-known/agent-skills/index.json>; rel="agent-skills"` — Agent Skills RFC v0.2.0
 
@@ -85,12 +88,12 @@ Converts the Zod schema to JSON Schema `inputSchema` and validates args at call 
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | `string` | `"manic-mcp"` | Server name shown to MCP clients |
-| `version` | `string` | `"1.0.0"` | Server version |
-| `path` | `string` | `"/mcp"` | Endpoint path |
-| `tools` | `McpTool[]` | `[]` | Additional tools |
+| Option    | Type        | Default       | Description                      |
+| --------- | ----------- | ------------- | -------------------------------- |
+| `name`    | `string`    | `"manic-mcp"` | Server name shown to MCP clients |
+| `version` | `string`    | `"1.0.0"`     | Server version                   |
+| `path`    | `string`    | `"/mcp"`      | Endpoint path                    |
+| `tools`   | `McpTool[]` | `[]`          | Additional tools                 |
 
 ## File structure
 

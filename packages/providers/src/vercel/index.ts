@@ -50,14 +50,15 @@ export function vercel(options: VercelOptions = {}): ManicProvider {
       };
       await Bun.write(`${vDist}/config.json`, JSON.stringify(vConfig, null, 2));
 
-      const vcConfig: Record<string, unknown> = runtime === 'edge'
-        ? { runtime: 'edge', entrypoint: 'index.mjs' }
-        : {
-            runtime: runtime === 'bun' ? 'bun1.x' : runtime,
-            handler: 'index.mjs',
-            shouldAddHelpers: false,
-            supportsResponseStreaming: true,
-          };
+      const vcConfig: Record<string, unknown> =
+        runtime === 'edge'
+          ? { runtime: 'edge', entrypoint: 'index.mjs' }
+          : {
+              runtime: runtime === 'bun' ? 'bun1.x' : runtime,
+              handler: 'index.mjs',
+              shouldAddHelpers: false,
+              supportsResponseStreaming: true,
+            };
 
       if (runtime !== 'bun' && runtime !== 'edge') {
         vcConfig.launcherType = 'Nodejs';
@@ -113,7 +114,7 @@ app.route("/api", apiApp);
 
 // OpenAPI spec
 const paths = {};
-${apiRoutes.map(route => `paths["/api${route === "/" ? "" : route}"] = { get: { responses: { 200: { description: "OK" } } } };`).join('\n')}
+${apiRoutes.map(route => `paths["/api${route === '/' ? '' : route}"] = { get: { responses: { 200: { description: "OK" } } } };`).join('\n')}
 const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? 'Manic'} API", version: "1.0.0" }, paths };
 app.get("/openapi.json", (c) => c.json(spec));
 
@@ -148,7 +149,9 @@ ${runtime === 'edge' ? 'export default (req, ctx) => app.fetch(req, { vercel: ct
 
       // Clean up raw entry
       const { unlinkSync } = await import('node:fs');
-      try { unlinkSync(rawEntry); } catch {}
+      try {
+        unlinkSync(rawEntry);
+      } catch {}
 
       await Bun.write(
         `${vDist}/functions/api.func/package.json`,

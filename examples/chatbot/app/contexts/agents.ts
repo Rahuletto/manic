@@ -91,7 +91,9 @@ export function agents(): ManicPlugin {
       // Emit references
       const referencesDir = '.agents/skills/manic-framework/references';
       const glob = new Bun.Glob('*.md');
-      const referenceFiles = await Array.fromAsync(glob.scan({ cwd: referencesDir }));
+      const referenceFiles = await Array.fromAsync(
+        glob.scan({ cwd: referencesDir })
+      );
       await Promise.all(
         referenceFiles.map(async file => {
           const content = await Bun.file(`${referencesDir}/${file}`).text();

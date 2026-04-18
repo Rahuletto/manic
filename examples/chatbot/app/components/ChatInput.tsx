@@ -1,6 +1,6 @@
 import { ArrowUp, SlidersHorizontal, Square } from 'lucide-react';
 import { ViewTransitions } from 'manicjs';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ChatActionsPopup, type ContextSettings } from './ChatActionsPopup';
 
 type Model = { id: string; name: string };
@@ -35,12 +35,30 @@ export function ChatInput({
   const hasContent = (value?.trim().length ?? 0) > 0;
   const isDisabled = !hasContent && !isLoading;
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSubmit?.();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        onSubmit?.();
+      }
+    },
+    [onSubmit]
+  );
+
+  const toggleActions = useCallback(() => setShowActions(s => !s), []);
+
+  const handleModelSelect = useCallback(
+    (id: string) => {
+      onModelSelect(id);
+      setShowActions(false);
+    },
+    [onModelSelect]
+  );
+
+  const handleSubmitOrStop = useCallback(() => {
+    if (isLoading) onStop?.();
+    else onSubmit?.();
+  }, [isLoading, onStop, onSubmit]);
 
   return (
     <ViewTransitions.div
@@ -63,17 +81,14 @@ export function ChatInput({
               <ChatActionsPopup
                 models={models}
                 currentModel={currentModel}
-                onModelSelect={id => {
-                  onModelSelect(id);
-                  setShowActions(false);
-                }}
+                onModelSelect={handleModelSelect}
                 contextSettings={contextSettings}
                 onContextChange={onContextChange}
               />
             )}
             <button
               type="button"
-              onClick={() => setShowActions(!showActions)}
+              onClick={toggleActions}
               className={`
                 flex items-center justify-center
                 w-10 h-10 rounded-full
@@ -117,7 +132,7 @@ export function ChatInput({
 
       <button
         type="button"
-        onClick={isLoading ? onStop : () => onSubmit?.()}
+        onClick={handleSubmitOrStop}
         disabled={isDisabled}
         className={`
                 flex items-center justify-center

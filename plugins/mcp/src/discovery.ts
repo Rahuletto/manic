@@ -11,16 +11,25 @@ export async function buildDiscoveryDocs(
   endpoint: string,
   tools: McpTool[]
 ) {
-  const toolDocs = tools.map(t => {
-    const props = t.inputSchema.properties ?? {};
-    const req = new Set(t.inputSchema.required ?? []);
-    const params = Object.entries(props)
-      .map(([k, v]: [string, any]) =>
-        `  - \`${k}${req.has(k) ? '' : '?'}\` (${v.type ?? 'string'})${v.description ? ': ' + v.description : ''}`
-      )
-      .join('\n');
-    return [`### \`${t.name}\``, t.description, ...(params ? ['', '**Parameters:**', params] : ['', '_No parameters._'])].join('\n');
-  }).join('\n\n');
+  const toolDocs = tools
+    .map(t => {
+      const props = t.inputSchema.properties ?? {};
+      const req = new Set(t.inputSchema.required ?? []);
+      const params = Object.entries(props)
+        .map(
+          ([k, v]: [string, any]) =>
+            `  - \`${k}${req.has(k) ? '' : '?'}\` (${v.type ?? 'string'})${v.description ? ': ' + v.description : ''}`
+        )
+        .join('\n');
+      return [
+        `### \`${t.name}\``,
+        t.description,
+        ...(params
+          ? ['', '**Parameters:**', params]
+          : ['', '_No parameters._']),
+      ].join('\n');
+    })
+    .join('\n\n');
 
   const skillContent = `# ${serverName} — MCP Server Skill
 
@@ -66,7 +75,11 @@ Mcp-Session-Id: <session-id>
 
   const skillBytes = new TextEncoder().encode(skillContent);
   const hashBuf = await crypto.subtle.digest('SHA-256', skillBytes);
-  const digest = 'sha256:' + Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const digest =
+    'sha256:' +
+    Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
   const skillUrl = '/.well-known/agent-skills/use-mcp/SKILL.md';
 
   return {
@@ -86,13 +99,15 @@ Mcp-Session-Id: <session-id>
     }),
     agentSkillsIndex: JSON.stringify({
       $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
-      skills: [{
-        name: 'use-mcp',
-        type: 'skill-md',
-        description: `How to connect to and use the ${serverName} MCP server`,
-        url: skillUrl,
-        digest,
-      }],
+      skills: [
+        {
+          name: 'use-mcp',
+          type: 'skill-md',
+          description: `How to connect to and use the ${serverName} MCP server`,
+          url: skillUrl,
+          digest,
+        },
+      ],
     }),
   };
 }

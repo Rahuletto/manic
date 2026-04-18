@@ -12,7 +12,11 @@ export function handleMessage(
   serverName: string,
   serverVersion: string
 ): HandleResult {
-  const { id, method, params } = msg as { id?: unknown; method?: string; params?: any };
+  const { id, method, params } = msg as {
+    id?: unknown;
+    method?: string;
+    params?: any;
+  };
 
   if (method === 'initialize') {
     const newSessionId = crypto.randomUUID();
@@ -20,7 +24,8 @@ export function handleMessage(
     return {
       newSessionId,
       response: {
-        jsonrpc: '2.0', id,
+        jsonrpc: '2.0',
+        id,
         result: {
           protocolVersion: PROTOCOL_VERSION,
           capabilities: { tools: {} },
@@ -39,8 +44,15 @@ export function handleMessage(
   if (method === 'tools/list') {
     return {
       response: {
-        jsonrpc: '2.0', id,
-        result: { tools: tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) },
+        jsonrpc: '2.0',
+        id,
+        result: {
+          tools: tools.map(({ name, description, inputSchema }) => ({
+            name,
+            description,
+            inputSchema,
+          })),
+        },
       },
     };
   }
@@ -48,21 +60,46 @@ export function handleMessage(
   if (method === 'tools/call') {
     const tool = tools.find(t => t.name === params?.name);
     if (!tool) {
-      return { response: { jsonrpc: '2.0', id, error: { code: -32601, message: `Tool not found: ${params?.name}` } } };
+      return {
+        response: {
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32601, message: `Tool not found: ${params?.name}` },
+        },
+      };
     }
     return {
       response: (async () => {
         try {
           const result = await tool.execute(params?.arguments ?? {});
-          return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result) }] } };
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              content: [{ type: 'text', text: JSON.stringify(result) }],
+            },
+          };
         } catch (err: unknown) {
-          return { jsonrpc: '2.0', id, error: { code: -32000, message: err instanceof Error ? err.message : String(err) } };
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32000,
+              message: err instanceof Error ? err.message : String(err),
+            },
+          };
         }
       })(),
     };
   }
 
-  return { response: { jsonrpc: '2.0', id: id ?? null, error: { code: -32601, message: 'Method not found' } } };
+  return {
+    response: {
+      jsonrpc: '2.0',
+      id: id ?? null,
+      error: { code: -32601, message: 'Method not found' },
+    },
+  };
 }
 
 export function sseEvent(data: unknown): string {

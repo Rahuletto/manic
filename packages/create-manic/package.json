@@ -22,8 +22,8 @@
     "index.ts",
     "template/**/*"
   ],
+  "type": "module",
   "publishConfig": {
     "access": "public"
-  },
-  "type": "module"
+  }
 }

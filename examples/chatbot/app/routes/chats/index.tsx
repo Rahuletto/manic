@@ -1,14 +1,14 @@
 import { useChat } from '@ai-sdk/react';
 import { Streamdown } from 'streamdown';
 import { useTheme, ThemeToggle } from 'manicjs/theme';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { DefaultChatTransport } from 'ai';
 import { Sun, MoonStar, ChevronDown } from 'lucide-react';
 import { Link, ViewTransitions } from 'manicjs';
-import { ChatInput } from '../components/ChatInput';
-import { type ContextSettings } from '../components/ChatActionsPopup';
-import { ErrorDisplay } from '../components/ErrorDisplay';
-import { LoadingIndicator } from '../components/LoadingIndicator';
+import { ChatInput } from '@/components/ChatInput';
+import { type ContextSettings } from '@/components/ChatActionsPopup';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { LoadingIndicator } from '@/components/LoadingIndicator';
 
 const SUGGESTIONS = [
   {
@@ -29,7 +29,17 @@ const SUGGESTIONS = [
   {
     title: 'API Routes',
     subtitle: 'Build your backend',
-    text: 'How do I create API routes in ManicJS with Elysia?',
+    text: 'How do I create API routes in ManicJS?',
+  },
+  {
+    title: 'Plugins',
+    subtitle: 'Extend functionality',
+    text: 'How do I add plugins like sitemap or SEO to my Manic app?',
+  },
+  {
+    title: 'Deployment',
+    subtitle: 'Go live',
+    text: 'How do I deploy my Manic app to Vercel or Cloudflare?',
   },
 ];
 
@@ -41,6 +51,30 @@ const MODELS = [
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
 ];
 
+type Suggestion = { title: string; subtitle: string; text: string };
+
+function SuggestionButton({
+  item,
+  onSelect,
+}: {
+  item: Suggestion;
+  onSelect: (text: string) => void;
+}) {
+  const handleClick = useCallback(
+    () => onSelect(item.text),
+    [item.text, onSelect]
+  );
+  return (
+    <button
+      onClick={handleClick}
+      className="group flex flex-col gap-1 p-6 py-5 rounded-[28px] bg-foreground/5 hover:bg-foreground/10 border border-transparent hover:border-foreground/5 transition-all duration-300 text-left cursor-pointer"
+    >
+      <h3 className="font-semibold text-foreground text-lg">{item.title}</h3>
+      <p className="text-sm text-foreground/60 font-medium">{item.subtitle}</p>
+    </button>
+  );
+}
+
 export default function Chatbot() {
   const { isDark } = useTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -50,6 +84,8 @@ export default function Chatbot() {
   const [contextSettings, setContextSettings] = useState<ContextSettings>({
     manicDocs: true,
     benchmarks: true,
+    agents: true,
+    skills: true,
   });
 
   const { messages, setMessages, sendMessage, status, stop, error } = useChat({
@@ -69,7 +105,7 @@ export default function Chatbot() {
         setMessages(JSON.parse(saved));
       } catch {}
     }
-  }, []);
+  }, [setMessages]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -85,31 +121,37 @@ export default function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const target = e.target;
-    target.style.height = 'auto';
-    target.style.height = `${target.scrollHeight}px`;
-  };
+  const handleInput = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInput(e.target.value);
+      const target = e.target;
+      target.style.height = 'auto';
+      target.style.height = `${target.scrollHeight}px`;
+    },
+    []
+  );
 
-  const onSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const onSubmit = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      if (!input.trim() || isLoading) return;
 
-    const currentInput = input;
-    setInput('');
+      const currentInput = input;
+      setInput('');
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.focus();
-    }
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.focus();
+      }
 
-    await sendMessage({
-      text: currentInput,
-    });
-  };
+      await sendMessage({
+        text: currentInput,
+      });
+    },
+    [input, isLoading, sendMessage]
+  );
 
-  const handleSuggestionClick = (text: string) => {
+  const handleSuggestionClick = useCallback((text: string) => {
     setInput(text);
     if (textareaRef.current) {
       textareaRef.current.focus();
@@ -120,7 +162,12 @@ export default function Chatbot() {
         }
       }, 0);
     }
-  };
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setMessages([]);
+    localStorage.removeItem('chat_messages');
+  }, [setMessages]);
 
   return (
     <main className="min-h-screen relative flex flex-col">
@@ -139,10 +186,7 @@ export default function Chatbot() {
 
         <div className="flex items-center gap-4">
           <button
-            onClick={() => {
-              setMessages([]);
-              localStorage.removeItem('chat_messages');
-            }}
+            onClick={clearHistory}
             className="text-foreground/40 hover:text-foreground/80 transition-colors text-xs font-medium px-3 py-1.5 rounded-full hover:bg-foreground/5"
             title="Clear Chat History"
           >
@@ -175,18 +219,11 @@ export default function Chatbot() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 fill-mode-backwards">
               {SUGGESTIONS.map(item => (
-                <button
+                <SuggestionButton
                   key={item.title}
-                  onClick={() => handleSuggestionClick(item.text)}
-                  className="group flex flex-col gap-1 p-6 py-5 rounded-[28px] bg-foreground/5 hover:bg-foreground/10 border border-transparent hover:border-foreground/5 transition-all duration-300 text-left cursor-pointer"
-                >
-                  <h3 className="font-semibold text-foreground text-lg">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-foreground/60 font-medium">
-                    {item.subtitle}
-                  </p>
-                </button>
+                  item={item}
+                  onSelect={handleSuggestionClick}
+                />
               ))}
             </div>
           </div>
@@ -258,7 +295,7 @@ export default function Chatbot() {
                       </details>
                     )}
                     <div
-                      className={`prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 prose-pre:bg-transparent max-w-full overflow-hidden ${
+                      className={`prose-pre:p-0 prose-pre:bg-transparent max-w-full overflow-hidden ${
                         m.role === 'user'
                           ? 'bg-foreground/5 max-w-lg text-foreground px-4 py-2.5 rounded-[20px] rounded-tr-sm'
                           : 'py-1'

@@ -24,8 +24,8 @@ The docs UI is available at `/docs`. The OpenAPI spec is served at `/openapi.jso
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `path` | `string` | `"/docs"` | Mount path for the docs UI |
-| `specUrl` | `string` | `"/openapi.json"` | URL of the OpenAPI spec |
-| `theme` | `string` | `"default"` | Scalar theme name |
+| Option    | Type     | Default           | Description                |
+| --------- | -------- | ----------------- | -------------------------- |
+| `path`    | `string` | `"/docs"`         | Mount path for the docs UI |
+| `specUrl` | `string` | `"/openapi.json"` | URL of the OpenAPI spec    |
+| `theme`   | `string` | `"default"`       | Scalar theme name          |

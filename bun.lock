@@ -41,11 +41,13 @@
         "@ai-sdk/google": "^3.0.1",
         "@ai-sdk/react": "^3.0.3",
         "@manicjs/api-docs": "latest",
+        "@manicjs/mcp": "^0.5.0",
+        "@manicjs/seo": "workspace:*",
         "ai": "^6.0.3",
         "bun-plugin-tailwind": "^0.1.2",
         "hono": "^4.12.14",
         "lucide-react": "^0.562.0",
-        "manicjs": "latest",
+        "manicjs": "workspace:*",
         "react": "^19.2.5",
         "react-dom": "^19.2.5",
         "streamdown": "^1.6.10",
@@ -80,14 +82,14 @@
     },
     "packages/create-manic": {
       "name": "create-manic",
-      "version": "0.5.3",
+      "version": "0.9.0",
       "bin": {
         "create-manic": "./index.ts",
       },
     },
     "packages/manic": {
       "name": "manicjs",
-      "version": "0.8.2",
+      "version": "0.12.0",
       "bin": {
         "manic": "./src/cli/index.ts",
       },
@@ -116,7 +118,7 @@
     },
     "packages/providers": {
       "name": "@manicjs/providers",
-      "version": "0.4.1",
+      "version": "0.8.0",
       "dependencies": {
         "colorette": "^2.0.20",
       },
@@ -130,7 +132,7 @@
     },
     "plugins/api-docs": {
       "name": "@manicjs/api-docs",
-      "version": "0.2.1",
+      "version": "0.6.0",
       "dependencies": {
         "@scalar/hono-api-reference": "^0.10.8",
         "hono": "^4.7.0",
@@ -141,7 +143,7 @@
     },
     "plugins/mcp": {
       "name": "@manicjs/mcp",
-      "version": "0.1.0",
+      "version": "0.5.0",
       "peerDependencies": {
         "manicjs": "^0.7.4",
         "zod": "^3.0.0 || ^4.0.0",
@@ -149,14 +151,14 @@
     },
     "plugins/seo": {
       "name": "@manicjs/seo",
-      "version": "0.1.0",
+      "version": "0.5.0",
       "peerDependencies": {
         "manicjs": "^0.7.4",
       },
     },
     "plugins/sitemap": {
       "name": "@manicjs/sitemap",
-      "version": "0.2.1",
+      "version": "0.6.0",
       "peerDependencies": {
         "manicjs": "^0.7.4",
       },
@@ -1045,9 +1047,7 @@
 
     "@chevrotain/gast/lodash-es": ["lodash-es@4.17.21", "", {}, "sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw=="],
 
-    "chatbot/@manicjs/api-docs": ["@manicjs/api-docs@0.2.1", "", { "dependencies": { "@scalar/hono-api-reference": "^0.10.8", "hono": "^4.7.0" }, "peerDependencies": { "manicjs": "^0.7.4" } }, "sha512-wryrYefBUNrZQYQPOSzrZC0r6DjteSG9gNuHTDFwvj97m/vjJV1JgU60IjDy5B8NxAvcR5NoHdWYZ3YwIXUVdQ=="],
-
-    "chatbot/manicjs": ["manicjs@0.8.2", "", { "dependencies": { "bun-plugin-tailwind": "^0.1.2", "colorette": "^2.0.20", "hono": "^4.7.0", "oxc-minify": "^0.125.0", "oxc-resolver": "^11.19.1", "oxc-transform": "^0.125.0", "oxlint": "^1.60.0" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" }, "bin": { "manic": "src/cli/index.ts" } }, "sha512-rnW00vb9upMMHX7aYXksG3+bvHA5xHGlKTJZaXymILosvkUF1OKssVMXhBogmAKq/lqw6d8R0QRbBjJLJetNMg=="],
+    "chatbot/@manicjs/api-docs": ["@manicjs/api-docs@0.6.0", "", { "dependencies": { "@scalar/hono-api-reference": "^0.10.8", "hono": "^4.7.0" }, "peerDependencies": { "manicjs": "^0.7.4" } }, "sha512-rQfVRPdWkl1K9FZQ3OZYU1lYbDufjNvU6FB9fEo/uJ/A6+ldQLZcgxApp/B3A/Q6UTJPwLTTZmivVS8th3x1Ew=="],
 
     "chevrotain/lodash-es": ["lodash-es@4.17.21", "", {}, "sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw=="],
 
@@ -1066,8 +1066,6 @@
     "parse-entities/@types/unist": ["@types/unist@2.0.11", "", {}, "sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA=="],
 
     "streamdown/lucide-react": ["lucide-react@0.542.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-w3hD8/SQB7+lzU2r4VdFyzzOzKnUjTZIF/MQJGSSvni7Llewni4vuViRppfRAa2guOsY5k4jZyxw/i9DQHv+dw=="],
-
-    "chatbot/@manicjs/api-docs/manicjs": ["manicjs@0.7.7", "", { "dependencies": { "bun-plugin-tailwind": "^0.1.2", "colorette": "^2.0.20", "hono": "^4.7.0", "oxc-minify": "^0.125.0", "oxc-resolver": "^11.19.1", "oxc-transform": "^0.125.0", "oxlint": "^1.60.0" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" }, "bin": { "manic": "src/cli/index.ts" } }, "sha512-Lt8zNf8XicNjG8vsjAnClJM7qr5ATpt0JQ5/RRNYezj1ZvTtI5EGRX7qlRRuY02Z/kKquikAo6i4kNI7fuTojQ=="],
 
     "cytoscape-fcose/cose-base/layout-base": ["layout-base@2.0.1", "", {}, "sha512-dp3s92+uNI1hWIpPGH3jK2kxE2lMjdXdr+DH8ynZHpd6PUlH6x6cbuXnoMmiNumznqaNO31xu9e79F0uuZ0JFg=="],
 

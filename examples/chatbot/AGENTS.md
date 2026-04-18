@@ -1,530 +1,150 @@
-# AGENTS.md — Manic Framework Guide
+# Manic Framework: The Comprehensive Engineering Manual
 
-> **Manic** (`manicjs`) is a file-based, client-side React SPA framework built exclusively on **Bun**. It uses **Elysia** as the HTTP server, supports **Tailwind CSS v4** natively, and has **no SSR** — all rendering happens in the browser.
-
-## Project Structure
-
-```
-portfolio/
-├── ~manic.ts                      # Server entry point (REQUIRED, DO NOT RENAME)
-├── manic.config.ts                # Framework configuration (REQUIRED)
-├── bunfig.toml                    # Bun config (enables Tailwind plugin)
-├── tsconfig.json                  # Uses @/* alias → app/*
-├── assets/                        # Static files served at /assets/*
-└── app/
-    ├── index.html                 # HTML shell (REQUIRED, serves for ALL routes)
-    ├── main.tsx                   # React entry point (REQUIRED)
-    ├── global.css                 # Global styles (Tailwind v4 @import "tailwindcss")
-    ├── manic.d.ts                 # Type augmentation for __MANIC_ROUTES__
-    ├── ~routes.generated.ts       # AUTO-GENERATED route manifest — NEVER EDIT
-    ├── App.tsx                    # Optional app wrapper component
-    ├── routes/                    # Page files — each .tsx = one URL route
-    ├── api/                       # Server-side Elysia API routes
-    └── components/                # Shared React components (any structure)
-```
-
-## The `~` (Tilde) Prefix Convention
-
-The tilde prefix is the central naming convention:
-
-| File                       | Meaning                                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `~manic.ts`                | Server entry point — runs on Bun, calls `createManicServer()`                                                |
-| `app/~routes.generated.ts` | Auto-generated route manifest — regenerated on dev start and route file changes                              |
-| `app/routes/~anything.tsx` | **Excluded from routing** — use for helpers, shared layout components, or utilities inside the routes folder |
-
-**CRITICAL:** Never manually edit `~routes.generated.ts`. It is regenerated automatically.
-
-## How to Create Pages
-
-### File-Based Routing
-
-Every `.tsx` file inside `app/routes/` (that doesn't start with `~`) becomes a route:
-
-```
-app/routes/index.tsx         →  /
-app/routes/about.tsx         →  /about
-app/routes/blog/index.tsx    →  /blog
-app/routes/blog/[slug].tsx   →  /blog/:slug  (dynamic parameter)
-```
-
-### Page Requirements
-
-A page **must export a default React component**:
-
-```tsx
-// app/routes/about.tsx → /about
-import { Link } from 'manicjs';
-import { useTheme } from 'manicjs/theme';
-
-export default function About() {
-  const { isDark } = useTheme();
-
-  return (
-    <main>
-      <h1>About</h1>
-      <Link to="/">Home</Link>
-    </main>
-  );
-}
-```
-
-### Dynamic Routes
-
-Use `[param]` in the filename for dynamic segments:
-
-```tsx
-// app/routes/blog/[slug].tsx → /blog/:slug
-import { useRouter } from 'manicjs';
-
-export default function BlogPost() {
-  const { params } = useRouter();
-  return <h1>Post: {params.slug}</h1>;
-}
-```
-
-### Key Rules for Pages
-
-- **Must have a default export** — the router uses `module.default` from dynamic imports
-- **No server-side data fetching** — no `getServerSideProps`, `loader`, etc. All data fetching is client-side (fetch, SWR, React Query calling `/api/*` endpoints)
-- **CSR only** — Manic is purely client-side rendered; no SSR, no RSC
-- Use `@/*` import alias which maps to `app/*`
-
-## Package Exports & Import Paths
-
-All framework functionality lives under `manicjs` and its sub-paths. **Always use these — never recreate this functionality.**
-
-| Import path           | What it provides                                                                     |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| `manicjs`             | Root barrel — re-exports Router, Link, NotFound, useRouter, useQueryParams, navigate |
-| `manicjs/router`      | Full router API (components, hooks, functions, context)                              |
-| `manicjs/config`      | Config helpers and types                                                             |
-| `manicjs/theme`       | Theme system (provider, hook, toggle component)                                      |
-| `manicjs/transitions` | View Transitions API wrappers                                                        |
-| `manicjs/env`         | Client-safe environment variable access                                              |
-| `manicjs/server`      | Server bootstrap (`createManicServer`)                                               |
-| `manicjs/plugins`     | Server plugins (API loader, static file serving)                                     |
+Manic is a high-performance, production-grade React framework built from the ground up on Bun and Hono. It features a custom, ultra-fast bundler and builder system leveraging OXC for transformation and minification. We prioritize reliability, speed, and zero-config DX, intentionally replacing existing solutions like Vite, Webpack, or Turbopack with our own optimized stack.
 
 ---
 
-### `manicjs` (root) & `manicjs/router`
+## 📂 Repository Structure
 
-#### Components
+### Core Workspace
 
-**`<Router>`** — Top-level SPA router. Reads `window.__MANIC_ROUTES__`, matches current URL, lazy-loads the page component, renders `<NotFound>` for unmatched paths.
+| Path                     | Purpose                                                           |
+| :----------------------- | :---------------------------------------------------------------- |
+| `packages/manic/`        | The core framework engine (CLI, runtime, router, server).         |
+| `packages/create-manic/` | CLI scaffolding tool (`bun create manic`) and project templates.  |
+| `packages/providers/`    | Deployment adapters for Vercel, Netlify, Cloudflare, and more.    |
+| `demo/`                  | The primary development testbench for local feature verification. |
+| `examples/`              | Curated reference applications and integration patterns.          |
 
-```tsx
-import { Router } from 'manicjs';
-// Props (all optional):
-//   routes?: Record<string, () => Promise<{ default: ComponentType }>>
-//   — defaults to window.__MANIC_ROUTES__
-```
+### Framework Internals (`packages/manic/src/`)
 
-**`<Link>`** — Client-side navigation link. Renders as `<a>`, prevents full-page reload, prefetches route chunk on hover/focus.
-
-```tsx
-import { Link } from "manicjs";
-
-<Link
-  to="/about"              // Target path (required)
-  prefetch={true}          // Preload chunk on hover/focus (default: true)
-  viewTransitionName="x"   // Sets CSS view-transition-name on the <a>
-  className="..."
-  style={{ ... }}
->
-  About
-</Link>
-```
-
-**`<NotFound>`** — Built-in 404 page with animated dot-canvas background. Used automatically by `<Router>` when no route matches.
-
-```tsx
-import { NotFound } from 'manicjs';
-```
-
-#### Hooks
-
-**`useRouter()`** — Access current route context. Throws if called outside `<Router>`.
-
-```tsx
-import { useRouter } from 'manicjs';
-
-const { path, navigate, params } = useRouter();
-// path:     string — current pathname
-// navigate: (to: string) => void — programmatic navigation
-// params:   Record<string, string> — dynamic segment values (e.g. { slug: "hello" })
-```
-
-**`useQueryParams()`** — Access URL search params. Re-renders on popstate.
-
-```tsx
-import { useQueryParams } from 'manicjs';
-
-const params = useQueryParams(); // Returns URLSearchParams
-const q = params.get('q');
-```
-
-#### Functions
-
-**`navigate(to)`** — Programmatic navigation. Works outside React components. Loads target component before pushing history. Uses View Transitions if enabled.
-
-```tsx
-import { navigate } from 'manicjs';
-await navigate('/dashboard');
-```
-
-**`preloadRoute(path)`** — Eagerly load a route's component into cache. Used internally by `<Link>` on hover, but can be called manually.
-
-```tsx
-import { preloadRoute } from 'manicjs/router';
-preloadRoute('/about'); // Starts loading the chunk immediately
-```
-
-**`setViewTransitions(enabled)`** — Globally enable/disable View Transitions API for all `navigate()` calls.
-
-```tsx
-import { setViewTransitions } from 'manicjs/router';
-setViewTransitions(false); // Disable view transitions
-```
-
-#### Context
-
-**`RouterContext`** — Raw React context. Use `useRouter()` instead unless you need to mock in tests.
-
-```tsx
-import { RouterContext } from 'manicjs/router';
-// type: React.Context<RouterContextValue | null>
-```
-
-#### Types
-
-```tsx
-import type { RouteDef, RouterContextValue } from 'manicjs/router';
-
-interface RouteDef {
-  path: string;
-  component: ComponentType | null;
-  loader?: () => Promise<{ default: ComponentType }>;
-}
-
-interface RouterContextValue {
-  path: string;
-  navigate: (to: string) => void;
-  params: Record<string, string>;
-}
-```
+| Directory      | Responsibility                             | Key Files                                                            |
+| :------------- | :----------------------------------------- | :------------------------------------------------------------------- |
+| `cli/`         | Command orchestrator & toolchain.          | `index.ts`, `commands/build.ts`, `commands/dev.ts`, `plugins/oxc.ts` |
+| `server/`      | Production Hono server & SSR engine.       | `index.ts`, `lib/discovery.ts` (route scanning)                      |
+| `router/`      | Type-safe React router & View Transitions. | `Router.tsx`, `lib/matcher.ts`, `lib/Link.tsx`, `lib/context.ts`     |
+| `plugins/`     | Core framework extensions & middleware.    | `lib/api.ts` (API loader), `lib/static.ts`                           |
+| `config/`      | Schema-driven configuration engine.        | `index.ts` (loadConfig/defineConfig), `client.ts`                    |
+| `env/`         | Environment variable management.           | `client.ts`                                                          |
+| `theme/`       | Built-in styling & theme utilities.        | `index.ts`                                                           |
+| `transitions/` | View Transitions API React components.     | `index.ts`                                                           |
 
 ---
 
-### `manicjs/theme`
+## 🛠 The Manic Build Engine (Custom Toolchain)
 
-#### Components
+Manic does NOT use Vite or Rollup. It implements a proprietary build pipeline built with Bun and OXC:
 
-**`<ThemeProvider>`** — Wrap your app to enable theme management. Reads initial theme from `localStorage`, applies `dark` class on `<html>`, subscribes to `prefers-color-scheme` for system mode.
+### 🏗 Build Pipeline Flow
 
-```tsx
-import { ThemeProvider } from 'manicjs/theme';
-
-<ThemeProvider>
-  <Router />
-</ThemeProvider>;
+```mermaid
+graph TD
+  Start[manic build] --> Lint[oxlint scan]
+  Lint --> Manifest[Discovery: Scan app/routes]
+  Manifest --> WriteManifest[Write app/~routes.generated.ts]
+  WriteManifest --> Client[Bun.build Client: browser target]
+  Client --> API[Bun.build API: Scan app/api, bundle per route]
+  API --> Server[Bun.build Server: Transform ~manic.ts + Inject HTML]
+  Server --> Minify[oxc-minify: Parallel Client/API/Server]
+  Minify --> Provider[Provider.build: Package for Vercel/CF]
 ```
 
-**`<ThemeToggle>`** — A button that toggles dark/light. Supports render-prop children.
-
-```tsx
-import { ThemeToggle } from "manicjs/theme";
-
-// Default (emoji icons):
-<ThemeToggle />
-
-// Custom icons via render prop:
-<ThemeToggle className="...">
-  {(resolvedTheme) => resolvedTheme === "dark" ? <SunIcon /> : <MoonIcon />}
-</ThemeToggle>
-```
-
-#### Hook
-
-**`useTheme()`** — Full theme state and controls. Throws if called outside `<ThemeProvider>`.
-
-```tsx
-import { useTheme } from 'manicjs/theme';
-
-const {
-  theme, // "light" | "dark" | "system" — stored preference
-  resolvedTheme, // "light" | "dark" — actual applied theme (never "system")
-  setTheme, // (theme: "light" | "dark" | "system") => void
-  toggle, // () => void — toggles between light and dark
-  isDark, // boolean — shorthand for resolvedTheme === "dark"
-  isLight, // boolean — shorthand for resolvedTheme === "light"
-} = useTheme();
-```
-
-Theme persists to `localStorage` under key `"manic-theme"`. Works with Tailwind's `dark:` variant.
+1. **Auto-Linting**: Mandatory `oxlint` pass ensures production-grade reliability before bundling.
+2. **Client Bundling**: `Bun.build` + `oxcPlugin` + `bun-plugin-tailwind`. Target: `browser`. Implements code-splitting via dynamic imports in the route manifest.
+3. **API Bundling**: Each folder in `app/api/` (with an `index.ts`) is bundled into a standalone JS file in `dist/api/`.
+4. **Server Entry Transformation**:
+   - Reads `~manic.ts`.
+   - Replaces `import app from './app/index.html'` with a `Bun.file()` read of the built HTML.
+   - Bundles the entire server for the `bun` target.
+5. **OXC Minification**: `oxc-minify` runs in parallel over all output directories. es2022 target, mangling enabled.
 
 ---
 
-### `manicjs/transitions`
+## 🛣 Routing & Client Lifecycle
 
-**`ViewTransitions`** — Object with pre-built components for common HTML elements that set `view-transition-name` via a `name` prop.
+### The `~` (Tilde) Convention
 
-```tsx
-import { ViewTransitions } from "manicjs/transitions";
+- `~manic.ts`: Mandatory server entry point.
+- `app/~routes.generated.ts`: Auto-generated manifest. Contains dynamic `import()` for all pages.
+- `app/routes/~*.tsx`: Files prefixed with `~` are ignored by the router (useful for components/layouts/utils).
 
-<ViewTransitions.div name="hero-card" className="card">...</ViewTransitions.div>
-<ViewTransitions.h1 name="page-title">Hello</ViewTransitions.h1>
-<ViewTransitions.img name="avatar" src="..." />
+### 🛣 Client Navigation Flow
+
+```mermaid
+graph LR
+  Click[Link click] --> Prev[Prevent Default]
+  Prev --> Match[Matcher: Regex scan registry]
+  Match --> Load[Lazy Load: import chunk]
+  Load --> VT[View Transition: document.startViewTransition]
+  VT --> Render[React Render: Update RouterContext]
+  Render --> Scroll[Scroll: top for new, pop for back]
 ```
 
-All components accept: `name` (required), `children`, `className`, `style` (merged with `{ viewTransitionName: name }`), plus standard HTML attributes.
-
-Available tags: `div`, `span`, `main`, `section`, `article`, `header`, `footer`, `nav`, `aside`, `h1`, `h2`, `h3`, `p`, `img`, `button`, `a`, `ul`, `li`
-
-Alternatively, set view transitions inline (as done in this project):
-
-```tsx
-<div style={{ viewTransitionName: 'content' }}>...</div>
-```
-
-Also re-exports `navigate` and `setViewTransitions` from `manicjs/router`.
+- **Matching Strategy**: Routes are compiled into regex and scored (Static > Dynamic > Catch-all). `RouteRegistry` ensures O(n) matching with pre-sorted priorities.
+- **Lazy Loading**: Pages are only loaded when navigated to. Components are cached in memory after first load.
+- **Prefetching**: `<Link>` preloads the target route's JS chunk on `onMouseEnter` or `onFocus`.
 
 ---
 
-### `manicjs/env`
+## 🔌 Plugin & Provider Architecture
 
-Client-safe environment variable access. Only `MANIC_PUBLIC_*` vars are accessible in the browser.
+### Build-Time Plugins (`ManicPlugin`)
 
-**`getEnv(key)`** — Read a single env var.
+Defined in `manic.config.ts`.
 
-```tsx
-import { getEnv } from 'manicjs/env';
+- `build(ctx)`: Access to `pageRoutes`, `apiRoutes`, `dist`, and `emitClientFile(path, content)`.
+- Use `emitClientFile(relativePath, content)` to write static files into `dist/client/`. These are automatically picked up by **all providers** (Vercel, Cloudflare, Netlify) since every provider copies `dist/client` to its static output directory.
+- **Do not write provider-specific code inside a plugin.** Plugins must be provider-agnostic. If a feature needs to work in production, emit it as a static file via `emitClientFile` or handle it in `configureServer` for the dev server.
 
-// Client: only MANIC_PUBLIC_* keys work (others log a warning, return undefined)
-// Server: any key works via process.env
-const apiUrl = getEnv('MANIC_PUBLIC_API_URL');
-```
+### Runtime/Server Plugins (`ManicPlugin`)
 
-**`getPublicEnv()`** — Get all public env vars as an object.
+- `configureServer(ctx)`: Hooks into `Bun.serve`. Can add routes via `addRoute(path, handler)` and inject `Link` headers via `addLinkHeader(value)`.
+- Routes registered here are **dev-only** unless the same content is also emitted as a static file in the `build` hook.
+- **Every plugin that registers a route in `configureServer` should also emit the equivalent static file in `build`** so production deployments work identically.
 
-```tsx
-import { getPublicEnv } from 'manicjs/env';
+### Plugin Checklist
 
-const env = getPublicEnv(); // { MANIC_PUBLIC_API_URL: "...", ... }
-```
+When creating or modifying a plugin, ensure:
 
-Server reads `.env` then `.env.local` (local takes precedence).
+- [ ] `configureServer` registers the route for dev
+- [ ] `build` emits the same content via `emitClientFile` for production
+- [ ] No provider-specific imports or logic inside the plugin
+- [ ] `addLinkHeader` is called for any discovery endpoint (RFC 8288)
 
----
+### Deployment Providers (`ManicProvider`)
 
-### `manicjs/server`
+Transforms `.manic/` output into platform-specific formats. Providers **consume** what plugins emit — they do not duplicate plugin logic.
 
-**`createManicServer(options)`** — Bootstraps the full Manic server. Called from `~manic.ts`.
-
-```tsx
-import { createManicServer } from 'manicjs/server';
-import app from './app/index.html';
-
-await createManicServer({ html: app });
-
-// Options:
-//   html: string | (() => Response | Promise<Response>) — the HTML shell (required)
-//   port?: number — overrides config (overridden by $PORT env var)
-```
-
-Internally: loads env files → generates route manifest → loads config → mounts API routes → mounts Swagger → serves static assets → registers page routes → starts `Bun.serve()` → watches for route changes in dev.
+- **Vercel**: Creates `.vercel/output`, maps static files, generates `config.json` + `.vc-config.json` for serverless functions.
+- **Cloudflare**: Generates `dist/`, `_worker.js` for edge routing, and `wrangler.toml`.
+- Providers may inject shared middleware (Link headers, markdown negotiation) into the generated worker/function code, but this is infrastructure-level — not plugin logic.
 
 ---
 
-### `manicjs/plugins`
+## 🚀 Technical Standards & Requirements
 
-**`apiLoaderPlugin(apiDir?)`** — Scans `app/api/` for Elysia modules and mounts them.
+### The Stack
 
-```tsx
-import { apiLoaderPlugin } from 'manicjs/plugins';
+- **Runtime**: Bun (Mandatory - uses `Bun.serve`, `Bun.build`, `Bun.Glob`, `Bun.spawn`, `Bun.file`).
+- **Server**: Hono (High-performance middleware & routing).
+- **Transform**: `oxc-transform` (Ultra-fast JSX/TS compilation).
+- **Minify**: `oxc-minify` (Production-grade code compression).
+- **Resolve**: `oxc-resolver` (Node/Bun compatible module resolution).
+- **Lint**: `oxlint` (Blazing fast diagnostics).
 
-const { app, routes } = await apiLoaderPlugin('app/api');
-// app: Elysia instance with all API routes mounted
-// routes: string[] — list of mounted route paths
-```
+### Engineering Principles
 
-**`fileImporterPlugin(publicDir?)`** — Serves static files via `@elysiajs/static`.
-
-```tsx
-import { fileImporterPlugin } from 'manicjs/plugins';
-
-const staticApp = fileImporterPlugin('public');
-```
+- **Reliability First**: Production builds in `demo/` are the ultimate source of truth.
+- **Speed & Lightness**: Avoid non-essential dependencies. Prefer Bun built-ins.
+- **Zero-Config**: Framework should "just work" by scanning `app/` structure.
+- **Type Safety**: Maintain strict TypeScript contracts across router, config, and plugins.
+- **Workspace Integrity**: Always use `bun install` at the root.
 
 ---
 
-### `manicjs/config`
+## 📝 Development Workflow
 
-**`defineConfig(config)`** — Type-safe config helper (identity function for autocomplete).
-
-```tsx
-import { defineConfig } from 'manicjs/config';
-
-export default defineConfig({
-  app: { name: 'my-app' },
-  server: { port: 3000, hmr: true },
-  router: {
-    viewTransitions: true,
-    preserveScroll: false,
-    scrollBehavior: 'auto',
-  },
-  build: {
-    minify: true,
-    sourcemap: 'inline',
-    splitting: true,
-    outdir: '.manic',
-  },
-  swagger: false,
-  providers: [],
-});
-```
-
-**`loadConfig(cwd?)`** — Reads and merges `manic.config.ts` with defaults. Cached after first call.
-
-```tsx
-import { loadConfig } from 'manicjs/config';
-const config = await loadConfig();
-```
-
-#### Types
-
-```tsx
-import type {
-  ManicConfig,
-  SwaggerConfig,
-  ManicProvider,
-  BuildContext,
-} from 'manicjs/config';
-
-interface ManicConfig {
-  app?: { name?: string };
-  server?: { port?: number; hmr?: boolean };
-  router?: {
-    viewTransitions?: boolean;
-    preserveScroll?: boolean;
-    scrollBehavior?: 'auto' | 'smooth';
-  };
-  build?: {
-    minify?: boolean;
-    sourcemap?: boolean | 'inline' | 'external';
-    splitting?: boolean;
-    outdir?: string;
-  };
-  swagger?: SwaggerConfig | false;
-  providers?: ManicProvider[];
-}
-
-interface SwaggerConfig {
-  path?: string;
-  documentation?: {
-    info?: { title?: string; description?: string; version?: string };
-  };
-}
-
-interface ManicProvider {
-  name: string;
-  build(context: BuildContext): Promise<void>;
-}
-
-interface BuildContext {
-  dist: string;
-  config: ManicConfig;
-  apiEntries: string[];
-  clientDir: string;
-  serverFile: string;
-}
-```
-
-## API Routes
-
-API routes live in `app/api/` and must use **folder + index.ts** structure. Each exports a default **Elysia** instance:
-
-```typescript
-// app/api/hello/index.ts → /api/hello
-import { Elysia, t } from 'elysia';
-
-export default new Elysia()
-  .get('/', () => ({ message: 'Hello!' }))
-  .post('/', ({ body }) => ({ echo: body.text }), {
-    body: t.Object({ text: t.String() }),
-  });
-```
-
-**Important:** Never create `app/api/index.ts` at root — always use `app/api/[name]/index.ts`.
-
-## Configuration Reference
-
-```typescript
-// manic.config.ts
-import { defineConfig } from 'manicjs/config';
-
-export default defineConfig({
-  app: {
-    name: 'portfolio', // App name for logs/title
-  },
-  server: {
-    port: 6070, // Default: 6070. Override with $PORT env var
-    hmr: true, // Default: true
-  },
-  router: {
-    viewTransitions: true, // Default: true. Enables View Transitions API
-    preserveScroll: false, // Default: false
-    scrollBehavior: 'auto', // "auto" | "smooth"
-  },
-  build: {
-    minify: true,
-    sourcemap: 'inline', // true | false | "inline" | "external"
-    splitting: true, // Code-splitting per route
-    outdir: '.manic',
-  },
-  swagger: false, // Set to { path: "/docs", documentation: {...} } to enable
-});
-```
-
-## CLI Commands
-
-| Command                         | Description                                   |
-| ------------------------------- | --------------------------------------------- |
-| `bun run dev` / `manic dev`     | Dev server with HMR (`bun --watch ~manic.ts`) |
-| `manic dev --port 3000`         | Override dev port                             |
-| `manic dev --network`           | Bind to 0.0.0.0, print LAN IP                 |
-| `bun run build` / `manic build` | Production build → `.manic/` directory        |
-| `bun run start` / `manic start` | Run production server (`.manic/server.js`)    |
-
-## Build Output
-
-```
-.manic/
-├── client/
-│   ├── index.html           # Transformed HTML shell
-│   ├── main-[hash].js       # Entry chunk
-│   ├── [hash].css            # Tailwind output
-│   └── chunks/              # One chunk per route (code-splitting)
-├── api/                     # Bundled API routes
-└── server.js                # Production server entry
-```
-
-## Styling Conventions (This Project)
-
-- Tailwind CSS v4 with `@import "tailwindcss"` in `global.css`
-- Custom theme using CSS variables (`--theme-*`) in `:root`
-- Tailwind `@theme` block maps semantic colors (`--color-background`, `--color-foreground`, rainbow colors)
-- Dark/light theme handled via `useTheme()` — currently switches assets rather than CSS variables
-- Custom utility classes in `global.css`: `.btn-primary`, `.btn-outline`, `.border-box`, `.sidebar-item`
-- View transition animations defined with `@view-transition` and `::view-transition-*` pseudo-elements
-
-## Key Architectural Notes
-
-1. **Pure CSR** — The server's only job is: serve the HTML shell for all page URLs, serve JS/CSS chunks, and handle `/api/*` routes
-2. **No hydration** — React uses `createRoot()` (not `hydrateRoot`), mounting fresh into `#root`
-3. **Route manifest** — `window.__MANIC_ROUTES__` is set in `main.tsx` from the auto-generated file; the `<Router>` reads it
-4. **Lazy loading** — Each route is a dynamic `import()` in the manifest, enabling code-splitting
-5. **Component caching** — Once a route's component loads, it's cached in memory; revisiting is instant
-6. **Prefetching** — `<Link>` preloads route chunks on hover/focus by default
-7. **Server entry** — `~manic.ts` imports the HTML via Bun's HTML import syntax (`import app from "./app/index.html"`)
-8. **Favicon** — Auto-discovered from `assets/` in order: `favicon.svg` → `.png` → `.ico` → `icon.svg` → `.png` → `.ico`
+1. **Feature Work**: Modify `packages/manic/src/`.
+2. **Local Validation**: Run `bun dev` or `bun build && bun start` in `demo/`.
+3. **Internal CLI Testing**: `bun run packages/manic/src/cli/index.ts <cmd>`.
+4. **Format/Lint**: Use `manic fmt` and `manic lint`.

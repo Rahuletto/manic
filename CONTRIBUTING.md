@@ -32,14 +32,14 @@ bun install   # always run at the root
 
 ## Project Structure
 
-| Path | Purpose |
-| --- | --- |
-| `packages/manic/` | Core framework (CLI, router, server, build engine) |
-| `packages/create-manic/` | `bunx create-manic` scaffolding tool |
-| `packages/providers/` | Vercel, Netlify, Cloudflare deployment adapters |
-| `plugins/` | Official plugins (`sitemap`, `api-docs`) |
-| `demo/` | Local dev testbench — the source of truth for builds |
-| `examples/` | Reference apps |
+| Path                     | Purpose                                              |
+| ------------------------ | ---------------------------------------------------- |
+| `packages/manic/`        | Core framework (CLI, router, server, build engine)   |
+| `packages/create-manic/` | `bunx create-manic` scaffolding tool                 |
+| `packages/providers/`    | Vercel, Netlify, Cloudflare deployment adapters      |
+| `plugins/`               | Official plugins (`sitemap`, `api-docs`)             |
+| `demo/`                  | Local dev testbench — the source of truth for builds |
+| `examples/`              | Reference apps                                       |
 
 ## Guidelines
 
@@ -59,6 +59,7 @@ bun install   # always run at the root
 ## Reporting Issues
 
 Use the GitHub issue templates:
+
 - **Bug report** — for unexpected behavior
 - **Feature request** — for new ideas
 

@@ -7,25 +7,27 @@ Manic is a high-performance, production-grade React framework built from the gro
 ## 📂 Repository Structure
 
 ### Core Workspace
-| Path | Purpose |
-| :--- | :--- |
-| `packages/manic/` | The core framework engine (CLI, runtime, router, server). |
-| `packages/create-manic/` | CLI scaffolding tool (`bun create manic`) and project templates. |
-| `packages/providers/` | Deployment adapters for Vercel, Netlify, Cloudflare, and more. |
-| `demo/` | The primary development testbench for local feature verification. |
-| `examples/` | Curated reference applications and integration patterns. |
+
+| Path                     | Purpose                                                           |
+| :----------------------- | :---------------------------------------------------------------- |
+| `packages/manic/`        | The core framework engine (CLI, runtime, router, server).         |
+| `packages/create-manic/` | CLI scaffolding tool (`bun create manic`) and project templates.  |
+| `packages/providers/`    | Deployment adapters for Vercel, Netlify, Cloudflare, and more.    |
+| `demo/`                  | The primary development testbench for local feature verification. |
+| `examples/`              | Curated reference applications and integration patterns.          |
 
 ### Framework Internals (`packages/manic/src/`)
-| Directory | Responsibility | Key Files |
-| :--- | :--- | :--- |
-| `cli/` | Command orchestrator & toolchain. | `index.ts`, `commands/build.ts`, `commands/dev.ts`, `plugins/oxc.ts` |
-| `server/` | Production Hono server & SSR engine. | `index.ts`, `lib/discovery.ts` (route scanning) |
-| `router/` | Type-safe React router & View Transitions. | `Router.tsx`, `lib/matcher.ts`, `lib/Link.tsx`, `lib/context.ts` |
-| `plugins/` | Core framework extensions & middleware. | `lib/api.ts` (API loader), `lib/static.ts` |
-| `config/` | Schema-driven configuration engine. | `index.ts` (loadConfig/defineConfig), `client.ts` |
-| `env/` | Environment variable management. | `client.ts` |
-| `theme/` | Built-in styling & theme utilities. | `index.ts` |
-| `transitions/` | View Transitions API React components. | `index.ts` |
+
+| Directory      | Responsibility                             | Key Files                                                            |
+| :------------- | :----------------------------------------- | :------------------------------------------------------------------- |
+| `cli/`         | Command orchestrator & toolchain.          | `index.ts`, `commands/build.ts`, `commands/dev.ts`, `plugins/oxc.ts` |
+| `server/`      | Production Hono server & SSR engine.       | `index.ts`, `lib/discovery.ts` (route scanning)                      |
+| `router/`      | Type-safe React router & View Transitions. | `Router.tsx`, `lib/matcher.ts`, `lib/Link.tsx`, `lib/context.ts`     |
+| `plugins/`     | Core framework extensions & middleware.    | `lib/api.ts` (API loader), `lib/static.ts`                           |
+| `config/`      | Schema-driven configuration engine.        | `index.ts` (loadConfig/defineConfig), `client.ts`                    |
+| `env/`         | Environment variable management.           | `client.ts`                                                          |
+| `theme/`       | Built-in styling & theme utilities.        | `index.ts`                                                           |
+| `transitions/` | View Transitions API React components.     | `index.ts`                                                           |
 
 ---
 
@@ -34,6 +36,7 @@ Manic is a high-performance, production-grade React framework built from the gro
 Manic does NOT use Vite or Rollup. It implements a proprietary build pipeline built with Bun and OXC:
 
 ### 🏗 Build Pipeline Flow
+
 ```mermaid
 graph TD
   Start[manic build] --> Lint[oxlint scan]
@@ -49,7 +52,7 @@ graph TD
 1. **Auto-Linting**: Mandatory `oxlint` pass ensures production-grade reliability before bundling.
 2. **Client Bundling**: `Bun.build` + `oxcPlugin` + `bun-plugin-tailwind`. Target: `browser`. Implements code-splitting via dynamic imports in the route manifest.
 3. **API Bundling**: Each folder in `app/api/` (with an `index.ts`) is bundled into a standalone JS file in `dist/api/`.
-4. **Server Entry Transformation**: 
+4. **Server Entry Transformation**:
    - Reads `~manic.ts`.
    - Replaces `import app from './app/index.html'` with a `Bun.file()` read of the built HTML.
    - Bundles the entire server for the `bun` target.
@@ -60,11 +63,13 @@ graph TD
 ## 🛣 Routing & Client Lifecycle
 
 ### The `~` (Tilde) Convention
+
 - `~manic.ts`: Mandatory server entry point.
 - `app/~routes.generated.ts`: Auto-generated manifest. Contains dynamic `import()` for all pages.
 - `app/routes/~*.tsx`: Files prefixed with `~` are ignored by the router (useful for components/layouts/utils).
 
 ### 🛣 Client Navigation Flow
+
 ```mermaid
 graph LR
   Click[Link click] --> Prev[Prevent Default]
@@ -84,25 +89,32 @@ graph LR
 ## 🔌 Plugin & Provider Architecture
 
 ### Build-Time Plugins (`ManicPlugin`)
+
 Defined in `manic.config.ts`.
+
 - `build(ctx)`: Access to `pageRoutes`, `apiRoutes`, `dist`, and `emitClientFile(path, content)`.
 - Use `emitClientFile(relativePath, content)` to write static files into `dist/client/`. These are automatically picked up by **all providers** (Vercel, Cloudflare, Netlify) since every provider copies `dist/client` to its static output directory.
 - **Do not write provider-specific code inside a plugin.** Plugins must be provider-agnostic. If a feature needs to work in production, emit it as a static file via `emitClientFile` or handle it in `configureServer` for the dev server.
 
 ### Runtime/Server Plugins (`ManicPlugin`)
+
 - `configureServer(ctx)`: Hooks into `Bun.serve`. Can add routes via `addRoute(path, handler)` and inject `Link` headers via `addLinkHeader(value)`.
 - Routes registered here are **dev-only** unless the same content is also emitted as a static file in the `build` hook.
 - **Every plugin that registers a route in `configureServer` should also emit the equivalent static file in `build`** so production deployments work identically.
 
 ### Plugin Checklist
+
 When creating or modifying a plugin, ensure:
+
 - [ ] `configureServer` registers the route for dev
 - [ ] `build` emits the same content via `emitClientFile` for production
 - [ ] No provider-specific imports or logic inside the plugin
 - [ ] `addLinkHeader` is called for any discovery endpoint (RFC 8288)
 
 ### Deployment Providers (`ManicProvider`)
+
 Transforms `.manic/` output into platform-specific formats. Providers **consume** what plugins emit — they do not duplicate plugin logic.
+
 - **Vercel**: Creates `.vercel/output`, maps static files, generates `config.json` + `.vc-config.json` for serverless functions.
 - **Cloudflare**: Generates `dist/`, `_worker.js` for edge routing, and `wrangler.toml`.
 - Providers may inject shared middleware (Link headers, markdown negotiation) into the generated worker/function code, but this is infrastructure-level — not plugin logic.
@@ -112,6 +124,7 @@ Transforms `.manic/` output into platform-specific formats. Providers **consume*
 ## 🚀 Technical Standards & Requirements
 
 ### The Stack
+
 - **Runtime**: Bun (Mandatory - uses `Bun.serve`, `Bun.build`, `Bun.Glob`, `Bun.spawn`, `Bun.file`).
 - **Server**: Hono (High-performance middleware & routing).
 - **Transform**: `oxc-transform` (Ultra-fast JSX/TS compilation).
@@ -120,6 +133,7 @@ Transforms `.manic/` output into platform-specific formats. Providers **consume*
 - **Lint**: `oxlint` (Blazing fast diagnostics).
 
 ### Engineering Principles
+
 - **Reliability First**: Production builds in `demo/` are the ultimate source of truth.
 - **Speed & Lightness**: Avoid non-essential dependencies. Prefer Bun built-ins.
 - **Zero-Config**: Framework should "just work" by scanning `app/` structure.

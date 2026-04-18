@@ -4,7 +4,9 @@ import type { SeoConfig } from './index';
 export function generateRobotsTxt(config: SeoConfig): string {
   const hostname = config.hostname.replace(/\/$/, '');
   const autoSitemap = config.autoSitemap ?? true;
-  const rules = config.rules?.length ? config.rules : [{ userAgent: '*', allow: ['/'] }];
+  const rules = config.rules?.length
+    ? config.rules
+    : [{ userAgent: '*', allow: ['/'] }];
   const lines: string[] = [];
 
   for (const rule of rules) {
@@ -23,7 +25,9 @@ export function generateRobotsTxt(config: SeoConfig): string {
   for (const s of sitemaps) lines.push(`Sitemap: ${s}`);
 
   if (config.contentSignals) {
-    const parts = Object.entries(config.contentSignals).map(([k, v]) => `${k}=${v}`);
+    const parts = Object.entries(config.contentSignals).map(
+      ([k, v]) => `${k}=${v}`
+    );
     if (parts.length) lines.push('', `Content-Signal: ${parts.join(', ')}`);
   }
 

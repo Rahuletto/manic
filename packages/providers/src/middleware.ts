@@ -18,8 +18,12 @@ export function agentMiddleware(ctx: BuildContext): string {
     '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   ];
   if (hasMcp) {
-    linkHeaders.push('</.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"');
-    linkHeaders.push('</.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"');
+    linkHeaders.push(
+      '</.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"'
+    );
+    linkHeaders.push(
+      '</.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"'
+    );
   }
   if (hasApiDocs) {
     linkHeaders.push('</docs>; rel="service-doc"; type="text/html"');
@@ -27,7 +31,9 @@ export function agentMiddleware(ctx: BuildContext): string {
 
   const linkHeaderValue = linkHeaders.join(', ');
 
-  const mcpBlock = !hasMcp ? '' : `
+  const mcpBlock = !hasMcp
+    ? ''
+    : `
 // ── MCP Streamable HTTP server ────────────────────────────────────────────────
 const _mcpSessions = new Map();
 const _mcpTools = [

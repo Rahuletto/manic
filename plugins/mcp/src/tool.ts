@@ -31,16 +31,20 @@ export function defineTool<S extends ZodObject<ZodRawShape>>(
 
   for (const [key, field] of Object.entries(shape)) {
     const f = field as any;
-    const isOptional = f._def?.typeName === 'ZodOptional' || f.isOptional?.() === true;
+    const isOptional =
+      f._def?.typeName === 'ZodOptional' || f.isOptional?.() === true;
     const inner = isOptional ? (f._def?.innerType ?? f) : f;
     const typeName: string = inner._def?.typeName ?? '';
 
     const prop: Record<string, unknown> = {
       type:
-        typeName === 'ZodNumber' ? 'number'
-        : typeName === 'ZodBoolean' ? 'boolean'
-        : typeName === 'ZodArray' ? 'array'
-        : 'string',
+        typeName === 'ZodNumber'
+          ? 'number'
+          : typeName === 'ZodBoolean'
+            ? 'boolean'
+            : typeName === 'ZodArray'
+              ? 'array'
+              : 'string',
     };
     const desc = f._def?.description ?? inner._def?.description;
     if (desc) prop.description = desc;
@@ -52,7 +56,11 @@ export function defineTool<S extends ZodObject<ZodRawShape>>(
   return {
     name,
     description: def.description,
-    inputSchema: { type: 'object', properties, ...(required.length ? { required } : {}) },
+    inputSchema: {
+      type: 'object',
+      properties,
+      ...(required.length ? { required } : {}),
+    },
     execute(args) {
       return def.execute(def.input.parse(args));
     },
