@@ -18,6 +18,43 @@ export interface McpConfig {
   tools?: import('./tool').McpTool[];
 }
 
+/**
+ * Generates a browser script that registers MCP tools via the WebMCP API
+ * (navigator.modelContext). Each tool delegates execution to the MCP server
+ * via fetch, so tools are defined once and work in both contexts.
+ */
+function buildWebMcpScript(endpoint: string, tools: import('./tool').McpTool[]): string {
+  const toolDefs = tools.map(t => ({
+    name: t.name,
+    description: t.description,
+    inputSchema: t.inputSchema,
+  }));
+
+  return `(function () {
+  if (!navigator.modelContext) return;
+  var ac = new AbortController();
+  var tools = ${JSON.stringify(toolDefs, null, 2)};
+  tools.forEach(function (tool) {
+    navigator.modelContext.registerTool({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+      signal: ac.signal,
+      execute: function (args) {
+        return fetch(${JSON.stringify(endpoint)}, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: tool.name, arguments: args } }),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { return d.result?.content?.[0]?.text ? JSON.parse(d.result.content[0].text) : d.result; });
+      },
+    });
+  });
+  window.addEventListener('unload', function () { ac.abort(); });
+})();`;
+}
+
 export function mcp(config: McpConfig = {}): ManicPlugin {
   const endpoint = config.path ?? '/mcp';
   const serverName = config.name ?? 'manic-mcp';
@@ -50,6 +87,12 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
       ctx.addLinkHeader('</.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"');
       ctx.addLinkHeader('</.well-known/mcp.json>; rel="mcp-discovery"; type="application/json"');
       ctx.addLinkHeader('</.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"');
+
+      ctx.addRoute('/webmcp.js', () =>
+        new Response(buildWebMcpScript(endpoint, tools), {
+          headers: { 'content-type': 'application/javascript; charset=utf-8' },
+        })
+      );
 
       ctx.addRoute(endpoint, async (req: Request) => {
         const origin = req.headers.get('origin');
@@ -128,6 +171,7 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
         ctx.emitClientFile('.well-known/mcp/server-card.json', serverCard),
         ctx.emitClientFile('.well-known/agent-skills/index.json', agentSkillsIndex),
         ctx.emitClientFile(skillUrl.slice(1), skillContent),
+        ctx.emitClientFile('webmcp.js', buildWebMcpScript(endpoint, tools)),
       ]);
     },
   };

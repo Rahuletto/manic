@@ -2,6 +2,7 @@
   "ignorePatterns": [
     "**/node_modules/**",
     "**/.manic/**",
+    "**/.wrangler/**",
     "**/dist/**",
     "**/build/**"
   ],

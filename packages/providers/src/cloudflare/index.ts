@@ -95,8 +95,12 @@ app.get("${docsPath}/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><me
 
 ${agentMiddleware(ctx)}
 
+${ctx.config.plugins?.some(p => p.name === '@manicjs/mcp') ? `// MCP endpoint — all methods
+app.all("${(ctx.config.plugins?.find((p: any) => p.name === '@manicjs/mcp') as any)?.mcpPath ?? '/mcp'}", (c) => _handleMcp(c.req.raw));
+app.all("${(ctx.config.plugins?.find((p: any) => p.name === '@manicjs/mcp') as any)?.mcpPath ?? '/mcp'}/*", (c) => _handleMcp(c.req.raw));` : ''}
+
 // Serve static assets from Cloudflare Pages
-app.get("/*", async (c) => {
+app.all("/*", async (c) => {
   return withAgentSupport(c.req.raw, async (req) => {
     const res = await c.env.ASSETS.fetch(req);
     if (res.status === 404) return c.env.ASSETS.fetch(new URL("/index.html", req.url));

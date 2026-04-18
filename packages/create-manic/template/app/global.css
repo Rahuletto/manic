@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@source '../../node_modules/manicjs/src/**/*.tsx';
+@source '../../node_modules/manicjs/src/**/*.ts';
 
 @theme {
   --color-accent: #F15156;
