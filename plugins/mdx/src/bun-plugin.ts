@@ -15,6 +15,11 @@ export interface MdxPluginOptions {
   disableFrontmatter?: boolean;
   /** Enable fumadocs-core rehypeToc — exports `toc` from each MDX file (default: false) */
   toc?: boolean;
+  /**
+   * Enable syntax highlighting via rehype-pretty-code (default: false).
+   * Pass `true` for github-light/github-dark, or a theme object.
+   */
+  highlight?: boolean | { light: string; dark: string };
   /** Extra remark plugins appended after built-ins */
   remarkPlugins?: CompileOptions['remarkPlugins'];
   /** Rehype plugins */
@@ -30,6 +35,7 @@ export function mdxBunPlugin(options: MdxPluginOptions = {}): BunPlugin {
     disableGfm = false,
     disableFrontmatter = false,
     toc = false,
+    highlight = false,
     remarkPlugins = [],
     rehypePlugins = [],
     mdxOptions = {},
@@ -49,6 +55,13 @@ export function mdxBunPlugin(options: MdxPluginOptions = {}): BunPlugin {
         }
 
         const builtinRehype: NonNullable<CompileOptions['rehypePlugins']> = [];
+        if (highlight) {
+          const { default: rehypePrettyCode } = await import('rehype-pretty-code');
+          const theme = highlight === true
+            ? { light: 'github-light', dark: 'github-dark' }
+            : highlight;
+          builtinRehype.push([rehypePrettyCode, { theme }]);
+        }
         if (toc) {
           const { rehypeToc, remarkHeading } = await import('fumadocs-core/mdx-plugins');
           builtinRemark.push(remarkHeading);
@@ -85,8 +98,5 @@ function resolveOptionsFromEnv(): MdxPluginOptions {
   }
 }
 
-// Auto-register when preloaded via manic plugin preload
+// Auto-register when preloaded via --preload
 Bun.plugin(mdxBunPlugin(resolveOptionsFromEnv()));
-
-// Default export for bunfig.toml [serve.static] registration
-export default mdxBunPlugin(resolveOptionsFromEnv());

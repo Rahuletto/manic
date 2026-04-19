@@ -18,6 +18,7 @@ export function mdx(options: import('./bun-plugin.ts').MdxPluginOptions = {}): M
   if (options.disableGfm) serializable.disableGfm = options.disableGfm;
   if (options.disableFrontmatter) serializable.disableFrontmatter = options.disableFrontmatter;
   if (options.toc) serializable.toc = options.toc;
+  if (options.highlight) serializable.highlight = options.highlight;
   if (options.mdxOptions) serializable.mdxOptions = options.mdxOptions;
 
   if (Object.keys(serializable).length) {
