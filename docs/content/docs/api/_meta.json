@@ -1,0 +1,11 @@
+{
+  "root": true,
+  "title": "API Reference",
+  "icon": "Library",
+  "pages": [
+    "index",
+    "config",
+    "router",
+    "plugins"
+  ]
+}

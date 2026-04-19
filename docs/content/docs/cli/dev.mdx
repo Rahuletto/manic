@@ -1,0 +1,66 @@
+---
+title: manic dev
+description: The high-speed development environment for Manic applications.
+icon: Terminal
+---
+
+# manic dev
+
+The `manic dev` command is the heart of the framework's local development experience. It orchestrates a suite of tools to provide instantaneous feedback as you write code.
+
+## Core Operations
+
+When you execute `manic dev`, the CLI performs a series of operations to prepare the environment:
+
+1.  **Config Discovery**: Loads `manic.config.ts` and prepares the plugin registry.
+2.  **Auto-Bunfig Generation**: Collects `bunfig` snippets from all active plugins and writes a temporary `bunfig.toml`. This allows plugins like Tailwind or MDX to register their own compilers without user manual configuration.
+3.  **Process Spawning**: Launches a new child process with the following flags:
+    -   `--watch`: Native Bun watcher for `~manic.ts`.
+    -   `--preload`: Injects plugin scripts into the runtime before execution.
+4.  **Hono Startup**: Initializes the Hono server instance to serve your application.
+
+---
+
+## Fast Refresh & HMR
+
+Manic uses **React Fast Refresh** integrated via our custom OXC transform plugin. This allows you to update components in your editor and see the changes in the browser almost instantly without losing component state.
+
+- **Fast**: Transformation is handled by OXC, which is significantly faster than standard Babel/SWC implementations.
+- **Reliable**: State is preserved across re-renders, making it perfect for UI experimentation.
+
+---
+
+## Plugin Preloading
+
+One of Manic's unique features is the ability for plugins to inject code directly into the dev server's preamble.
+
+```ts title="manic.config.ts"
+export default defineConfig({
+  plugins: [
+    {
+      name: 'my-logger',
+      preload: './scripts/logger.ts' // This runs BEFORE anything else
+    }
+  ]
+});
+```
+
+The CLI automatically detects these `preload` paths and passes them to the underlying `bun` command.
+
+---
+
+## Technical Reference
+
+### Usage
+```bash
+manic dev [options]
+```
+
+### Options
+- `--port, -p`: Specify the port (default: `6070`).
+- `--network`, `-n`: Expose the server to the local network (`0.0.0.0`).
+- `--mode`: Set the execution environment (`development` or `production`).
+
+### Environment Variables
+- `PORT`: Overrides the default port.
+- `HOST`: Overrides the default host (usually `localhost`).

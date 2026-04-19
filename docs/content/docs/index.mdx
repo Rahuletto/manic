@@ -1,0 +1,54 @@
+---
+title: Introduction
+description: Manic is a high-performance, fullstack React framework built on Bun and OXC.
+full: true
+---
+
+# Manic Framework
+
+Manic is a next-generation React framework designed for absolute performance and uncompromising developer experience. Built from the ground up on the **Bun runtime** and the **OXC toolchain**, it eliminates the overhead of legacy bundlers and runtimes to deliver a sub-millisecond development lifecycle.
+
+<Cards>
+  <Card
+    title="Getting Started"
+    description="Go from zero to a production-ready Manic app in minutes."
+    href="/docs/guide/getting-started"
+  />
+  <Card
+    title="Architecture"
+    description="Understand the high-performance pillars powering the framework."
+    href="/docs/core/architecture"
+  />
+</Cards>
+
+## Why Manic?
+
+Existing frameworks often struggle with slow build times and high cold-start latency due to deep dependency trees and legacy tooling. Manic solves this by **vertically integrating** the entire stack:
+
+- **Ultra-Fast Transformation**: Powered by OXC, JSX and TypeScript transformation is up to 100x faster than Babel.
+- **Native Bundling**: Leverages Bun's native bundler for greedy code-splitting and rapid cold starts.
+- **View Transitions API**: First-class support for native browser animations during navigation.
+- **Zero-Config Fullstack**: Seamlessly handle both React frontend and Hono API routes with zero extra setup.
+
+## Key Philosophies
+
+### 1. Speed Above All
+Every part of the framework—from the CLI watcher to the production minifier—is chosen specifically for being the fastest in its class.
+
+### 2. Simple by Default, Powerful by Design
+Start with a single file. As your app grows, Manic's plugin and provider system grows with you, allowing for massive scale without complexity.
+
+### 3. Standards First
+We prioritize standard Web APIs like `fetch`, `Request/Response`, and the `View Transitions API`, ensuring your knowledge remains portable and future-proof.
+
+---
+
+## Technical Highlights
+
+- **Bundler**: Bun.build + Custom OXC Plugins
+- **Transpiler**: OXC (Ultra-fast TS/JSX)
+- **Minifier**: OXC-Minify
+- **Server**: Hono + Bun.serve
+- **Router**: Type-safe React SPA Router
+
+Ready to experience the future? [Start Building →](/docs/guide/getting-started)

@@ -1,0 +1,58 @@
+---
+title: manic build
+description: Deep dive into the Manic production build pipeline.
+icon: Package
+---
+
+# manic build
+
+The `manic build` command is responsible for transforming your source code into a highly optimized, production-ready bundle. It leverages Bun's native bundling power and OXC's lightning-fast transformation and minification.
+
+## The Build Pipeline
+
+Manic uses a multi-stage pipeline to ensure that both your React frontend and Hono backend are perfectly synced and optimized.
+
+### 1. Route Discovery & Manifest
+The build process starts by scanning `app/routes/` and `app/api/`. It generates a static manifest (`app/~routes.generated.ts`) that contains dynamic `import()` statements. This is the foundation of Manic's automatic code-splitting.
+
+### 2. Client Bundling
+Using `Bun.build` with the `browser` target, Manic bundles your React pages.
+- **Entry Point**: `~manic.ts` (browser side).
+- **Plugins**: Includes `bun-plugin-tailwind` and custom OXC transforms.
+- **Output**: Chunks are placed in `dist/client/`.
+
+### 3. API Bundling
+Each directory in `app/api/` is treated as an independent service.
+- **Isolation**: Every endpoint is bundled into its own standalone JS file.
+- **Efficiency**: API routes only import the code they actually need, reducing cold start times in serverless environments.
+
+### 4. Server Entry Transformation
+This is a critical step where the framework bridges the gap between static assets and the runtime server.
+- The build engine reads your `app/index.html` template.
+- It injects script tags for the built client chunks.
+- It replaces the `import app from './app/index.html'` statement in your server code with a static file pointer.
+
+### 5. OXC Minification
+Unlike other frameworks that use slower minifiers like Terser, Manic uses **OXC-Minify** in parallel across all output paths. This results in production-grade compression at a fraction of the time.
+
+### 6. Provider Transformation
+Finally, the configured [Provider](/docs/guide/deployments) takes over. It maps the bundled assets to the specific requirements of platforms like Vercel, Cloudflare, or Netlify.
+
+---
+
+## Technical Reference
+
+### Usage
+```bash
+manic build [options]
+```
+
+### Options
+- `--out-dir`: Customize where the artifacts are stored (default: `.manic`).
+- `--mode`: Current environment (`production` by default).
+- `--minify`: Toggle minification (default: `true`).
+
+## Best Practices
+
+> [!TIP]
+> Always run `manic build` locally before deploying to catch any linting or bundling errors early in the cycle. Manic includes a mandatory `oxlint` pass as the first step of the build!

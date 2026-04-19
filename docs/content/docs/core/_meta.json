@@ -1,0 +1,10 @@
+{
+  "root": true,
+  "title": "Core Internals",
+  "icon": "Cpu",
+  "pages": [
+    "index",
+    "architecture",
+    "build-pipeline"
+  ]
+}

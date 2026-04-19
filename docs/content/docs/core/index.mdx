@@ -1,0 +1,30 @@
+---
+title: Core Internals
+description: Deep dive into the framework's internal architecture and build system.
+icon: Cpu
+---
+
+# Core Internals
+
+This section is dedicated to the inner workings of the Manic framework. It is intended for framework contributors and developers who want to understand the high-performance architecture powering their applications.
+
+## Topics
+
+<Cards>
+  <Card
+    title="Build Pipeline"
+    description="A technical breakdown of the Bun + OXC build process."
+    href="/docs/core/build-pipeline"
+  />
+  <Card
+    title="Plugin Architecture"
+    description="How plugins scale the framework's capabilities."
+    href="/docs/guide/plugins" 
+  />
+</Cards>
+
+## Architecture Principles
+
+- **Speed Above All**: Every decision, from choosing OXC to using Bun's native server, is driven by performance.
+- **Simplicity**: The internal codebase is kept lean and modular.
+- **Type Safety**: End-to-end TypeScript ensures a reliable development experience.

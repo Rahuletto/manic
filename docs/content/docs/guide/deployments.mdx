@@ -1,0 +1,70 @@
+---
+title: Deployments
+description: How to deploy your Manic application to various platforms.
+icon: Rocket
+---
+
+# Deployments
+
+Manic is designed to be provider-agnostic. Its build system generates a universal `.manic/` output that can be transformed for any target platform using **Providers**.
+
+## Official Providers
+
+Manic maintains several official providers for popular hosting platforms:
+
+### 1. Vercel
+Standard Serverless and Edge Function support.
+```ts
+import { vercel } from '@manicjs/providers';
+
+export default defineConfig({
+  provider: vercel(),
+});
+```
+
+### 2. Cloudflare Pages/Workers
+Deploy to the global edge network using Cloudflare's high-performance infrastructure.
+```ts
+import { cloudflare } from '@manicjs/providers';
+
+export default defineConfig({
+  provider: cloudflare(),
+});
+```
+
+### 3. Netlify
+Full support for Netlify Functions and Blobs.
+```ts
+import { netlify } from '@manicjs/providers';
+
+export default defineConfig({
+  provider: netlify(),
+});
+```
+
+### 4. Direct (Bun)
+Deploy on your own Linux server or Docker container using the native Bun runtime.
+```ts
+import { direct } from '@manicjs/providers';
+
+export default defineConfig({
+  provider: direct(),
+});
+```
+
+## How Providers Work
+
+1. **Build Phase**: Manic builds the application into the `dist/` directory.
+2. **Transform Phase**: The Provider takes the `dist/` content and packages it for the target platform (e.g., creating `.vercel/output`).
+3. **Static Assets**: All providers automatically handle serving static files from `dist/client/`.
+
+## Manual Deployment
+
+If you are using the `direct` provider, you can serve your app with:
+
+```bash
+manic build
+manic start
+```
+
+This will launch a high-performance Hono server bound to the port specified in your environment (`PORT`).

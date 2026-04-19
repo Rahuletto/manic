@@ -1,0 +1,15 @@
+{
+  "root": true,
+  "title": "Framework Guide",
+  "icon": "Layout",
+  "pages": [
+    "index",
+    "getting-started",
+    "project-structure",
+    "routing",
+    "api-routes",
+    "data-fetching",
+    "examples",
+    "deployments"
+  ]
+}

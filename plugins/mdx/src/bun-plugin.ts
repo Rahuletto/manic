@@ -99,4 +99,8 @@ function resolveOptionsFromEnv(): MdxPluginOptions {
 }
 
 // Auto-register when preloaded via --preload
-Bun.plugin(mdxBunPlugin(resolveOptionsFromEnv()));
+const _plugin = mdxBunPlugin(resolveOptionsFromEnv());
+Bun.plugin(_plugin);
+
+// Default export required by bunfig.toml [serve.static] plugins
+export default _plugin;

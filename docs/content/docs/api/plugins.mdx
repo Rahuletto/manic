@@ -1,0 +1,90 @@
+---
+title: Plugins
+description: Full reference for the Manic Plugin API and development lifecycle.
+icon: Plug
+---
+
+# Plugins Reference
+
+Plugins are the primary way to extend Manic's functionality. They allow you to hook into the development server, customize the build pipeline, and inject assets into the built application.
+
+## `createPlugin`
+
+The `createPlugin` helper simplifies plugin development by providing a unified interface for both development and production environments.
+
+```ts twoslash
+import { createPlugin } from 'manicjs/config';
+
+// Conceptual helper
+const generateSitemap = (routes: any[]) => '<xml></xml>';
+
+export const sitemapPlugin = (options: { enabled?: boolean }) => {
+  return createPlugin({
+    name: 'manic-plugin-sitemap',
+    
+    // Automatic dev/prod parity for static files
+    staticFiles: [
+      {
+        path: '/sitemap.xml',
+        content: (ctx) => generateSitemap(ctx.pageRoutes),
+        contentType: 'application/xml',
+      },
+    ],
+
+    configureServer(ctx) {
+      // Dev-only hooks
+      ctx.injectHtml('<meta name="sitemap-plugin" content="enabled">');
+    },
+
+    build(ctx) {
+      // Build-only hooks
+      ctx.injectHtml('<style>.sitemap-link { color: red; }</style>');
+    }
+  });
+};
+```
+
+---
+
+## Technical Specification
+
+### `ManicPlugin` Interface
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `name` | `string` | Unique identifier for the plugin. |
+| `preload` | `string` | Absolute path to a Bun plugin script to preload. |
+| `bunfig` | `string` | TOML snippet to merge into `bunfig.toml` during dev. |
+| `configureServer` | `Function` | Runtime hook for the development server. |
+| `build` | `Function` | Build-time hook for production packaging. |
+
+---
+
+## Context APIs
+
+Both `configureServer` and `build` hooks receive a context object that provides access to the project's state.
+
+### `ManicPluginContext` (Shared)
+- **`config`**: The full merged `ManicConfig`.
+- **`pageRoutes`**: Array of discovered page routes (path, file path).
+- **`apiRoutes`**: Array of discovered API routes.
+- **`prod`**: Boolean indicating if the environment is production.
+
+### `ManicServerPluginContext` (Server Only)
+- **`addRoute(path, handler)`**: Register a Hono route on the dev server.
+- **`addLinkHeader(value)`**: Injects a Link header (RFC 8288) into responses.
+- **`injectHtml(tags)`**: Appends HTML to the `<head>` of served pages.
+
+### `ManicBuildPluginContext` (Build Only)
+- **`emitClientFile(path, content)`**: Writes a static asset to the client output.
+- **`injectHtml(tags)`**: Appends HTML to the `<head>` of the built `index.html`.
+
+---
+
+## Best Practices
+
+> [!IMPORTANT]
+> **Production Parity**: If you register a route in `configureServer` using `addRoute`, make sure to also emit the same content in a `build` hook (or use the `staticFiles` shorthand) so your application behaves identically in production and development.
+
+> [!TIP]
+> Use the `staticFiles` shorthand in `createPlugin` whenever possible. It handles the dev/prod parity logic for you automatically.

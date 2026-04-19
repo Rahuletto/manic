@@ -1,0 +1,42 @@
+---
+title: API Overview
+description: Technical reference for Manic's exported functions and components.
+icon: Library
+---
+
+# API Reference
+
+Manic provides a suite of type-safe utilities and components designed to streamline fullstack development. This reference covers everything from the core build configuration to the client-side routing hooks.
+
+## Reference Categories
+
+<Cards>
+  <Card
+    title="Configuration"
+    description="Detailed specification for manic.config.ts properties and types."
+    href="/docs/api/config"
+  />
+  <Card
+    title="Router API"
+    description="Reference for Link, useRouter, and dynamic path hooks."
+    href="/docs/api/router"
+  />
+  <Card
+    title="Plugin API"
+    description="Guide and specification for building custom Manic extensions."
+    href="/docs/api/plugins"
+  />
+</Cards>
+
+---
+
+## Installation
+
+The API is fully contained within the `manicjs` package.
+
+```bash
+bun add manicjs
+```
+
+### Typing
+Manic is written in TypeScript and provides first-class type definitions for all exports. We recommend using a modern IDE (like VS Code) to take advantage of the deep autocompletion provided by our type system.
