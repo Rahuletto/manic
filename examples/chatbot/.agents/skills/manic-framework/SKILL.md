@@ -48,7 +48,9 @@ Bun.serve
   └── SPA catch-all (/*) → index.html → React client router
 ```
 
-**Toolchain:** OXC (transforms + lint + format + minify) · Bun.build (bundler) · bun-plugin-tailwind · Hono (API layer)
+**Toolchain:** OXC (transforms + lint + format + minify) · Bun.build (bundler) · @manicjs/tailwind (or @manicjs/unocss) · Hono (API layer)
+
+**Plugin fields:** `preload` (Bun plugin script path, auto-injected as `--preload`) · `bunfig` (TOML snippet, merged into auto-generated `bunfig.toml`)
 
 **Key conventions:**
 
@@ -65,6 +67,9 @@ Bun.serve
 packages/manic/          → manicjs (framework core)
 packages/create-manic/   → create-manic (scaffolding CLI)
 packages/providers/      → @manicjs/providers (deployment adapters)
+plugins/tailwind/        → @manicjs/tailwind (Tailwind CSS v4)
+plugins/unocss/          → @manicjs/unocss (UnoCSS)
+plugins/mdx/             → @manicjs/mdx (MDX with GFM + TOC)
 plugins/api-docs/        → @manicjs/api-docs (Scalar API UI)
 plugins/seo/             → @manicjs/seo (robots.txt, Link headers)
 plugins/sitemap/         → @manicjs/sitemap (sitemap.xml)

@@ -416,6 +416,17 @@ interface ManicConfig {
   };
   swagger?: SwaggerConfig | false;
   providers?: ManicProvider[];
+  plugins?: ManicPlugin[];
+}
+
+interface ManicPlugin {
+  name: string;
+  /** Absolute path to a Bun plugin script — auto-injected as --preload in dev */
+  preload?: string;
+  /** TOML snippet merged into bunfig.toml by manic dev */
+  bunfig?: string;
+  configureServer?(ctx: ManicServerPluginContext): void | Promise<void>;
+  build?(ctx: ManicBuildPluginContext): void | Promise<void>;
 }
 
 interface SwaggerConfig {

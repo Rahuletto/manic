@@ -88,6 +88,36 @@ graph LR
 
 ## 🔌 Plugin & Provider Architecture
 
+### `ManicPlugin` Interface
+
+```ts
+interface ManicPlugin {
+  name: string;
+  /** Absolute path to a Bun plugin script — auto-injected as --preload in dev, Bun.plugin() in build */
+  preload?: string;
+  /** TOML snippet for bunfig.toml — manic dev merges all [serve.static] entries automatically */
+  bunfig?: string;
+  configureServer?(ctx: ManicServerPluginContext): void | Promise<void>;
+  build?(ctx: ManicBuildPluginContext): void | Promise<void>;
+}
+```
+
+### First-Party Plugins
+
+| Package | Purpose |
+| :--- | :--- |
+| `@manicjs/tailwind` | Tailwind CSS v4 via `bun-plugin-tailwind` |
+| `@manicjs/unocss` | UnoCSS via `bun-plugin-unocss` |
+| `@manicjs/mdx` | MDX with GFM, frontmatter, TOC extraction |
+| `@manicjs/seo` | Meta tags, Open Graph, canonical URLs |
+| `@manicjs/sitemap` | Auto-generates `sitemap.xml` |
+| `@manicjs/mcp` | Model Context Protocol endpoint |
+| `@manicjs/api-docs` | Scalar API reference UI |
+
+### How `bunfig.toml` Works
+
+`manic dev` auto-generates `bunfig.toml` by collecting `bunfig` snippets from all plugins and merging `[serve.static]` entries into one section. Apps never touch `bunfig.toml` — it's gitignored.
+
 ### Build-Time Plugins (`ManicPlugin`)
 
 Defined in `manic.config.ts`.
