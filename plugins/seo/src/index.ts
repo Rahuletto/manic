@@ -1,8 +1,4 @@
-import type {
-  ManicPlugin,
-  ManicServerPluginContext,
-  ManicBuildPluginContext,
-} from 'manicjs/config';
+import { createPlugin } from 'manicjs/config';
 import { generateRobotsTxt } from './robots';
 
 export interface RobotRule {
@@ -113,20 +109,19 @@ function generateMetaTags(config: SeoConfig): string {
   return tags.join('\n');
 }
 
-export function seo(config: SeoConfig): ManicPlugin {
-  return {
+export function seo(config: SeoConfig) {
+  return createPlugin({
     name: 'seo',
 
-    configureServer(ctx: ManicServerPluginContext) {
-      const txt = generateRobotsTxt(config);
-      ctx.addRoute(
-        '/robots.txt',
-        () =>
-          new Response(txt, {
-            headers: { 'content-type': 'text/plain; charset=utf-8' },
-          })
-      );
+    staticFiles: [
+      {
+        path: '/robots.txt',
+        content: generateRobotsTxt(config),
+        contentType: 'text/plain; charset=utf-8',
+      },
+    ],
 
+    configureServer(ctx) {
       const hostname = config.hostname.replace(/\/$/, '');
       if (config.autoSitemap ?? true) {
         ctx.addLinkHeader(
@@ -141,16 +136,13 @@ export function seo(config: SeoConfig): ManicPlugin {
           `<${lh.href}>; rel="${lh.rel}"${lh.type ? `; type="${lh.type}"` : ''}`
         );
       }
-
       const metaTags = generateMetaTags(config);
       if (metaTags) ctx.injectHtml(metaTags);
     },
 
-    async build(ctx: ManicBuildPluginContext) {
-      await ctx.emitClientFile('robots.txt', generateRobotsTxt(config));
-
+    build(ctx) {
       const metaTags = generateMetaTags(config);
       if (metaTags) ctx.injectHtml(metaTags);
     },
-  };
+  });
 }

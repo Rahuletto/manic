@@ -142,6 +142,8 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
           })
       );
 
+      ctx.injectHtml('<script src="/webmcp.js"></script>');
+
       ctx.addRoute(endpoint, async (req: Request) => {
         const origin = req.headers.get('origin');
         const cors: Record<string, string> = origin
@@ -300,6 +302,7 @@ export function mcp(config: McpConfig = {}): ManicPlugin {
         ctx.emitClientFile(skillUrl.slice(1), skillContent),
         ctx.emitClientFile('webmcp.js', buildWebMcpScript(endpoint, tools)),
       ]);
+      ctx.injectHtml('<script src="/webmcp.js"></script>');
     },
   };
 }

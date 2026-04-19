@@ -31,7 +31,7 @@ plugins/mcp/             → @manicjs/mcp (MCP server endpoint for AI agents)
 | `manicjs`             | Root barrel      | `Router`, `Link`, `NotFound`, `ServerError`, `navigate`, `useRouter`, `useQueryParams`, `defineConfig`, `loadConfig`, `ThemeProvider`, `useTheme`, `ThemeToggle`, `ViewTransitions`, `createClient` |
 | `manicjs/router`      | Full router      | `Router`, `Link`, `RouterContext`, `useRouter`, `useQueryParams`, `navigate`, `setViewTransitions`, `preloadRoute`, types                                                                           |
 | `manicjs/server`      | Server bootstrap | `createManicServer`                                                                                                                                                                                 |
-| `manicjs/config`      | Config + types   | `defineConfig`, `loadConfig`, `ManicConfig`, `ManicPlugin`, `ManicPluginContext`, `ManicServerPluginContext`, `ManicBuildPluginContext`, `ManicProvider`, `BuildContext`, `PageRoute`, `ApiRoute`   |
+| `manicjs/config`      | Config + types   | `defineConfig`, `loadConfig`, `createPlugin`, `ManicConfig`, `ManicPlugin`, `ManicPluginContext`, `ManicServerPluginContext`, `ManicBuildPluginContext`, `ManicProvider`, `BuildContext`, `PageRoute`, `ApiRoute`   |
 | `manicjs/plugins`     | Internal plugins | `apiLoaderPlugin`, `fileImporterPlugin`                                                                                                                                                             |
 | `manicjs/theme`       | Dark/light mode  | `ThemeProvider`, `useTheme`, `ThemeToggle`, `initTheme`                                                                                                                                             |
 | `manicjs/transitions` | View Transitions | `ViewTransitions` object with HTML element wrappers                                                                                                                                                 |
@@ -210,11 +210,13 @@ interface ManicServerPluginContext extends ManicPluginContext {
     handler: (req: Request) => Response | Promise<Response>
   ): void;
   addLinkHeader(value: string): void;
+  injectHtml(tags: string): void;
 }
 ```
 
 - `addRoute` registers a Bun route. Dev-only unless you also emit the file in `build`.
 - `addLinkHeader` adds RFC 8288 Link headers to all HTML responses.
+- `injectHtml` injects tags into `<head>` of every served HTML page.
 - `config`, `pageRoutes`, `apiRoutes`, `prod`, `cwd`, `dist` available on context.
 
 ### Build Context (ManicBuildPluginContext)
@@ -225,42 +227,55 @@ interface ManicBuildPluginContext extends ManicPluginContext {
     relativePath: string,
     content: string | Uint8Array
   ): Promise<void>;
+  injectHtml(tags: string): void;
 }
 ```
 
 - `emitClientFile` writes to `.manic/client/[relativePath]`. All providers copy this directory.
+- `injectHtml` injects tags into `<head>` of the built `index.html`.
 
-### How to Create a Plugin
+### `createPlugin` Helper
 
-Minimal plugin:
+Use `createPlugin` from `manicjs/config` instead of returning a plain object. The `staticFiles` shorthand automatically serves files as routes in dev and emits them via `emitClientFile` in prod — eliminating the repetitive parity boilerplate.
 
 ```ts
-import type { ManicPlugin } from 'manicjs/config';
+import { createPlugin } from 'manicjs/config';
 
-export function myPlugin(options: MyOptions = {}): ManicPlugin {
-  return {
+export function myPlugin(options = {}) {
+  return createPlugin({
     name: 'my-plugin',
 
+    staticFiles: [
+      {
+        path: '/my-file.txt',
+        // plain string or (ctx: ManicPluginContext) => string | Promise<string>
+        content: ctx => generateContent(ctx.pageRoutes),
+        contentType: 'text/plain; charset=utf-8',
+      },
+    ],
+
     configureServer(ctx) {
-      // Register dev routes
-      ctx.addRoute('/my-endpoint', req => new Response('hello'));
-      ctx.addLinkHeader('</my-endpoint>; rel="my-relation"');
+      // Runs after staticFiles. Use for link headers, html injection, dynamic routes.
+      ctx.addLinkHeader('</my-file.txt>; rel="my-relation"');
+      ctx.injectHtml('<meta name="my-plugin" content="true">');
     },
 
-    async build(ctx) {
-      // Emit static files for production
-      await ctx.emitClientFile('my-endpoint', 'hello');
+    build(ctx) {
+      // Runs after staticFiles. Use for html injection, extra emits.
+      ctx.injectHtml('<meta name="my-plugin" content="true">');
     },
-  };
+  });
 }
 ```
 
 Plugin rules:
 
-1. **Always implement both hooks** if you register a route in `configureServer`. The route only exists in dev otherwise. `build` must emit the same content via `emitClientFile`.
-2. **No provider-specific code** inside plugins. Plugins are provider-agnostic. Providers consume what plugins emit.
-3. **Use `addLinkHeader`** for any discovery endpoint so AI agents can find it.
-4. Plugin name must be unique. Convention: `@manicjs/[name]` for first-party, anything for third-party.
+1. **Use `createPlugin`** — don't return a plain `ManicPlugin` object.
+2. **Use `staticFiles`** for any file that needs to exist in both dev and prod.
+3. **Use `injectHtml`** for any `<script>` or `<meta>` tags — never hardcode them in `index.html`.
+4. **No provider-specific code** inside plugins. Plugins are provider-agnostic.
+5. **Use `addLinkHeader`** for any discovery endpoint so AI agents can find it.
+6. Plugin name must be unique. Convention: `@manicjs/[name]` for first-party, anything for third-party.
 
 ### Plugin Lifecycle
 
@@ -283,7 +298,7 @@ export default defineConfig({
 
 Plugin packages should:
 
-- Export a factory function that returns `ManicPlugin`
+- Export a factory function that uses `createPlugin` from `manicjs/config`
 - Declare `manicjs` as a `peerDependency`
 - Import types from `manicjs/config`
 - Publish with `src/**/*` in `files` (Bun runs TypeScript directly)

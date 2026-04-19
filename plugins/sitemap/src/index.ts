@@ -1,8 +1,4 @@
-import type {
-  ManicPlugin,
-  ManicServerPluginContext,
-  ManicBuildPluginContext,
-} from 'manicjs/config';
+import { createPlugin } from 'manicjs/config';
 import { generateSitemapXml } from './generate';
 
 export interface SitemapConfig {
@@ -23,24 +19,15 @@ export interface SitemapConfig {
   exclude?: string[];
 }
 
-export function sitemap(config: SitemapConfig): ManicPlugin {
-  return {
+export function sitemap(config: SitemapConfig) {
+  return createPlugin({
     name: 'sitemap',
-
-    configureServer(ctx: ManicServerPluginContext) {
-      const xml = generateSitemapXml(ctx.pageRoutes, config);
-      ctx.addRoute(
-        '/sitemap.xml',
-        () =>
-          new Response(xml, { headers: { 'content-type': 'application/xml' } })
-      );
-    },
-
-    async build(ctx: ManicBuildPluginContext) {
-      await ctx.emitClientFile(
-        'sitemap.xml',
-        generateSitemapXml(ctx.pageRoutes, config)
-      );
-    },
-  };
+    staticFiles: [
+      {
+        path: '/sitemap.xml',
+        content: ctx => generateSitemapXml(ctx.pageRoutes, config),
+        contentType: 'application/xml',
+      },
+    ],
+  });
 }

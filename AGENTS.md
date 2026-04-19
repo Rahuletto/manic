@@ -92,22 +92,62 @@ graph LR
 
 Defined in `manic.config.ts`.
 
-- `build(ctx)`: Access to `pageRoutes`, `apiRoutes`, `dist`, and `emitClientFile(path, content)`.
+- `build(ctx)`: Access to `pageRoutes`, `apiRoutes`, `dist`, `emitClientFile(path, content)`, and `injectHtml(tags)`.
 - Use `emitClientFile(relativePath, content)` to write static files into `dist/client/`. These are automatically picked up by **all providers** (Vercel, Cloudflare, Netlify) since every provider copies `dist/client` to its static output directory.
+- Use `injectHtml(tags)` to inject HTML tags (e.g. `<meta>`, `<script>`) into `<head>` of the built `index.html`.
 - **Do not write provider-specific code inside a plugin.** Plugins must be provider-agnostic. If a feature needs to work in production, emit it as a static file via `emitClientFile` or handle it in `configureServer` for the dev server.
 
 ### Runtime/Server Plugins (`ManicPlugin`)
 
-- `configureServer(ctx)`: Hooks into `Bun.serve`. Can add routes via `addRoute(path, handler)` and inject `Link` headers via `addLinkHeader(value)`.
+- `configureServer(ctx)`: Hooks into `Bun.serve`. Can add routes via `addRoute(path, handler)`, inject `Link` headers via `addLinkHeader(value)`, and inject HTML tags via `injectHtml(tags)`.
 - Routes registered here are **dev-only** unless the same content is also emitted as a static file in the `build` hook.
 - **Every plugin that registers a route in `configureServer` should also emit the equivalent static file in `build`** so production deployments work identically.
+
+### `createPlugin` Helper
+
+Use `createPlugin` from `manicjs/config` instead of returning a plain object. It eliminates the dev/prod parity boilerplate for static files via the `staticFiles` shorthand:
+
+```ts
+import { createPlugin } from 'manicjs/config';
+
+export function myPlugin(options = {}) {
+  return createPlugin({
+    name: 'my-plugin',
+
+    // Automatically served as a route in dev AND emitted via emitClientFile in prod
+    staticFiles: [
+      {
+        path: '/my-file.txt',
+        content: ctx => generateContent(ctx.pageRoutes), // or a plain string
+        contentType: 'text/plain; charset=utf-8',
+      },
+    ],
+
+    configureServer(ctx) {
+      // Additional dev-only setup (link headers, html injection, dynamic routes)
+      ctx.addLinkHeader('</my-file.txt>; rel="my-relation"');
+      ctx.injectHtml('<meta name="my-plugin" content="true">');
+    },
+
+    build(ctx) {
+      // Additional build-only setup (html injection, extra emits)
+      ctx.injectHtml('<meta name="my-plugin" content="true">');
+    },
+  });
+}
+```
+
+- `staticFiles[].content` can be a plain string or a function `(ctx: ManicPluginContext) => string | Promise<string>` for context-aware generation.
+- `configureServer` and `build` hooks are optional and run **after** `staticFiles` are processed.
+- **Never hardcode `<script src="/webmcp.js">` or similar plugin-owned tags in `index.html`** — plugins inject them via `injectHtml`.
 
 ### Plugin Checklist
 
 When creating or modifying a plugin, ensure:
 
-- [ ] `configureServer` registers the route for dev
-- [ ] `build` emits the same content via `emitClientFile` for production
+- [ ] Use `createPlugin` from `manicjs/config`
+- [ ] Static files use the `staticFiles` shorthand (not manual `addRoute` + `emitClientFile`)
+- [ ] `injectHtml` is called (not a hardcoded script tag in `index.html`) for any injected scripts/meta
 - [ ] No provider-specific imports or logic inside the plugin
 - [ ] `addLinkHeader` is called for any discovery endpoint (RFC 8288)
 

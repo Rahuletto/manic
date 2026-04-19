@@ -82,14 +82,14 @@
     },
     "packages/create-manic": {
       "name": "create-manic",
-      "version": "0.9.0",
+      "version": "0.9.1",
       "bin": {
         "create-manic": "./index.ts",
       },
     },
     "packages/manic": {
       "name": "manicjs",
-      "version": "0.12.0",
+      "version": "0.12.1",
       "bin": {
         "manic": "./src/cli/index.ts",
       },
@@ -118,7 +118,7 @@
     },
     "packages/providers": {
       "name": "@manicjs/providers",
-      "version": "0.8.0",
+      "version": "0.8.1",
       "dependencies": {
         "colorette": "^2.0.20",
       },
@@ -132,7 +132,7 @@
     },
     "plugins/api-docs": {
       "name": "@manicjs/api-docs",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "@scalar/hono-api-reference": "^0.10.8",
         "hono": "^4.7.0",
@@ -143,7 +143,7 @@
     },
     "plugins/mcp": {
       "name": "@manicjs/mcp",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "peerDependencies": {
         "manicjs": "^0.7.4",
         "zod": "^3.0.0 || ^4.0.0",
@@ -151,14 +151,14 @@
     },
     "plugins/seo": {
       "name": "@manicjs/seo",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "peerDependencies": {
         "manicjs": "^0.7.4",
       },
     },
     "plugins/sitemap": {
       "name": "@manicjs/sitemap",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "peerDependencies": {
         "manicjs": "^0.7.4",
       },
