@@ -1,6 +1,8 @@
 # Config
 
-Configuration is done via `manic.config.ts`.
+<Callout type="note">
+Configuration is done via `manic.config.ts` in your project root.
+</Callout>
 
 ## Basic Config
 
@@ -18,6 +20,10 @@ export default defineConfig({
   },
 });
 ```
+
+<Callout type="tip">
+Use `defineConfig()` for full type safety and IDE autocomplete.
+</Callout>
 
 ## Plugins
 
@@ -42,6 +48,10 @@ export default defineConfig({
   ],
 });
 ```
+
+<Callout type="important">
+Plugins must be configured in both `configureServer` and `build` for dev/prod parity.
+</Callout>
 
 ## Custom Routes
 
@@ -69,3 +79,7 @@ export default defineConfig({
   ],
 });
 ```
+
+<Callout type="warning">
+Custom routes registered in `configureServer` are dev-only unless also emitted via `emitClientFile` in `build`.
+</Callout>

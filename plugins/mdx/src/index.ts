@@ -6,6 +6,33 @@ export type { MdxPluginOptions } from './bun-plugin.ts';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
+/**
+ * Creates an MDX plugin for Manic.
+ *
+ * Enables MDX (Markdown + JSX) support in the project.
+ * Uses bun-plugin-mdx for fast compilation with support for:
+ * - GFM (GitHub Flavored Markdown)
+ * - Frontmatter
+ * - Table of contents extraction
+ * - Syntax highlighting
+ *
+ * @param options - MDX plugin configuration options
+ * @returns ManicPlugin for MDX
+ *
+ * @example
+ * import { mdx } from '@manicjs/mdx';
+ *
+ * mdx({
+ *   frontmatterName: 'metadata',
+ *   toc: true,
+ *   highlight: 'github-dark',
+ * })
+ *
+ * @example
+ * // With custom remark/rehype plugins (via Bun.plugin directly)
+ * import { mdxBunPlugin } from '@manicjs/mdx';
+ * Bun.plugin(mdxBunPlugin({ myOption: true }));
+ */
 export function mdx(options: import('./bun-plugin.ts').MdxPluginOptions = {}): ManicPlugin {
   // Serialize non-function options so the preload script can read them.
   // remark/rehype plugin arrays (functions) can't be serialized — users needing

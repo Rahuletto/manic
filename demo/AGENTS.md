@@ -1,6 +1,6 @@
 # AGENTS.md — Manic Framework Guide
 
-> **Manic** (`manicjs`) is a file-based, client-side React SPA framework built exclusively on **Bun**. It uses **Elysia** as the HTTP server, supports **Tailwind CSS v4** natively, and has **no SSR** — all rendering happens in the browser.
+> **Manic** (`manicjs`) is a file-based, client-side React SPA framework built exclusively on **Bun**. It uses **Hono** as the HTTP server, supports **Tailwind CSS v4** natively, and has **no SSR** — all rendering happens in the browser.
 
 ## Project Structure
 
@@ -18,7 +18,7 @@ portfolio/
     ├── ~routes.generated.ts       # AUTO-GENERATED route manifest — NEVER EDIT
     ├── App.tsx                    # Optional app wrapper component
     ├── routes/                    # Page files — each .tsx = one URL route
-    ├── api/                       # Server-side Elysia API routes
+    ├── api/                       # Server-side Hono API routes
     └── components/                # Shared React components (any structure)
 ```
 
@@ -337,17 +337,17 @@ Internally: loads env files → generates route manifest → loads config → mo
 
 ### `manicjs/plugins`
 
-**`apiLoaderPlugin(apiDir?)`** — Scans `app/api/` for Elysia modules and mounts them.
+**`apiLoaderPlugin(apiDir?)`** — Scans `app/api/` for Hono modules and mounts them.
 
 ```tsx
 import { apiLoaderPlugin } from 'manicjs/plugins';
 
 const { app, routes } = await apiLoaderPlugin('app/api');
-// app: Elysia instance with all API routes mounted
+// app: Hono instance with all API routes mounted
 // routes: string[] — list of mounted route paths
 ```
 
-**`fileImporterPlugin(publicDir?)`** — Serves static files via `@elysiajs/static`.
+**`fileImporterPlugin(publicDir?)`** — Serves static files from the specifies directory.
 
 ```tsx
 import { fileImporterPlugin } from 'manicjs/plugins';
@@ -452,17 +452,21 @@ interface BuildContext {
 
 ## API Routes
 
-API routes live in `app/api/` and must use **folder + index.ts** structure. Each exports a default **Elysia** instance:
+API routes live in `app/api/` and must use **folder + index.ts** structure. Each exports a default **Hono** instance:
 
 ```typescript
 // app/api/hello/index.ts → /api/hello
-import { Elysia, t } from 'elysia';
+import { Hono } from 'hono';
 
-export default new Elysia()
-  .get('/', () => ({ message: 'Hello!' }))
-  .post('/', ({ body }) => ({ echo: body.text }), {
-    body: t.Object({ text: t.String() }),
-  });
+const app = new Hono();
+
+app.get('/', (c) => c.json({ message: 'Hello!' }));
+app.post('/', async (c) => {
+  const body = await c.req.json();
+  return c.json({ echo: body.text });
+});
+
+export default app;
 ```
 
 **Important:** Never create `app/api/index.ts` at root — always use `app/api/[name]/index.ts`.

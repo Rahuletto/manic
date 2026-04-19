@@ -1,20 +1,38 @@
 import { createPlugin } from 'manicjs/config';
 import { generateRobotsTxt } from './robots';
 
+/**
+ * Robot rule for robots.txt
+ * @interface RobotRule
+ */
 export interface RobotRule {
+  /** User agent pattern (e.g. "*", "GoogleBot") */
   userAgent: string;
+  /** Allowed paths */
   allow?: string[];
+  /** Disallowed paths */
   disallow?: string[];
+  /** Crawl delay in seconds */
   crawlDelay?: number;
 }
 
+/**
+ * RFC 8288 Link header configuration
+ * @interface LinkHeader
+ */
 export interface LinkHeader {
+  /** Target URL for the link */
   href: string;
   /** IANA link relation type (e.g. "service-desc", "describedby") */
   rel: string;
+  /** Media type (e.g. "application/json") */
   type?: string;
 }
 
+/**
+ * SEO configuration for meta tags, Open Graph, Twitter Cards, and robots.txt
+ * @interface SeoConfig
+ */
 export interface SeoConfig {
   /** Base URL of the site, e.g. "https://example.com" */
   hostname: string;
@@ -109,6 +127,29 @@ function generateMetaTags(config: SeoConfig): string {
   return tags.join('\n');
 }
 
+/**
+ * Creates an SEO plugin for meta tags, Open Graph, Twitter Cards, and robots.txt.
+ *
+ * Generates:
+ * - robots.txt with crawl rules
+ * - Meta tags (title, description, author)
+ * - Open Graph tags for social sharing
+ * - Twitter Card tags
+ * - RFC 8288 Link headers for sitemap discovery
+ *
+ * @param config - SEO configuration options
+ * @returns ManicPlugin for SEO
+ *
+ * @example
+ * import { seo } from '@manicjs/seo';
+ *
+ * seo({
+ *   hostname: 'https://example.com',
+ *   title: 'My App',
+ *   description: 'A great app',
+ *   twitter: { card: 'summary_large_image' },
+ * })
+ */
 export function seo(config: SeoConfig) {
   return createPlugin({
     name: 'seo',

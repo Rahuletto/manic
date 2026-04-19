@@ -7,6 +7,10 @@ import { consoleIngestHandler, CONSOLE_SCRIPT } from './console';
 export type { McpTool } from './tool';
 export { defineTool } from './tool';
 
+/**
+ * MCP (Model Context Protocol) server configuration
+ * @interface McpConfig
+ */
 export interface McpConfig {
   /** @default "manic-mcp" */
   name?: string;
@@ -19,7 +23,36 @@ export interface McpConfig {
 }
 
 /**
- * Generates a browser script that registers MCP tools via the WebMCP API
+ * Creates an MCP (Model Context Protocol) server plugin.
+ *
+ * Exposes tools to AI agents via the MCP protocol. Provides:
+ * - MCP server endpoint (JSON-RPC over SSE)
+ * - Auto-discovery endpoints for agents
+ * - Built-in framework tools (navigate, getRoute, etc.)
+ * - Browser-side WebMCP integration via /webmcp.js
+ * - Console logging for debugging
+ *
+ * @param config - MCP configuration options
+ * @returns ManicPlugin for MCP
+ *
+ * @example
+ * import { mcp, defineTool } from '@manicjs/mcp';
+ *
+ * mcp({
+ *   name: 'my-app',
+ *   version: '1.0.0',
+ *   path: '/mcp',
+ *   tools: [
+ *     defineTool({
+ *       name: 'getUser',
+ *       description: 'Get user by ID',
+ *       inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
+ *       handler: async ({ id }) => ({ id, name: 'John' }),
+ *     }),
+ *   ],
+ * })
+ */
+export function mcp(config: McpConfig = {}): ManicPlugin {
  * (navigator.modelContext). Each tool delegates execution to the MCP server
  * via fetch, so tools are defined once and work in both contexts.
  */
