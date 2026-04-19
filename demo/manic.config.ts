@@ -4,6 +4,7 @@ import { apiDocs } from '@manicjs/api-docs';
 import { seo } from '@manicjs/seo';
 import { sitemap } from '@manicjs/sitemap';
 import { mcp } from '@manicjs/mcp';
+import { tailwind } from '@manicjs/tailwind';
 
 export default defineConfig({
   app: {
@@ -15,6 +16,7 @@ export default defineConfig({
   },
 
   plugins: [
+    tailwind(),
     apiDocs(),
     seo({
       hostname: 'https://manic.js.org',

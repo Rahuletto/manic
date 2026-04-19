@@ -11,3 +11,4 @@ netlify
 dist
 wrangler
 .wrangler
+bunfig.toml

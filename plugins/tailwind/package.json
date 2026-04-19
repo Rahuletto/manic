@@ -1,0 +1,12 @@
+{
+  "name": "@manicjs/tailwind",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "bun-plugin-tailwind": "^0.1.2"
+  }
+}

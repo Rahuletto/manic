@@ -8,7 +8,6 @@
 portfolio/
 ├── ~manic.ts                      # Server entry point (REQUIRED, DO NOT RENAME)
 ├── manic.config.ts                # Framework configuration (REQUIRED)
-├── bunfig.toml                    # Bun config (enables Tailwind plugin)
 ├── tsconfig.json                  # Uses @/* alias → app/*
 ├── assets/                        # Static files served at /assets/*
 └── app/
