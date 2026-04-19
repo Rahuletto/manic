@@ -1,0 +1,14 @@
+{
+  "root": true,
+  "title": "Core internals",
+  "description": "Engine and architecture.",
+  "icon": "Cuboid",
+  "pages": [
+    "index",
+    "architecture",
+    "build-pipeline",
+    "discovery-engine",
+    "oxc-toolchain",
+    "manic-internals"
+  ]
+}

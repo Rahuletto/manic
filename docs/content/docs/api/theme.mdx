@@ -1,0 +1,186 @@
+---
+title: Theme
+description: Dark mode, theme toggling, and CSS variables in Manic.
+---
+
+# Theme
+
+Manic provides built-in theme support for dark/light mode with system preference detection.
+
+## Quick Start
+
+### Wrap Your App
+
+```tsx
+// app/main.tsx
+import { ThemeProvider } from 'manicjs';
+import { App } from './App';
+
+export default function Root() {
+  return (
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  );
+}
+```
+
+### Use in Component
+
+```tsx
+// app/routes/index.tsx
+import { useTheme, ThemeToggle } from 'manicjs';
+
+export default function Home() {
+  const { theme, isDark, toggle } = useTheme();
+  
+  return (
+    <div className={isDark ? 'dark' : 'light'}>
+      <p>Current: {theme}</p>
+      <button onClick={toggle}>Toggle</button>
+      <ThemeToggle />
+    </div>
+  );
+}
+```
+
+## `useTheme()`
+
+Access the current theme state and controls:
+
+```ts
+const { 
+  theme,           // 'light' | 'dark' | 'system'
+  setTheme,       // (theme: Theme) => void
+  toggle,        // () => void
+  isDark,        // boolean
+  isLight,       // boolean
+  resolvedTheme  // 'light' | 'dark' (resolved)
+} = useTheme();
+```
+
+### Theme Type
+
+<TypeTable
+  type={{
+    theme: {
+      type: "'light' | 'dark' | 'system'",
+      description: 'User preference setting',
+    },
+    resolvedTheme: {
+      type: "'light' | 'dark'",
+      description: 'Actual applied theme after resolving system',
+    },
+    isDark: {
+      type: 'boolean',
+      description: 'True if resolved theme is dark',
+    },
+    isLight: {
+      type: 'boolean',
+      description: 'True if resolved theme is light',
+    },
+  }}
+/>
+
+## `<ThemeToggle />`
+
+A pre-built toggle button component:
+
+```tsx
+import { ThemeToggle } from 'manicjs';
+
+// Default
+<ThemeToggle />
+
+// With custom styling
+<ThemeToggle 
+  className="my-toggle"
+  style={{ borderRadius: '8px' }}
+/>
+
+// With custom icons
+<ThemeToggle>
+  <span slot="light">☀️</span>
+  <span slot="dark">🌙</span>
+</ThemeToggle>
+```
+
+### Props
+
+<TypeTable
+  type={{
+    className: {
+      type: 'string',
+      description: 'CSS class name',
+    },
+    style: {
+      type: 'CSSProperties',
+      description: 'Inline styles',
+    },
+    children: {
+      type: 'ReactNode',
+      description: 'Custom toggle content with slots',
+    },
+  }}
+/>
+
+## CSS Variables
+
+Manic sets CSS variables on the `html` element:
+
+```css
+:root {
+  --manic-theme: light;
+  --manic-is-dark: 0;
+}
+
+:root.dark {
+  --manic-theme: dark;
+  --manic-is-dark: 1;
+}
+```
+
+### Using in Tailwind
+
+```css
+/* tailwind.config.js */
+export default {
+  darkMode: 'class',
+  darkClass: 'dark',
+}
+```
+
+```tsx
+// In components
+<div className={isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}>
+  Content
+</div>
+```
+
+## Programmatic Control
+
+```tsx
+function ThemeSwitch() {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <select 
+      value={theme}
+      onChange={(e) => setTheme(e.target.value as Theme)}
+    >
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+      <option value="system">System</option>
+    </select>
+  );
+}
+```
+
+## Persistence
+
+Theme preference is stored in `localStorage` under `manic-theme` key.
+
+## See Also
+
+- [Environment Variables](/docs/framework/advanced/environment-variables) - Theme config
+- [Getting Started](/docs/framework/getting-started) - Basic setup

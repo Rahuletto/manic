@@ -1,0 +1,47 @@
+---
+title: Cloudflare
+description: Deploying Manic to Cloudflare Pages or Workers.
+---
+
+# Deploying to Cloudflare
+
+Manic offers first-class support for Cloudflare's edge network. You can deploy as either a Cloudflare Worker or a Cloudflare Pages project.
+
+## Setup
+
+Configure the Cloudflare provider in `manic.config.ts`:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { cloudflare } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [cloudflare()],
+});
+```
+
+## Deployment
+
+### Cloudflare Pages
+
+1. Commit and push your code to GitHub/GitLab.
+2. Connect your repository in the Cloudflare Dashboard.
+3. Build Settings:
+   - Framework Preset: `None`
+   - Build Command: `manic build`
+   - Output Directory: `dist/client` (Static) and `.manic/` (Server)
+
+### Cloudflare Workers
+
+Use `wrangler` to deploy directly:
+
+```bash
+manic build
+wrangler deploy
+```
+
+## Features
+
+- **Edge Execution**: Your Entire application runs on Cloudflare's edge nodes.
+- **Low Latency**: Sub-millisecond cold starts.
+- **Wrangler Support**: Fully compatible with `wrangler.toml` for KV, D1, and R2 bindings.

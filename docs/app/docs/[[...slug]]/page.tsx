@@ -22,7 +22,14 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const markdownUrl = getPageMarkdownUrl(page).url;
 
   return (
-    <DocsPage toc={page.data.toc} full={page.data.full}>
+    <DocsPage 
+      toc={page.data.toc} 
+      full={page.data.full}
+      tableOfContent={{
+        style: 'clerk',
+        single: false,
+      }}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
       <div className="flex flex-row gap-2 items-center border-b pb-6">
@@ -39,6 +46,11 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
             a: createRelativeLink(source, page),
           })}
         />
+        {page.data.lastModified && (
+          <p className="mt-8 text-xs text-fd-muted-foreground border-t pt-4">
+            Last updated: {new Date(page.data.lastModified).toLocaleDateString()}
+          </p>
+        )}
       </DocsBody>
     </DocsPage>
   );
@@ -56,8 +68,9 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
   return {
     title: page.data.title,
     description: page.data.description,
+    metadataBase: new URL('https://manic.js.org'),
     openGraph: {
-      images: getPageImage(page).url,
+      images: [getPageImage(page).url],
     },
   };
 }

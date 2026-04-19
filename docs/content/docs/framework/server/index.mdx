@@ -1,0 +1,124 @@
+---
+title: API Routes
+description: Build high-performance backends with Manic's integrated Hono engine.
+---
+
+# API Routes
+
+Manic isn't just a frontend framework—it's a fullstack powerhouse natively integrated with **Hono**. This allows you to build lightning-fast, type-safe API endpoints directly within your project.
+
+## Creating an Endpoints
+
+Any subdirectory in `app/api/` that contains an `index.ts` file becomes an API endpoint. Manic bundles these endpoints into **independent JavaScript chunks** during build time, ensuring optimal performance for serverless environments.
+
+```ts title="app/api/users/index.ts" twoslash
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c: any) => {
+  return c.json({ users: ['Alice', 'Bob'] });
+});
+
+app.post('/', async (c: any) => {
+  const body = await c.req.json();
+  // ... create user logic
+  return c.json({ success: true }, 201);
+});
+
+export default app;
+```
+
+---
+
+## Route Parameters
+
+API routes support the same dynamic parameter syntax as page routes.
+
+```ts title="app/api/users/[id]/index.ts" twoslash
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c: any) => {
+  const id = c.req.param('id');
+  return c.json({ id });
+});
+
+export default app;
+```
+
+---
+
+## Middleware Support
+
+Since Manic API routes are just Hono instances, you can use any official or custom Hono middleware.
+
+```ts title="app/api/protected/index.ts" twoslash
+import { Hono } from 'hono';
+import { bearerAuth } from 'hono/bearer-auth';
+
+const app = new Hono();
+
+// Add middleware
+app.use('/*', bearerAuth({ token: 'manic-secret' }));
+
+app.get('/', (c: any) => {
+  return c.json({ secret: 'The build engine uses OXC.' });
+});
+
+export default app;
+```
+
+---
+
+## Advanced: Shared Types
+
+One of the greatest advantages of using Hono with Manic is the ability to share type definitions between your API and your React components.
+
+```ts
+// 1. Export the Type from your API
+// app/api/data/index.ts
+const app = new Hono().get('/', (c) => c.json({ hello: 'world' }));
+export type AppType = typeof app;
+
+// 2. Import it in your React Hook/Component
+// app/routes/index.tsx
+import type { AppType } from '../api/data';
+// (Use with hc for type-safe client)
+```
+
+## Internal Architecture: The "API Chunker"
+
+During `manic build`, the framework uses a dedicated bundling phase for API routes:
+1.  **Discovery**: It scans `app/api/` for `index.ts` files.
+2.  **Mounting**: It calculates the `mountPath` based on the folder nesting.
+3.  **Isolation**: Each route is built as a standalone entry point using `Bun.build`.
+4.  **Deployment**: When deployed (e.g., to Vercel), these chunks are mapped to serverless functions or edge workers.
+
+## API Bundling Flow
+
+```mermaid
+flowchart TD
+    A[app/api/] --> B[Scan for index.ts]
+    B --> C[Generate mount paths]
+    C --> D{For each route}
+    D -->|users| E[users/index.ts]
+    D -->|posts| F[posts/index.ts]
+    D -->|posts/[id]| G[posts/[id]/index.ts]
+    
+    E --> H[Bun.build entry]
+    F --> H
+    G --> H
+    
+    H --> I[dist/api/users.js]
+    H --> J[dist/api/posts.js]
+    H --> K[dist/api/posts/[id].js]
+    
+    I --> L[Vercel Functions]
+    J --> L
+    K --> L
+    
+    style A fill:#e9ecef
+    style L fill:#d3f9d8
+```

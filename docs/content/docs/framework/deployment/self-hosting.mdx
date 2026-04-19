@@ -1,0 +1,42 @@
+---
+title: Self-Hosting
+description: Running Manic on your own infrastructure using Bun.
+---
+
+# Self-Hosting
+
+Manic can be deployed anywhere that supports the Bun runtime. This is the most flexible deployment method, allowing you to run on Linux servers, Docker, or edge platforms like Fly.io.
+
+## Setup
+
+First, use the `direct` provider in `manic.config.ts`:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { direct } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [direct()],
+});
+```
+
+## Running the Server
+
+1. **Build the application**:
+   ```bash
+   manic build
+   ```
+
+2. **Start the production server**:
+   ```bash
+   manic start
+   ```
+
+By default, the server listens on port `3000`. You can change this using the `PORT` environment variable.
+
+## Production Checklist
+
+- **Reverse Proxy**: Use Nginx or Caddy to handle SSL/TLS termination and Gzip compression.
+- **Process Manager**: Use `systemd` or Docker to ensure the Bun process restarts automatically.
+- **Environment**: Set `NODE_ENV=production` for optimized performance and error handling.
+- **Port**: Ensure your firewall allows incoming traffic on your selected port.

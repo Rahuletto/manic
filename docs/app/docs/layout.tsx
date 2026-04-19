@@ -5,14 +5,10 @@ import { getSidebarTabs } from 'fumadocs-ui/utils/get-sidebar-tabs';
 import type { ReactNode } from 'react';
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const allTabs = getSidebarTabs(source.getPageTree());
+  const tabs = getSidebarTabs(source.getPageTree());
 
   return (
-    <DocsLayout
-      tree={source.getPageTree()}
-      {...baseOptions()}
-      tabs={allTabs}
-    >
+    <DocsLayout tree={source.getPageTree()} {...baseOptions()} tabs={tabs}>
       {children}
     </DocsLayout>
   );

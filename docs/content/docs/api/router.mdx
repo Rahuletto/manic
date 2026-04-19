@@ -1,37 +1,83 @@
 ---
-title: Router
-description: Detailed API specification for the Manic Client Router.
-icon: Route
+title: Router API
+description: Complete API reference for client-side routing and navigation.
 ---
 
-# Router Reference
+# Router API
 
-The Manic Router is a zero-config, type-safe React routing engine built for SPAs. It manages navigation state, handles code-splitting, and orchestrates View Transitions.
+The Manic Router provides a **type-safe, zero-config routing system** for client-side navigation with built-in code-splitting and View Transitions support.
 
 ## Components
 
 ### `<Link />`
 
-The primary component for client-side navigation.
+Primary component for client-side navigation. Automatically prefetches code chunks on hover.
 
-```tsx twoslash
+```tsx
+// @errors: 2322
 import React from 'react';
-import { Link } from 'manicjs';
+import { Link as ManicLink } from 'manicjs';
 
-<Link to="/posts/123" prefetch={true} replace={false}>
-  View Post
-</Link>
+export default function Nav() {
+  return (
+    <ManicLink to="/posts/123" prefetch={true}>
+      View Post
+    </ManicLink>
+  );
+}
 ```
 
 #### Props
 
-| Prop | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `to` | `string` | **Required** | The destination URL path. |
-| `prefetch` | `boolean` | `true` | Preloads the target route's code chunk on hover/focus. |
-| `replace` | `boolean` | `false` | Replaces the current history entry instead of pushing a new one. |
-| `viewTransition` | `boolean` | `true` | Wraps the navigation in `document.startViewTransition`. |
-| `className` | `string` | `undefined` | Standard CSS class name. |
+#### Props
+ 
+<TypeTable
+  type={{
+    to: {
+      type: 'string',
+      description: 'Destination URL path',
+    },
+    prefetch: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Preload code chunk on hover/focus',
+    },
+    replace: {
+      type: 'boolean',
+      default: 'false',
+      description: 'Replace history entry instead of pushing',
+    },
+    viewTransition: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Use document.startViewTransition',
+    },
+    className: {
+      type: 'string',
+      description: 'CSS class name',
+    },
+  }}
+/>
+
+#### Example: Conditional Navigation
+
+```tsx
+// @errors: 2322
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export function BlogLink({ slug, featured }: { slug: string; featured?: boolean }) {
+  return (
+    <ManicLink
+      to={`/blog/${slug}`}
+      replace={featured}
+      className={featured ? 'font-bold' : ''}
+    >
+      {slug}
+    </ManicLink>
+  );
+}
+```
 
 ---
 
@@ -39,56 +85,388 @@ import { Link } from 'manicjs';
 
 ### `useRouter()`
 
-Provides access to the router instance for programmatic navigation.
+Access the router instance for programmatic navigation.
 
-```tsx twoslash
+```tsx
 import React from 'react';
 import { useRouter } from 'manicjs';
 
-function MyComponent() {
+export function LoginButton() {
   const router = useRouter();
-  
-  // Navigate to a new route
-  const goToHome = () => router.navigate('/');
-  
-  // Replace current route
-  const reset = () => router.navigate('/login', { replace: true });
-  
-  return <button onClick={goToHome}>Home</button>;
+
+  const handleLogin = async () => {
+    // ... login logic
+    router.navigate('/dashboard');
+  };
+
+  return <button onClick={handleLogin}>Login</button>;
 }
 ```
 
-#### Return Type
-```ts
-interface RouterContextValue {
-  path: string;
-  navigate(to: string, options?: { replace?: boolean }): void;
-  params: Record<string, string>;
-}
-```
+#### Router API
 
-### `useParams()`
+#### Router API
+ 
+<TypeTable
+  type={{
+    path: {
+      type: 'string',
+      description: 'Current URL pathname',
+    },
+    navigate: {
+      type: '(to: string, options?: { replace?: boolean }) => void',
+      description: 'Navigate to a new path',
+    },
+    params: {
+      type: 'Record<string, string>',
+      description: 'Dynamic route parameters',
+    },
+  }}
+/>
 
-Returns an object of the dynamic segments from the current URL.
+#### Examples
 
 ```tsx
-// For app/routes/blog/[slug].tsx
-const { slug } = useParams();
+// @errors: 2322
+const router = useRouter();
+
+// Push a new entry to history
+router.navigate('/posts/456');
+
+// Replace current history entry
+router.navigate('/login', { replace: true });
+
+// Check current path
+if (router.path === '/') {
+  // Home page
+}
+
+// Access route params
+const postId = router.params.id;
+```
+
+### Route Parameters
+
+Access dynamic route parameters via `useRouter().params`:
+
+```tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+
+export default function PostPage() {
+  const { params } = useRouter();
+  const slug = params.slug;
+  
+  return <div>Post: {slug}</div>;
+}
+```
+
+#### Usage
+
+```tsx
+import { useRouter } from 'manicjs';
+
+// Route: app/routes/blog/[slug].tsx
+const { params } = useRouter();
+const { slug } = params;  // From URL: /blog/my-post
+
+// Route: app/routes/posts/[id]/comments/[commentId].tsx
+const { id, commentId } = params;
+
+// Route: app/routes/docs/[...path].tsx (catch-all)
+const { path } = params;  // path = "guides/setup/installation"
 ```
 
 ### `useQueryParams()`
 
-A hook to manage URL search parameters with a React-state-like API.
+Access and update URL search parameters:
 
 ```tsx
-const [query, setQuery] = useQueryParams();
+import React from 'react';
+import { useQueryParams } from 'manicjs';
 
-// Access: query.get('q')
-// Update: setQuery({ q: 'new search' })
+export function SearchPage() {
+  const searchParams = useQueryParams();
+
+  return (
+    <>
+      <input
+        value={searchParams.get('q') || ''}
+        onChange={(e) => {
+          const params = new URLSearchParams(searchParams);
+          params.set('q', e.target.value);
+          window.history.replaceState({}, '', `?${params.toString()}`);
+        }}
+      />
+      <p>Searching for: {searchParams.get('q')}</p>
+    </>
+  );
+}
+```
+
+#### API
+
+`useQueryParams()` returns a standard `URLSearchParams` object:
+
+```ts
+class URLSearchParams {
+  get(key: string): string | null;
+  getAll(key: string): string[];
+  has(key: string): boolean;
+  set(key: string, value: string): void;
+  delete(key: string): void;
+  toString(): string;
+}
+```
+
+#### Examples
+
+```tsx
+const searchParams = useQueryParams();
+
+// Read
+const searchTerm = searchParams.get('q');           // "react"
+const page = searchParams.get('page');             // "2"
+const tags = searchParams.getAll('tag');           // ["javascript", "react"]
+
+// Check existence
+if (searchParams.has('sort')) {
+  // Sort param exists
+}
+
+// Update URL manually
+const params = new URLSearchParams(searchParams);
+params.set('q', 'typescript');
+params.delete('page');
+window.history.replaceState({}, '', `?${params.toString()}`);
 ```
 
 ---
 
-## Internal: Route Manifest
+## Route Manifest
 
-The router relies on a generated manifest located at `app/~routes.generated.ts`. This file is automatically updated by the `manic dev` and `manic build` processes. **Do not edit this file manually.**
+The router relies on an **auto-generated manifest** at `app/~routes.generated.ts`. This file is updated automatically by `manic dev` and `manic build`.
+
+<Callout type="warn">
+
+**Never edit `app/~routes.generated.ts` manually.** It is regenerated on every build.
+
+</Callout>
+
+### Example Generated Manifest
+
+```ts
+// app/~routes.generated.ts (auto-generated)
+export const routes = [
+  {
+    path: '/',
+    component: null,
+    loader: () => import('./routes/index.tsx'),
+  },
+  {
+    path: '/blog/:slug',
+    component: null,
+    loader: () => import('./routes/blog/[slug].tsx'),
+  },
+  {
+    path: '/docs/:...path',
+    component: null,
+    loader: () => import('./routes/docs/[...path].tsx'),
+  },
+];
+```
+
+### Route Registry Structure
+
+```mermaid
+classDiagram
+    class Route {
+        +string path
+        +Component component
+        +Function loader
+    }
+
+    class RouteRegistry {
+        +Route[] routes
+        +add(route)
+        +match(pathname)
+        +getLoader(pathname)
+    }
+
+    class Matcher {
+        +score(pattern)
+        +extractParams(path, pattern)
+    }
+
+    RouteRegistry --> Route : contains
+    Matcher --> RouteRegistry : uses
+```
+
+### Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client["Client Side"]
+        Link["`<Link />`"]
+        Router["Router Context"]
+        Hooks["useRouter() / useQueryParams()"]
+        Match["Route Matcher"]
+        Cache["Chunk Cache"]
+    end
+
+    subgraph Manifest["Route Discovery"]
+        Scan["Scan app/routes/"]
+        Generate["Generate ~routes.generated.ts"]
+        Routes["Route Registry"]
+    end
+
+    subgraph Navigation["Navigation Flow"]
+        Click["Click / Navigate"]
+        Prefetch["Prefetch Chunk"]
+        Load["Lazy Load JS"]
+        Render["Render Component"]
+        VT["View Transition"]
+    end
+
+    Link -->|onClick| Click
+    Link -->|onMouseEnter| Prefetch
+    Click --> Match
+    Prefetch --> Load
+    Match --> Routes
+    Load --> Cache
+    Cache --> Render
+    Render --> VT
+    Hooks --> Router
+    Router --> Match
+    Scan --> Generate
+    Generate --> Routes
+
+    style Client fill:transparent,stroke:#555,stroke-dasharray: 5 5
+    style Manifest fill:transparent,stroke:#555,stroke-dasharray: 5 5
+    style Navigation fill:transparent,stroke:#555,stroke-dasharray: 5 5
+```
+
+---
+
+## Advanced Patterns
+
+### Protected Routes
+
+```tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+import { useAuth } from './~hooks/useAuth';
+
+export default function AdminPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  React.useEffect(() => {
+    if (!user?.role.includes('admin')) {
+      router.navigate('/unauthorized', { replace: true });
+    }
+  }, [user, router]);
+
+  return <div>Admin Panel</div>;
+}
+```
+
+### Search with Query Params
+
+```tsx
+import React from 'react';
+import { useRouter, useQueryParams } from 'manicjs';
+
+export default function SearchResults() {
+  const query = useQueryParams();
+  const router = useRouter();
+  const searchTerm = query.get('q') || '';
+
+  const handleSearch = (term: string) => {
+    const params = new URLSearchParams(query);
+    params.set('q', term);
+    params.set('page', '1');
+    window.history.replaceState({}, '', `?${params.toString()}`);
+  };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(query);
+    params.set('page', String(page));
+    window.history.replaceState({}, '', `?${params.toString()}`);
+  };
+
+  return (
+    <div>
+      <input value={searchTerm} onChange={(e) => handleSearch(e.target.value)} />
+      {/* Results for {searchTerm} */}
+    </div>
+  );
+}
+```
+
+### Nested Dynamic Routes
+
+```tsx
+// Route: app/routes/posts/[id]/comments/[commentId].tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+
+export default function CommentPage() {
+  const { params } = useRouter();
+  
+  return (
+    <div>
+      <h1>Post {params.id}</h1>
+      <p>Comment {params.commentId}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## View Transitions
+
+Manic automatically wraps navigation in `document.startViewTransition()` for smooth page transitions.
+
+```tsx twoslash
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export default function Navigation() {
+  return (
+    <ManicLink to="/about">
+      About
+    </ManicLink>
+  );
+}
+```
+
+**Disable transitions globally:**
+
+```ts
+import { setViewTransitions } from 'manicjs';
+
+setViewTransitions(false);
+```
+
+**Custom transition CSS:**
+
+```css
+::view-transition-old(root) {
+  animation: fadeOut 0.3s ease-out;
+}
+
+::view-transition-new(root) {
+  animation: fadeIn 0.3s ease-in;
+}
+```
+
+---
+
+<Callout type="info">
+
+Router hooks must be called inside components rendered by the router. Calling them outside a routed component will error.
+
+</Callout>
+See [routing guide](/docs/framework/routing) for more patterns and best practices.

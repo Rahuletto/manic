@@ -31,16 +31,18 @@
     "@manicjs/seo": "workspace:*",
     "@manicjs/sitemap": "workspace:*",
     "@manicjs/tailwind": "workspace:*",
-    "hono": "^4.12.14",
-    "manicjs": "workspace:*",
+    "@shikijs/transformers": "^4.0.2",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/mdx": "^2.0.13",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "fumadocs-docgen": "^3.0.10",
+    "hono": "^4.12.14",
+    "manicjs": "workspace:*",
+    "oxlint": "^1.60.0",
     "postcss": "^8.5.9",
     "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2",
-    "oxlint": "^1.60.0"
+    "typescript": "^6.0.2"
   }
 }

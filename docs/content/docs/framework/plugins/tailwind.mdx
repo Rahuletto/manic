@@ -1,0 +1,160 @@
+---
+title: Tailwind CSS
+description: Tailwind CSS v4 integration for Manic.
+---
+
+# Tailwind CSS
+
+Integrates Tailwind CSS v4 with zero configuration. Uses `bun-plugin-tailwind` under the hood.
+
+## Installation
+
+```bash
+bun add @manicjs/tailwind
+```
+
+## Quick Start
+
+### 1. Install Plugin
+
+```bash
+bun add @manicjs/tailwind
+```
+
+### 2. Configure
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { tailwind } from '@manicjs/tailwind';
+
+export default defineConfig({
+  plugins: [tailwind()],
+});
+```
+
+### 3. Add CSS
+
+```css
+/* app/app.css */
+@import "tailwindcss";
+```
+
+That's it! Tailwind is now integrated.
+
+## Options
+
+<TypeTable
+  type={{
+    content: {
+      type: 'string | string[]',
+      default: '["app/**/*.tsx", "app/**/*.css"]',
+      description: 'Files to scan for classes',
+    },
+    darkMode: {
+      type: "'selector' | 'class'",
+      default: "'selector'",
+      description: 'How to enable dark mode',
+    },
+    safelist: {
+      type: 'string[]',
+      description: 'Classes to always include',
+    },
+  }}
+/>
+
+## Example Configuration
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { tailwind } from '@manicjs/tailwind';
+
+export default defineConfig({
+  plugins: [
+    tailwind({
+      content: ['app/**/*.{tsx,css}'],
+      darkMode: 'selector',
+      safelist: ['bg-primary', 'text-primary'],
+    }),
+  ],
+});
+```
+
+## Dark Mode
+
+This plugin uses Tailwind's selector-based dark mode:
+
+```css
+/* app/app.css */
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+Then set the `dark` class on your root element:
+
+```tsx
+import { useTheme } from 'manicjs';
+
+export default function App() {
+  const { isDark } = useTheme();
+  
+  return (
+    <html className={isDark ? 'dark' : ''}>
+      {/* Your app */}
+    </html>
+  );
+}
+```
+
+## Using with Theme
+
+The plugin works with Manic's theme system:
+
+```tsx
+function MyComponent() {
+  const { isDark } = useTheme();
+  
+  return (
+    <div className={isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}>
+      Content
+    </div>
+  );
+}
+```
+
+## CSS Functions
+
+All Tailwind CSS v4 functions are supported:
+
+```css
+/* theme() */
+color: theme('colors.primary');
+
+/* layers */
+@layer utilities {
+  .my-utility {
+    /* custom styles */
+  }
+}
+
+/* apply */
+@apply flex gap-4;
+```
+
+## JIT Mode
+
+Always-on Just-In-Time compilation is enabled by default:
+
+```css
+/* These classes are generated on-demand */
+.flex { display: flex; }
+.grid { display: grid; }
+.shadow-lg { --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+```
+
+## See Also
+
+- [Theme API](/docs/api/theme) - Dark mode integration
+- [UnoCSS](/docs/framework/unocss) - Alternative styling plugin
+- [Tailwind CSS v4 Docs](https://tailwindcss.com/docs/upgrade-guide)

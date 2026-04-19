@@ -1,0 +1,492 @@
+---
+title: Authentication
+description: Implementing user authentication, sessions, cookies, and protected routes in Manic.
+---
+
+# Authentication
+
+<Callout type="info" title="TL;DR">
+
+Manic implements authentication via API routes for login/logout, cookies for session management, and React Context for global auth state. Protect routes server-side or client-side.
+
+</Callout>
+## What It Is
+
+Authentication patterns in Manic:
+
+| Pattern | Use Case | Security |
+|---------|----------|----------|
+| **Cookie Sessions** | Web apps | HttpOnly, secure cookies |
+| **API Tokens** | Mobile/SPAs | Bearer tokens |
+| **JWT** | Stateless | Signed tokens |
+
+**Flow:**
+1. User submits credentials
+2. Server validates
+3. Server sets session cookie
+4. Client sends cookie with requests
+5. Server validates cookie
+
+---
+
+## Prerequisites
+
+- [API Routes](/docs/framework/server) - Backend endpoints
+- [State Management](/docs/framework/advanced/state-management) - Global state
+
+---
+
+## Quick Start
+
+### Create Auth API
+
+```tsx
+// app/api/auth/login/index.ts
+import { cookies } from 'manicjs';
+
+export async function POST({ request }: { request: Request }) {
+  const { email, password } = await request.json();
+
+  const user = await validateUser(email, password);
+  if (!user) {
+    return Response.json({ error: 'Invalid credentials' }, { status: 401 });
+  }
+
+  // Set session cookie
+  cookies().set('session', user.token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+
+  return Response.json({ user: { id: user.id, email: user.email } });
+}
+```
+
+---
+
+## How It Works
+
+### Auth Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client
+    participant API
+    participant DB
+
+    User->>Client: Enter credentials
+    Client->>API: POST /api/auth/login
+    API->>DB: Validate user
+    DB->>API: User data
+    API->>Client: Set-Cookie: session=xxx
+    Client->>Client: Store in cookies
+    Client->>User: Logged in
+```
+
+### Protected Route Flow
+
+```mermaid
+graph TD
+    A[Request] --> B{Has session?}
+    B -->|No| C[Redirect to login]
+    B -->|Yes| D[Validate session]
+    D -->|Valid| E[Allow access]
+    D -->|Invalid| F[Clear session]
+    F --> C
+```
+
+---
+
+## Type Definitions
+
+```ts
+// Session cookie
+interface Session {
+  userId: string;
+  email: string;
+  expiresAt: number;
+}
+
+// Auth context
+interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  check: () => Promise<void>;
+}
+
+// Protected route options
+interface ProtectedOptions {
+  requireAdmin?: boolean;
+  redirectTo?: string;
+}
+```
+
+---
+
+## Examples
+
+### Example 1: Login API
+
+```tsx
+// app/api/auth/login/index.ts
+import { cookies } from 'manicjs';
+import bcrypt from 'bcrypt';
+
+interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+}
+
+export async function POST({ request }: { request: Request }) {
+  const { email, password } = await request.json();
+
+  // Find user
+  const user = await db.users.find({ email });
+  if (!user) {
+    return Response.json(
+      { error: 'Invalid email or password' },
+      { status: 401 }
+    );
+  }
+
+  // Verify password
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    return Response.json(
+      { error: 'Invalid email or password' },
+      { status: 401 }
+    );
+  }
+
+  // Create session
+  const token = await createSessionToken(user.id);
+
+  // Set cookie
+  cookies().set('session', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
+  return Response.json({
+    user: { id: user.id, email: user.email }
+  });
+}
+```
+
+### Example 2: Logout API
+
+```tsx
+// app/api/auth/logout/index.ts
+import { cookies } from 'manicjs';
+
+export async function POST() {
+  cookies().delete('session');
+
+  return Response.json({ success: true });
+}
+```
+
+### Example 3: Get Current User
+
+```tsx
+// app/api/auth/me/index.ts
+import { cookies } from 'manicjs';
+
+export async function GET() {
+  const sessionToken = cookies().get('session');
+
+  if (!sessionToken) {
+    return Response.json({ user: null });
+  }
+
+  const user = await validateSession(sessionToken);
+  if (!user) {
+    return Response.json({ user: null });
+  }
+
+  return Response.json({ user: { id: user.id, email: user.email } });
+}
+```
+
+### Example 4: Auth Context Provider
+
+```tsx
+// app/routes/~context/AuthContext.tsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check auth on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      setUser(data.user);
+    } catch {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Login failed');
+    }
+
+    const data = await res.json();
+    setUser(data.user);
+  };
+
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}
+```
+
+### Example 5: Protected Route Component
+
+```tsx
+// app/routes/dashboard/index.tsx
+import React, { useEffect } from 'react';
+import { useAuth } from '../~context/AuthContext';
+import { useRouter } from 'manicjs';
+
+export default function Dashboard() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.navigate('/login?redirect=/dashboard');
+    }
+  }, [user, isLoading]);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!user) return null;
+
+  return <div>Welcome, {user.email}!</div>;
+}
+```
+
+### Example 6: Require Admin
+
+```tsx
+// app/routes/admin/index.tsx
+import React, { useEffect } from 'react';
+import { useAuth } from '../~context/AuthContext';
+import { useRouter } from 'manicjs';
+
+export default function AdminPage() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && (!user || !user.isAdmin)) {
+      router.navigate('/');
+    }
+  }, [user, isLoading]);
+
+  if (isLoading || !user?.isAdmin) return null;
+
+  return <div>Admin Panel</div>;
+}
+```
+
+---
+
+## Advanced Patterns
+
+### Pattern 1: Session Expiry
+
+```tsx
+// Extend session on activity
+export function useSessionExtend() {
+  useEffect(() => {
+    const handleActivity = () => {
+      // Ping server to extend session
+      fetch('/api/auth/ping', { method: 'POST' });
+    };
+
+    document.addEventListener('click', handleActivity);
+    document.addEventListener('keypress', handleActivity);
+
+    return () => {
+      document.removeEventListener('click', handleActivity);
+      document.removeEventListener('keypress', handleActivity);
+    };
+  }, []);
+}
+```
+
+### Pattern 2: JWT Refresh
+
+```tsx
+// app/api/auth/refresh/index.ts
+export async function POST() {
+  const oldToken = cookies().get('session');
+
+  if (!oldToken) {
+    return Response.json({ error: 'No session' }, { status: 401 });
+  }
+
+  const newToken = await refreshToken(oldToken);
+  cookies().set('session', newToken);
+
+  return Response.json({ success: true });
+}
+```
+
+### Pattern 3: CSRF Protection
+
+```tsx
+// Generate CSRF token
+export async function GET() {
+  const token = generateCSRF();
+  cookies().set('csrf', token);
+
+  return Response.json({ token });
+}
+
+// Verify CSRF on mutations
+export async function POST({ request }: { request: Request }) {
+  const csrf = request.headers.get('X-CSRF-TOKEN');
+  const cookieCSRF = cookies().get('csrf');
+
+  if (csrf !== cookieCSRF) {
+    return Response.json({ error: 'Invalid CSRF' }, { status: 403 });
+  }
+}
+```
+
+---
+
+## Common Issues
+
+### Issue 1: Session Not Persisting
+
+**Problem:** Login state resets on refresh.
+
+**Check:**
+1. Cookie is being set
+2. Cookie is HttpOnly
+3. Request includes credentials
+
+**Solution:**
+
+```tsx
+// Include credentials
+fetch('/api/auth/me', {
+  credentials: 'include',  // Important!
+});
+```
+
+### Issue 2: CORS Issues
+
+**Problem:** Cookie blocked by browser.
+
+**Solution:**
+
+```tsx
+// Server: Set SameSite
+cookies().set('session', token, {
+  sameSite: 'lax',  // or 'none' for cross-origin
+  secure: true,     // required for cross-origin
+});
+```
+
+---
+
+## Security Best Practices
+
+<Callout type="warn">
+ 
+**Use HttpOnly cookies** — prevents JavaScript access to user sessions.
+ 
+</Callout>
+ 
+<Callout type="warn">
+ 
+**Use Secure cookies** — HTTPS only in production environments.
+ 
+</Callout>
+ 
+<Callout type="warn">
+ 
+**Implement CSRF protection** — mandatory for all state-changing operations.
+ 
+</Callout>
+
+<Callout type="info">
+
+**Set reasonable session expiry** — 7 days is common.
+
+</Callout>
+<Callout type="info">
+
+**Use secure password hashing** — bcrypt with salt.
+
+</Callout>
+---
+
+## Version History
+
+| Version | Changes |
+|---------|---------|
+| v0.12.0 | Added session extension |
+| v0.11.0 | Added CSRF protection |
+| v0.10.0 | Initial auth support |
+
+---
+
+See also:
+- [API Routes](/docs/framework/server)
+- [State Management](/docs/framework/advanced/state-management)
+- [Environment Variables](/docs/framework/advanced/environment-variables)

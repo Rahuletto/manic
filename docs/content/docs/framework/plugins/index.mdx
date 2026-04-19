@@ -1,0 +1,120 @@
+---
+title: Plugins
+description: Official plugins to extend Manic functionality.
+---
+
+# Plugins
+
+Plugins extend Manic's core functionality. The framework includes official plugins for styling, content, SEO, and more.
+
+## Installation
+
+Each plugin is a separate package:
+
+```bash
+# Add plugins you need
+bun add @manicjs/tailwind @manicjs/mdx @manicjs/seo @manicjs/sitemap @manicjs/mcp @manicjs/api-docs
+```
+
+## Official Plugins
+
+<Cards>
+  <Card title="Tailwind CSS" description="Tailwind CSS v4 integration with zero config." href="/docs/framework/tailwind" />
+  <Card title="UnoCSS" description="UnoCSS for atomic CSS styling." href="/docs/framework/unocss" />
+  <Card title="MDX" description="Markdown with JSX components." href="/docs/framework/mdx" />
+  <Card title="SEO" description="Meta tags, Open Graph, and social cards." href="/docs/framework/seo" />
+  <Card title="Sitemap" description="Auto-generate sitemap.xml." href="/docs/framework/sitemap" />
+  <Card title="MCP" description="Model Context Protocol server." href="/docs/framework/mcp" />
+  <Card title="API Docs" description="Scalar API reference UI." href="/docs/framework/api-docs" />
+</Cards>
+
+---
+
+## Using Plugins
+
+### 1. Install
+
+```bash
+bun add @manicjs/[plugin-name]
+```
+
+### 2. Configure
+
+Add to your `manic.config.ts`:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { tailwind } from '@manicjs/tailwind';
+import { mdx } from '@manicjs/mdx';
+
+export default defineConfig({
+  plugins: [
+    tailwind(),
+    mdx(),
+  ],
+});
+```
+
+### 3. That's It
+
+Plugins automatically integrate with both dev server and build output. No additional setup required.
+
+---
+
+## How Plugins Work
+
+### Plugin Interface
+
+```ts
+interface ManicPlugin {
+  name: string;
+  
+  /** Bun plugin script - auto-injected */
+  preload?: string;
+  
+  /** bunfig.toml snippet */
+  bunfig?: string;
+  
+  /** Dev server hooks */
+  configureServer?(ctx: ManicServerPluginContext): void | Promise<void>;
+  
+  /** Build hooks */
+  build?(ctx: ManicBuildPluginContext): void | Promise<void>;
+}
+```
+
+### Build Context
+
+During build, plugins can:
+
+- Inject HTML into `<head>` via `injectHtml()`
+- Emit static files via `emitClientFile()`
+- Access route information via `pageRoutes` and `apiRoutes`
+
+### Server Context
+
+In dev server, plugins can:
+
+- Add routes via `addRoute()`
+- Inject link headers via `addLinkHeader()`
+- Inject HTML via `injectHtml()`
+
+---
+
+## Creating Custom Plugins
+
+See [Plugin Development](/docs/framework/advanced/plugin-development) for creating your own plugins.
+
+---
+
+## Version Compatibility
+
+| Plugin | Manic Version |
+|--------|---------------|
+| @manicjs/tailwind | 0.5.0+ |
+| @manicjs/unocss | 0.5.0+ |
+| @manicjs/mdx | 0.5.0+ |
+| @manicjs/seo | 0.5.0+ |
+| @manicjs/sitemap | 0.5.0+ |
+| @manicjs/mcp | 0.6.0+ |
+| @manicjs/api-docs | 0.6.0+ |

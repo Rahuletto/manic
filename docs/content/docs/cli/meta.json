@@ -1,0 +1,12 @@
+{
+  "root": true,
+  "title": "Manic CLI",
+  "description": "Dev and build tools.",
+  "icon": "Terminal",
+  "pages": [
+    "index",
+    "dev",
+    "build",
+    "lint-fmt"
+  ]
+}

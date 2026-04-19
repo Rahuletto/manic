@@ -1,0 +1,95 @@
+---
+title: Advanced
+description: Deep dive into Manic internals, optimization, and plugin development.
+---
+
+# Advanced
+
+<Callout type="info" title="TL;DR">
+
+Advanced topics covering framework internals, build optimization, and creating custom plugins for production deployments.
+
+</Callout>
+This section covers topics for developers who want to understand how Manic works under the hood and how to extend it for their specific needs.
+
+---
+
+## What's Inside
+
+<Cards>
+  <Card
+    title="Manic Internals"
+    description="How config loading, route discovery, and ~routes.generated.ts generation work."
+    href="/docs/framework/advanced/manic-internals"
+  />
+  <Card
+    title="Build Optimization"
+    description="Code splitting, chunk optimization, and production build tuning."
+    href="/docs/framework/advanced/build-optimization"
+  />
+  <Card
+    title="Plugin Development"
+    description="Creating custom plugins to extend Manic functionality."
+    href="/docs/framework/advanced/plugin-development"
+  />
+</Cards>
+
+---
+
+## Who Should Read This
+
+This section is for:
+
+- **Framework contributors** wanting to understand internal architecture
+- **Plugin developers** creating reusable extensions
+- **Production engineers** optimizing build and deployment
+- **Advanced users** debugging complex issues
+
+---
+
+## Prerequisites
+
+Before reading these topics, you should be familiar with:
+
+- [Building applications](/docs/framework/getting-started)
+- [Configuration](/docs/api/config)
+- [Plugin system](/docs/framework/plugins)
+
+---
+
+## Topics
+
+### Framework Internals
+
+Understanding the internal mechanisms:
+
+- How `manic.config.ts` is loaded and processed
+- Route discovery algorithm
+- `~routes.generated.ts` generation process
+- Build pipeline stages
+
+### Build Optimization
+
+Optimizing production builds:
+
+- Code splitting strategies
+- Chunk optimization
+- Bundle analysis
+- Tree shaking
+- Minification settings
+
+### Plugin Development
+
+Creating custom plugins:
+
+- Plugin interface
+- Build hooks
+- Server hooks
+- Static file emission
+
+---
+
+See also:
+- [Core Internals](/docs/core/index)
+- [API Reference](/docs/api/index)
+- [Troubleshooting](/docs/framework/troubleshooting/index)

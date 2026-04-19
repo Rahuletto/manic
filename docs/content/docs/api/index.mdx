@@ -1,42 +1,64 @@
 ---
 title: API Overview
-description: Technical reference for Manic's exported functions and components.
-icon: Library
+description: Complete technical reference for all Manic exports.
 ---
 
 # API Reference
 
-Manic provides a suite of type-safe utilities and components designed to streamline fullstack development. This reference covers everything from the core build configuration to the client-side routing hooks.
+Complete reference for all exports from the `manicjs` package. Each page covers function signatures, TypeTables, and examples.
 
-## Reference Categories
+## Navigation
 
 <Cards>
-  <Card
-    title="Configuration"
-    description="Detailed specification for manic.config.ts properties and types."
-    href="/docs/api/config"
-  />
-  <Card
-    title="Router API"
-    description="Reference for Link, useRouter, and dynamic path hooks."
-    href="/docs/api/router"
-  />
-  <Card
-    title="Plugin API"
-    description="Guide and specification for building custom Manic extensions."
-    href="/docs/api/plugins"
-  />
+  <Card title="Router" description="Link, navigate, useRouter for navigation" href="/docs/api/router" />
+  <Card title="navigate" description="Programmatic navigation function" href="/docs/api/navigate" />
+  <Card title="Link" description="Declarative navigation component" href="/docs/api/link" />
+  <Card title="useRouter" description="Router context hook" href="/docs/api/use-router" />
+  <Card title="useQueryParams" description="URL search parameters" href="/docs/api/use-query-params" />
+  <Card title="config" description="defineConfig, loadConfig types" href="/docs/api/config" />
+  <Card title="server" description="createManicServer, hooks" href="/docs/api/server" />
+  <Card title="plugins" description="createPlugin, types" href="/docs/api/plugins" />
+  <Card title="theme" description="ThemeProvider, useTheme, ThemeToggle" href="/docs/api/theme" />
+  <Card title="transitions" description="ViewTransitions, setViewTransitions" href="/docs/api/transitions" />
+  <Card title="env" description="getEnv, getPublicEnv" href="/docs/api/env" />
+  <Card title="client" description="Client-side patterns" href="/docs/api/client" />
+  <Card title="error-handling" description="NotFound, ErrorOverlay, ServerError" href="/docs/api/error-handling" />
 </Cards>
 
----
+## Quick Reference
+
+| Export | Module | Description |
+|--------|--------|-------------|
+| `Link` | `manicjs` | Navigation component |
+| `navigate` | `manicjs` | Navigation function |
+| `useRouter` | `manicjs` | Router context hook |
+| `useQueryParams` | `manicjs` | URL search params |
+| `defineConfig` | `manicjs/config` | Config helper |
+| `createPlugin` | `manicjs/config` | Plugin builder |
+| `ThemeProvider` | `manicjs` | Theme context |
+| `useTheme` | `manicjs` | Theme hook |
+| `ViewTransitions` | `manicjs` | View transitions wrapper |
+| `getEnv` | `manicjs/env` | Env variable getter |
 
 ## Installation
-
-The API is fully contained within the `manicjs` package.
 
 ```bash
 bun add manicjs
 ```
 
-### Typing
-Manic is written in TypeScript and provides first-class type definitions for all exports. We recommend using a modern IDE (like VS Code) to take advantage of the deep autocompletion provided by our type system.
+All exports are available from the main package:
+
+```ts
+// Most exports
+import { Link, useRouter, navigate } from 'manicjs';
+
+// Config
+import { defineConfig } from 'manicjs/config';
+
+// Environment
+import { getEnv } from 'manicjs/env';
+```
+
+## TypeScript
+
+Manic is written in TypeScript and provides full type definitions.

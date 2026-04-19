@@ -1,7 +1,6 @@
 ---
 title: manic build
 description: Deep dive into the Manic production build pipeline.
-icon: Package
 ---
 
 # manic build
@@ -36,7 +35,7 @@ This is a critical step where the framework bridges the gap between static asset
 Unlike other frameworks that use slower minifiers like Terser, Manic uses **OXC-Minify** in parallel across all output paths. This results in production-grade compression at a fraction of the time.
 
 ### 6. Provider Transformation
-Finally, the configured [Provider](/docs/guide/deployments) takes over. It maps the bundled assets to the specific requirements of platforms like Vercel, Cloudflare, or Netlify.
+Finally, the configured [Provider](/docs/framework/deployment) takes over. It maps the bundled assets to the specific requirements of platforms like Vercel, Cloudflare, or Netlify.
 
 ---
 
@@ -54,5 +53,8 @@ manic build [options]
 
 ## Best Practices
 
-> [!TIP]
-> Always run `manic build` locally before deploying to catch any linting or bundling errors early in the cycle. Manic includes a mandatory `oxlint` pass as the first step of the build!
+<Callout type="info">
+
+Always run `manic build` locally before deploying to catch any linting or bundling errors early in the cycle. Manic includes a mandatory `oxlint` pass as the first step of the build!
+
+</Callout>

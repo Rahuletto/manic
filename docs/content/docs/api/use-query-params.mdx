@@ -1,0 +1,204 @@
+---
+title: useQueryParams
+description: Hook for accessing and manipulating URL search parameters.
+---
+
+# `useQueryParams()`
+
+The `useQueryParams` hook provides access to URL search parameters with a standard `URLSearchParams` interface.
+
+## Hook Signature
+
+```ts twoslash
+import { useQueryParams } from 'manicjs';
+
+export default function Page() {
+  const searchParams = useQueryParams();
+  // ...
+}
+```
+
+## Return Value
+
+Returns a `URLSearchParams` object with standard methods:
+
+```ts
+class URLSearchParams {
+  get(name: string): string | null;
+  getAll(name: string): string[];
+  has(name: string): boolean;
+  set(name: string, value: string): void;
+  append(name: string, value: string): void;
+  delete(name: string): void;
+  forEach(callback: (value: string, key: string) => void): void;
+  toString(): string;
+}
+```
+
+## Examples
+
+### Reading Query Params
+
+```tsx twoslash
+import React from 'react';
+import { useQueryParams } from 'manicjs';
+
+export function SearchResults() {
+  const searchParams = useQueryParams();
+  
+  const query = searchParams.get('q') || '';
+  const page = searchParams.get('page') || '1';
+  const sort = searchParams.get('sort') || 'date';
+  
+  return (
+    <div>
+      <h1>Results for "{query}"</h1>
+      <p>Page {page}, sorted by {sort}</p>
+    </div>
+  );
+}
+```
+
+### Updating Query Params
+
+```tsx twoslash
+import React from 'react';
+import { useQueryParams } from 'manicjs';
+
+export function SearchInput() {
+  const searchParams = useQueryParams();
+  
+  const handleSearch = (term: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('q', term);
+    params.set('page', '1'); // Reset pagination
+    
+    // Update URL without navigation
+    window.history.replaceState({}, '', `?${params.toString()}`);
+  };
+  
+  return (
+    <input
+      defaultValue={searchParams.get('q') || ''}
+      onChange={(e) => handleSearch(e.target.value)}
+    />
+  );
+}
+```
+
+### Pagination
+
+```tsx twoslash
+import React from 'react';
+import { useQueryParams } from 'manicjs';
+
+export function Paginator() {
+  const searchParams = useQueryParams();
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  
+  const goToPage = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(page));
+    window.history.replaceState({}, '', `?${params.toString()}`);
+  };
+  
+  return (
+    <nav>
+      <button disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)}>
+        Previous
+      </button>
+      <span>Page {currentPage}</span>
+      <button onClick={() => goToPage(currentPage + 1)}>
+        Next
+      </button>
+    </nav>
+  );
+}
+```
+
+### Multiple Values
+
+```tsx twoslash
+import React from 'react';
+import { useQueryParams } from 'manicjs';
+
+// URL: /search?tag=react&tag=typescript
+export function TagFilter() {
+  const searchParams = useQueryParams();
+  
+  // getAll returns array for multiple values
+  const tags = searchParams.getAll('tag');
+  // ['react', 'typescript']
+  
+  const toggleTag = (tag: string) => {
+    const params = new URLSearchParams(searchParams);
+    const current = params.getAll('tag');
+    
+    if (current.includes(tag)) {
+      // Remove tag
+      params.delete('tag');
+      current.filter(t => t !== tag).forEach(t => params.append('tag', t));
+    } else {
+      // Add tag
+      params.append('tag', tag);
+    }
+    
+    window.history.replaceState({}, '', `?${params.toString()}`);
+  };
+  
+  return (
+    <div>
+      {tags.map(tag => (
+        <span key={tag}>{tag}</span>
+      ))}
+    </div>
+  );
+}
+```
+
+### With useEffect
+
+```tsx twoslash
+import React, { useEffect, useState } from 'react';
+import { useQueryParams } from 'manicjs';
+
+export function DataFetcher() {
+  const searchParams = useQueryParams();
+  const [data, setData] = useState<{ items: string[] } | null>(null);
+  
+  // Refetch when query params change
+  useEffect(() => {
+    const query = searchParams.get('q');
+    const page = searchParams.get('page');
+    
+    fetch(`/api/items?q=${query}&page=${page}`)
+      .then(res => res.json())
+      .then(setData);
+  }, [searchParams.toString()]); // Re-run when params string changes
+  
+  if (!data) return <div>Loading...</div>;
+  
+  return <div>{data.items}</div>;
+}
+```
+
+## Type Definitions
+
+```ts
+declare function useQueryParams(): URLSearchParams;
+```
+
+## URL Patterns
+
+| URL | `searchParams.get()` Result |
+|-----|------------------------|
+| `/search?q=react` | `q`: "react" |
+| `/posts?sort=date&page=2` | `sort`: "date", `page`: "2" |
+| `/filter?tag=a&tag=b` | `getAll('tag')`: ["a", "b"] |
+| `/empty` | All methods return null/[] |
+
+## See Also
+
+- [Link](/docs/api/link) - Navigation with query params
+- [navigate](/docs/api/navigate) - Programmatic navigation
+- [useRouter](/docs/api/use-router) - Full router state

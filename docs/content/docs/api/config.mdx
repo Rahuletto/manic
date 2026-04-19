@@ -1,11 +1,15 @@
 ---
 title: Configuration
-description: Full technical specification for manic.config.ts.
-icon: Settings
+description: Full technical specification for manic.config.ts with TypeTable definitions.
 ---
 
 # Configuration Reference
 
+<Callout type="info" title="TL;DR">
+
+Complete reference for `manic.config.ts` - covers all configuration options with full TypeScript type definitions.
+
+</Callout>
 The `manic.config.ts` file (or `.js`) is the source of truth for your application's build and runtime behavior. Use the `defineConfig` helper to ensure full type safety.
 
 ```ts twoslash
@@ -27,48 +31,119 @@ export default defineConfig({
 
 ## Top-Level Options
 
-| Property | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `mode` | `'fullstack' \| 'frontend'` | `'fullstack'` | `'fullstack'` includes Hono API support. `'frontend'` is SPA only. |
-| `app` | `Object` | `{}` | Application-level metadata. |
-| `server` | `Object` | `{}` | Development and runtime server settings. |
-| `router` | `Object` | `{}` | Client-side navigation settings. |
-| `build` | `Object` | `{}` | Production optimization settings. |
-| `oxc` | `Object` | `{}` | Transformer and minifier settings. |
-| `providers` | `ManicProvider[]` | `[]` | Deployment adapters (Vercel, Cloudflare, etc.). |
-| `plugins` | `ManicPlugin[]` | `[]` | Framework extensions. |
+<TypeTable
+  type={{
+    mode: {
+      type: "'fullstack' | 'frontend'",
+      default: "'fullstack'",
+      description: "'fullstack' includes Hono API support. 'frontend' is SPA only.",
+    },
+    app: {
+      type: "AppConfig",
+      default: "{}",
+      description: "Application-level metadata.",
+    },
+    server: {
+      type: "ServerConfig",
+      default: "{}",
+      description: "Development and runtime server settings.",
+    },
+    router: {
+      type: "RouterConfig",
+      default: "{}",
+      description: "Client-side navigation settings.",
+    },
+    build: {
+      type: "BuildConfig",
+      default: "{}",
+      description: "Production optimization settings.",
+    },
+    providers: {
+      type: "ManicProvider[]",
+      default: "[]",
+      description: "Deployment adapters (Vercel, Cloudflare, etc.).",
+    },
+  }}
+/>
 
 ---
 
 ## `app` Settings
 
-- **`name`**: `string`. The title of your application, injected into the `<title>` tag of the built HTML.
+<TypeTable
+  type={{
+    name: {
+      type: "string",
+      description: "The title of your application, injected into the <title> tag of the built HTML.",
+    },
+  }}
+/>
 
 ## `server` Settings
 
-- **`port`**: `number`. The port the server binds to. Defaults to `6070`.
-- **`hmr`**: `boolean`. Toggle React Fast Refresh in development. Defaults to `true`.
+<TypeTable
+  type={{
+    port: {
+      type: "number",
+      default: "6070",
+      description: "The port the server binds to.",
+    },
+    hmr: {
+      type: "boolean",
+      default: "true",
+      description: "Toggle React Fast Refresh in development.",
+    },
+  }}
+/>
 
 ## `router` Settings
 
-- **`viewTransitions`**: `boolean`. Enable the native browser View Transitions API. Defaults to `true`.
-- **`preserveScroll`**: `boolean`. If `true`, the router will not reset scroll to top on navigation. Defaults to `false`.
-- **`scrollBehavior`**: `'auto' \| 'smooth'`. The CSS scroll behavior for navigation. Defaults to `'auto'`.
+<TypeTable
+  type={{
+    viewTransitions: {
+      type: "boolean",
+      default: "true",
+      description: "Enable the native browser View Transitions API.",
+    },
+    preserveScroll: {
+      type: "boolean",
+      default: "false",
+      description: "If true, the router will not reset scroll to top on navigation.",
+    },
+    scrollBehavior: {
+      type: "'auto' | 'smooth'",
+      default: "'auto'",
+      description: "The CSS scroll behavior for navigation.",
+    },
+  }}
+/>
 
 ## `build` Settings
 
-- **`outdir`**: `string`. The directory for build artifacts. Defaults to `.manic`.
-- **`minify`**: `boolean`. Toggle OXC-Minify for production builds. Defaults to `true`.
-- **`splitting`**: `boolean`. Enable greedy code-splitting for route chunks. Defaults to `true`.
-- **`sourcemap`**: `boolean \| 'inline' \| 'external'`. Source map generation strategy. Defaults to `'inline'`.
-
-## `oxc` Settings
-
-Deeply customize the OXC transform engine.
-
-- **`target`**: `string`. The ECMAScript target. Defaults to `esnext` in dev and `es2022` in prod.
-- **`refresh`**: `boolean`. Enable/disable React Fast Refresh transform.
-- **`rewriteImportExtensions`**: `boolean`. Automatically converts `.ts` imports to `.js` in the output. Defaults to `true`.
+<TypeTable
+  type={{
+    outdir: {
+      type: "string",
+      default: "'.manic'",
+      description: "The directory for build artifacts.",
+    },
+    minify: {
+      type: "boolean",
+      default: "true",
+      description: "Toggle OXC-Minify for production builds.",
+    },
+    splitting: {
+      type: "boolean",
+      default: "true",
+      description: "Enable greedy code-splitting for route chunks.",
+    },
+    sourcemap: {
+      type: "boolean | 'inline' | 'external'",
+      default: "'inline'",
+      description: "Source map generation strategy.",
+    },
+  }}
+/>
 
 ---
 

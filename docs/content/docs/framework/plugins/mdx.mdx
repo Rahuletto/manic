@@ -1,0 +1,214 @@
+---
+title: MDX
+description: Markdown with JSX components in Manic.
+---
+
+# MDX
+
+Integrates MDX (Markdown with JSX) support for rich content pages in Manic.
+
+## Installation
+
+```bash
+bun add @manicjs/mdx
+```
+
+## Quick Start
+
+### 1. Install Plugin
+
+```bash
+bun add @manicjs/mdx
+```
+
+### 2. Configure
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { mdx } from '@manicjs/mdx';
+
+export default defineConfig({
+  plugins: [mdx()],
+});
+```
+
+### 3. Create MDX Content
+
+```mdx
+# Hello World
+
+This is **Markdown** with React components.
+
+<Counter initial={5} />
+```
+
+## Options
+
+<TypeTable
+  type={{
+    gfm: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Enable GitHub Flavored Markdown',
+    },
+    remarkPlugins: {
+      type: 'Plugin[]',
+      description: 'Remark plugins to add',
+    },
+    rehypePlugins: {
+      type: 'Plugin[]',
+      description: 'Rehype plugins to add',
+    },
+    frontmatter: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Parse YAML frontmatter',
+    },
+    toc: {
+      type: 'boolean',
+      default: 'false',
+      description: 'Extract table of contents',
+    },
+  }}
+/>
+
+## GFM Support
+
+Enabled by default:
+
+| Feature | Support |
+|---------|---------|
+| Tables | ✓ |
+| Task lists | ✓ |
+| Strikethrough | ✓ |
+| Autolinks | ✓ |
+| Footnotes | ✓ |
+
+## Frontmatter
+
+Add metadata at the top of your MDX files:
+
+```mdx
+---
+title: My Post
+date: 2024-01-15
+author: John Doe
+tags: [react, manic]
+---
+
+# {frontmatter.title}
+
+Written by {frontmatter.author}
+```
+
+## Using Components
+
+Import and use React components in MDX:
+
+```mdx
+import { Callout } from '~/components/Callout';
+
+# Installation
+
+<Callout type="info">
+  Follow these steps to install...
+</Callout>
+```
+
+## Custom Components
+
+Pass custom components to MDX pages:
+
+```tsx
+// app/routes/blog/[slug].tsx
+import { getPost } from '~/lib/posts';
+
+export default function BlogPost({ slug }) {
+  const post = await getPost(slug);
+  
+  return (
+    <article>
+      <MDX source={post.content} components={post.components} />
+    </article>
+  );
+}
+```
+
+## Table of Contents
+
+Enable TOC extraction:
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { mdx } from '@manicjs/mdx';
+
+export default defineConfig({
+  plugins: [
+    mdx({
+      toc: true,
+    }),
+  ],
+});
+```
+
+Access in your page:
+
+```tsx
+import { toc } from '~/toc';
+
+console.log(toc.headings);
+// [{ depth: 1, title: 'Introduction', id: 'introduction' }, ...]
+```
+
+## Syntax Highlighting
+
+Code blocks use Shiki by default:
+
+````mdx
+```ts
+const greeting = 'Hello';
+console.log(greeting);
+```
+````
+
+## Custom Remark/Rehype
+
+Add remark/rehype plugins:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { mdx } from '@manicjs/mdx';
+import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug';
+
+export default defineConfig({
+  plugins: [
+    mdx({
+      remarkPlugins: [remarkGfm],
+      rehypePlugins: [rehypeSlug],
+    }),
+  ],
+});
+```
+
+## MDX File Structure
+
+```
+app/
+├── routes/
+│   ├── blog/
+│   │   ├── index.tsx       # Blog listing
+│   │   └── [slug].tsx     # Blog post
+│   └── content/
+│       └── posts/
+│           ├── getting-started.mdx
+│           └── advanced.mdx
+```
+
+## See Also
+
+- [SEO](/docs/framework/seo) - Meta tags for content
+- [Sitemap](/docs/framework/sitemap) - Auto-generate sitemap
+- [MDX Docs](https://mdxjs.com)

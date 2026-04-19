@@ -1,0 +1,73 @@
+---
+title: Examples
+description: Real-world examples and patterns for building with Manic.
+---
+
+# Examples
+
+Explore how to build common features with Manic.
+
+## Basic Counter
+
+A simple React component with state management.
+
+```tsx
+import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      Count is {count}
+    </button>
+  );
+}
+```
+
+## Data Fetching with API Routes
+
+Fetching data from a local Manic API endpoint.
+
+**API:** `app/api/data/index.ts`
+```ts
+export default new Hono().get('/', (c) => c.json({ data: [1, 2, 3] }));
+```
+
+**Page:** `app/routes/data.tsx`
+```tsx
+import { useEffect, useState } from 'react';
+
+export default function DataPage() {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/data')
+      .then(res => res.json())
+      .then(json => setItems(json.data));
+  }, []);
+
+  return (
+    <ul>
+      {items.map(i => <li key={i}>{i}</li>)}
+    </ul>
+  );
+}
+```
+
+## View Transitions between Pages
+
+Creating smooth transitions between list and detail views.
+
+**List:** `app/routes/items/index.tsx`
+```tsx
+<Link href="/items/1">
+  <img src="/thumb.jpg" style={{ viewTransitionName: 'item-1' }} />
+</a>
+```
+
+**Detail:** `app/routes/items/[id].tsx`
+```tsx
+<img src="/full.jpg" style={{ viewTransitionName: 'item-1' }} />
+```
+
+Manic handles the `document.startViewTransition` call automatically!

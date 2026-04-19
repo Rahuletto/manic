@@ -1,0 +1,228 @@
+---
+title: SEO
+description: SEO meta tags, Open Graph, and social cards.
+---
+
+# SEO
+
+Automatic SEO optimization with meta tags, Open Graph, and Twitter cards.
+
+## Installation
+
+```bash
+bun add @manicjs/seo
+```
+
+## Quick Start
+
+### 1. Install Plugin
+
+```bash
+bun add @manicjs/seo
+```
+
+### 2. Configure
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+
+export default defineConfig({
+  plugins: [
+    seo({
+      title: 'My App',
+      description: 'Build amazing apps with Manic',
+      siteUrl: 'https://example.com',
+    }),
+  ],
+});
+```
+
+## Options
+
+<TypeTable
+  type={{
+    title: {
+      type: 'string',
+      description: 'Site title (used as template)',
+    },
+    titleTemplate: {
+      type: 'string',
+      default: '%s | {title}',
+      description: 'Template for page titles',
+    },
+    description: {
+      type: 'string',
+      description: 'Default meta description',
+    },
+    siteName: {
+      type: 'string',
+      description: 'Site name for Open Graph',
+    },
+    siteUrl: {
+      type: 'string',
+      description: 'Canonical URL',
+    },
+    twitter: {
+      type: 'TwitterCard',
+      description: 'Twitter card settings',
+    },
+    openGraph: {
+      type: 'OpenGraphConfig',
+      description: 'Open Graph settings',
+    },
+  }}
+/>
+
+### TwitterCard
+
+<TypeTable
+  type={{
+    site: {
+      type: 'string',
+      description: '@username for Twitter',
+    },
+    creator: {
+      type: 'string',
+      description: '@username of content creator',
+    },
+    cardType: {
+      type: "'summary' | 'summary_large_image'",
+      default: "'summary_large_image'",
+      description: 'Card type',
+    },
+  }}
+/>
+
+### OpenGraphConfig
+
+<TypeTable
+  type={{
+    locale: {
+      type: 'string',
+      default: "'en_US'",
+      description: 'Locale for OG tags',
+    },
+    type: {
+      type: "'website' | 'article'",
+      default: "'website'",
+      description: 'OG type',
+    },
+    fallbackImage: {
+      type: 'string',
+      description: 'Default OG image path',
+    },
+  }}
+/>
+
+## Per-Page SEO
+
+Set SEO data for individual pages:
+
+```tsx
+// app/routes/about.tsx
+import { Metadata } from 'manicjs/seo';
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn more about our company',
+  ogImage: '/images/about-og.png',
+};
+
+export default function About() {
+  return <div>About page</div>;
+}
+```
+
+## Automatic Meta Tags
+
+The plugin automatically generates:
+
+```html
+<title>Page Title | Site Name</title>
+<meta name="description" content="..." />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="..." />
+<meta property="og:description" content="..." />
+<meta property="og:image" content="..." />
+<meta property="og:url" content="..." />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="..." />
+<meta name="twitter:description" content="..." />
+<meta name="twitter:image" content="..." />
+```
+
+## Robots & Canonical
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+
+export default defineConfig({
+  plugins: [
+    seo({
+      title: 'My App',
+      robots: {
+        index: true,
+        follow: true,
+      },
+      canonical: true,      // Auto-generate canonical URLs
+    }),
+  ],
+});
+```
+
+## JSON-LD Structured Data
+
+```tsx
+import { JsonLd } from 'manicjs/seo';
+
+function OrganizationSchema() {
+  return (
+    <JsonLd>
+      {{
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'My Company',
+        url: 'https://example.com',
+        logo: 'https://example.com/logo.png',
+      }}
+    </JsonLd>
+  );
+}
+```
+
+## Dynamic OG Images
+
+Generate Open Graph images dynamically:
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+
+export default defineConfig({
+  plugins: [
+    seo({
+      ogImage: {
+        route: '/og',  // Custom OG image route
+        defaults: {
+          title: 'My App',
+          theme: '#000000',
+        },
+      },
+    }),
+  ],
+});
+```
+
+## See Also
+
+- [MDX](/docs/framework/mdx) - Content for SEO pages
+- [Sitemap](/docs/framework/sitemap) - Search engine indexing
+- [manicjs/seo Package](https://github.com/manicjs/seo)

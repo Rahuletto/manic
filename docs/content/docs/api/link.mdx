@@ -1,0 +1,204 @@
+---
+title: Link
+description: Declarative navigation component for Manic router.
+---
+
+# `<Link />`
+
+The `<Link>` component provides declarative, client-side navigation with automatic prefetching and View Transitions support.
+
+## Component Signature
+
+```ts
+import { Link } from 'manicjs';
+
+type LinkProps = {
+  to: string;
+  prefetch?: boolean;
+  replace?: boolean;
+  viewTransition?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+};
+```
+
+## Props
+
+<TypeTable
+  type={{
+    to: {
+      type: 'string',
+      description: 'Destination URL path (required)',
+    },
+    prefetch: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Preload route chunk on hover/focus',
+    },
+    replace: {
+      type: 'boolean',
+      default: 'false',
+      description: 'Replace history entry instead of pushing',
+    },
+    viewTransition: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Use document.startViewTransition API',
+    },
+    className: {
+      type: 'string',
+      description: 'CSS class name',
+    },
+    children: {
+      type: 'ReactNode',
+      description: 'Link content',
+    },
+  }}
+/>
+
+## Examples
+
+### Basic Usage
+
+```tsx twoslash
+// @errors: 2322
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export function Nav() {
+  return (
+    <nav>
+      <ManicLink to="/">Home</ManicLink>
+      <ManicLink to="/about">About</ManicLink>
+      <ManicLink to="/posts">Blog</ManicLink>
+    </nav>
+  );
+}
+```
+
+### With Dynamic Path
+
+```tsx twoslash
+// @errors: 2322
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export function PostList({ posts }: { posts: Array<{ slug: string; title: string }> }) {
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.slug}>
+          <ManicLink to={`/posts/${post.slug}`}>{post.title}</ManicLink>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Conditional Replace
+
+```tsx twoslash
+// @errors: 2322
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export function BlogLink({ slug, isFeatured }: { slug: string; isFeatured?: boolean }) {
+  return (
+    <ManicLink
+      to={`/blog/${slug}`}
+      replace={isFeatured}
+      className={isFeatured ? 'font-bold text-lg' : ''}
+    >
+      {slug}
+    </ManicLink>
+  );
+}
+```
+
+### Disable Prefetching
+
+```tsx twoslash
+// @errors: 2322
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export function LargeList() {
+  // Disable prefetch for large lists to avoid memory pressure
+  return (
+    <div>
+      {Array.from({ length: 1000 }).map((_, i) => (
+        <ManicLink key={i} to={`/item/${i}`} prefetch={false}>
+          Item {i}
+        </ManicLink>
+      ))}
+    </div>
+  );
+}
+```
+
+### Disable View Transitions
+
+```tsx twoslash
+// @errors: 2322
+import React from 'react';
+import { Link as ManicLink } from 'manicjs';
+
+export function InstantNav() {
+  return (
+    <ManicLink to="/page" viewTransition={false}>
+      Go Instant
+    </ManicLink>
+  );
+}
+```
+
+## Type Definitions
+
+```ts
+interface LinkProps {
+  to: string;
+  prefetch?: boolean;
+  replace?: boolean;
+  viewTransition?: boolean;
+  className?: string;
+  children?: ReactNode;
+}
+
+declare const Link: React.ComponentType<LinkProps>;
+```
+
+## How It Works
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Link
+    participant Cache
+    participant Router
+    
+    User->>Link: Hover
+    Link->>Cache: prefetch route chunk
+    Cache-->>Link: Loaded
+    User->>Link: Click
+    Link->>Router: navigate(to)
+    Router->>Cache: Get chunk
+    Cache-->>Router: Component
+    Router->>Router: Render with View Transition
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Prefetch** | Loads route JS on hover/focus |
+| **Code Splitting** | Each route is a separate chunk |
+| **View Transitions** | Smooth animated navigation |
+| **Cache** | Loaded chunks in memory |
+| **History** | Browser history integration |
+
+## See Also
+
+- [navigate](/docs/api/navigate) - Programmatic navigation
+- [useRouter](/docs/api/use-router) - Router state and hooks
+- [useQueryParams](/docs/api/use-query-params) - URL query params

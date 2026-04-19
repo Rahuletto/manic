@@ -1,0 +1,248 @@
+---
+title: Testing
+description: Testing Manic applications with Bun's built-in test runner and Playwright.
+---
+
+# Testing
+
+<Callout type="info" title="TL;DR">
+ 
+Manic uses Bun's built-in test runner (`bun test`) for unit and integration tests, and Playwright for end-to-end tests. Test components, hooks, API routes, and full user flows.
+
+</Callout>
+## What It Is
+
+Testing patterns in Manic:
+
+| Type | Tool | What It Tests |
+|------|------|---------------|
+| **Unit** | `bun test` | Components, hooks, utilities |
+| **Integration** | `bun test` | API routes, state |
+| **E2E** | Playwright | User flows, pages |
+
+---
+
+## Prerequisites
+
+- [Project Structure](/docs/framework/getting-started/project-structure) - Test files organization
+- [API Routes](/docs/framework/server) - Testing backend
+
+---
+
+## Quick Start
+
+### Install Testing Tools
+
+```bash
+bun add -d @playwright/test
+```
+
+Bun's test runner (`bun test`) is built-in and requires no configuration.
+
+---
+
+## Test Examples
+
+### Example 1: Component Test
+
+```tsx
+// tests/Button.test.tsx
+import { describe, it, expect } from 'bun:test';
+import { render, screen } from '@testing-library/react';
+import { Button } from '../app/routes/~components/Button';
+
+describe('Button', () => {
+  it('renders text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByText('Click me')).toBeInTheDocument();
+  });
+
+  it('handles click', async () => {
+    const onClick = vi.fn();
+    render(<Button onClick={onClick}>Click me</Button>);
+
+    await userEvent.click(screen.getByText('Click me'));
+    expect(onClick).toHaveBeenCalled();
+  });
+});
+```
+
+### Example 2: Hook Test
+
+```tsx
+// tests/useCounter.test.ts
+import { describe, it, expect } from 'bun:test';
+import { renderHook, act } from '@testing-library/react';
+import { useCounter } from '../app/routes/~hooks/useCounter';
+
+describe('useCounter', () => {
+  it('increments counter', () => {
+    const { result } = renderHook(() => useCounter());
+
+    expect(result.current.count).toBe(0);
+
+    act(() => {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+});
+```
+
+### Example 3: Router Test
+
+```tsx
+// tests/router.test.ts
+import { describe, it, expect, vi } from 'bun:test';
+import { navigate } from 'manicjs';
+
+vi.mock('manicjs', () => ({
+  useRouter: () => ({
+    navigate: vi.fn(),
+  }),
+}));
+
+describe('navigation', () => {
+  it('navigates to path', () => {
+    const router = useRouter();
+    router.navigate('/about');
+
+    expect(router.navigate).toHaveBeenCalledWith('/about');
+  });
+});
+```
+
+### Example 4: API Route Test
+
+Hono routes can be tested directly by calling their handlers:
+
+```tsx
+// tests/api/users.test.ts
+import { describe, it, expect } from 'bun:test';
+import users from '../../app/api/users/index';
+
+describe('/api/users', () => {
+  it('returns users', async () => {
+    const req = new Request('http://localhost/api/users');
+    const res = await users.fetch(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('creates user', async () => {
+    const req = new Request('http://localhost/api/users', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'test@test.com' }),
+    });
+    const res = await users.fetch(req);
+    expect(res.status).toBe(201);
+  });
+});
+```
+
+This works because Hono instances export a `.fetch(req)` method.
+
+---
+
+## E2E Testing with Playwright
+
+### Config
+
+```ts
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  webServer: {
+    command: 'bun dev',
+    port: 3000,
+    reuseExistingServer: true,
+  },
+});
+```
+
+### Test
+
+```ts
+// e2e/home.test.ts
+import { test, expect } from '@playwright/test';
+
+test('homepage loads', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('h1')).toContainText('Welcome');
+});
+
+test('navigation works', async ({ page }) => {
+  await page.goto('/');
+  await page.click('text=About');
+  await expect(page).toHaveURL('/about');
+});
+
+test('form submission', async ({ page }) => {
+  await page.goto('/contact');
+  await page.fill('input[name="email"]', 'test@test.com');
+  await page.fill('textarea[name="message"]', 'Hello');
+  await page.click('button[type="submit"]');
+  await expect(page.locator('text=Message sent')).toBeVisible();
+});
+```
+
+---
+
+## Running Tests
+
+### Unit Tests
+
+```bash
+bun test
+bun test --watch
+```
+
+### E2E Tests
+
+```bash
+npx playwright test
+```
+
+### Coverage
+
+```bash
+bun test --coverage
+```
+
+---
+
+## Best Practices
+
+<Callout type="info">
+
+**Test user-facing behavior** — not implementation details.
+
+</Callout>
+<Callout type="warn">
+ 
+**Mock external dependencies** — APIs, databases, etc.
+ 
+</Callout>
+
+<Callout type="info">
+
+**Use realistic data** — test with representative examples.
+
+</Callout>
+---
+
+## Version History
+
+| Version | Changes |
+|---------|---------|
+| v0.12.0 | Added Playwright support |
+| v0.11.0 | Migrated from Vitest to Bun test runner |
+| v0.10.0 | Initial testing support |
+
+---
+
+See also:
+- [API Routes](/docs/framework/server)
+- [Project Structure](/docs/framework/getting-started/project-structure)

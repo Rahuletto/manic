@@ -1,0 +1,22 @@
+{
+  "root": true,
+  "title": "API Reference",
+  "description": "Complete reference for all manicjs exports.",
+  "icon": "Library",
+  "pages": [
+    "index",
+    "router",
+    "navigate",
+    "link",
+    "use-router",
+    "use-query-params",
+    "config",
+    "server",
+    "plugins",
+    "theme",
+    "transitions",
+    "env",
+    "client",
+    "error-handling"
+  ]
+}

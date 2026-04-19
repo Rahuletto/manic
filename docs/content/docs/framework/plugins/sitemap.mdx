@@ -1,0 +1,232 @@
+---
+title: Sitemap
+description: Auto-generate sitemap.xml for search engines.
+---
+
+# Sitemap
+
+Automatically generates `sitemap.xml` for search engine indexing.
+
+## Installation
+
+```bash
+bun add @manicjs/sitemap
+```
+
+## Quick Start
+
+### 1. Install Plugin
+
+```bash
+bun add @manicjs/sitemap
+```
+
+### 2. Configure
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [sitemap()],
+});
+```
+
+Generates `sitemap.xml` at build time.
+
+## Options
+
+<TypeTable
+  type={{
+    hostname: {
+      type: 'string',
+      required: true,
+      description: 'Site hostname for URLs',
+    },
+    outDir: {
+      type: 'string',
+      default: '"./public"',
+      description: 'Output directory',
+    },
+    filename: {
+      type: 'string',
+      default: '"sitemap.xml"',
+      description: 'Output filename',
+    },
+    ignoreRoutes: {
+      type: 'string[]',
+      description: 'Routes to exclude',
+    },
+    extraRoutes: {
+      type: 'RouteConfig[]',
+      description: 'Additional routes to include',
+    },
+    lastmod: {
+      type: "'build' | 'modified' | false",
+      default: "'build'",
+      description: 'Last modification strategy',
+    },
+    changefreq: {
+      type: 'DefaultFreq',
+      description: 'Default change frequency',
+    },
+    priority: {
+      type: 'boolean',
+      default: 'false',
+      description: 'Auto-calculate priorities',
+    },
+    trailingSlash: {
+      type: 'boolean',
+      description: 'Add trailing slashes',
+    },
+  }}
+/>
+
+### RouteConfig
+
+```ts
+interface RouteConfig {
+  url: string;
+  lastmod?: Date;
+  changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+  priority?: number;
+}
+```
+
+## Example Configuration
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: 'https://example.com',
+      ignoreRoutes: ['/admin', '/api', '/private'],
+      extraRoutes: [
+        { url: '/contact', changefreq: 'monthly', priority: 0.5 },
+      ],
+      priority: true,
+      trailingSlash: true,
+    }),
+  ],
+});
+```
+
+## Sitemap Index
+
+For large sites, generate sitemap index:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: 'https://example.com',
+      // Automatically creates sitemap-1.xml, sitemap-2.xml, etc.
+      maxUrlsPerSitemap: 1000,
+      sitemaps: [
+        { filename: 'pages.xml', routes: ['/about', '/contact'] },
+        { filename: 'blog.xml', routes: ['/blog/**'] },
+      ],
+    }),
+  ],
+});
+```
+
+## Output
+
+Generated `sitemap.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+    <lastmod>2024-01-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+    <lastmod>2024-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
+```
+
+## Robots.txt Integration
+
+The plugin can also update `robots.txt`:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: 'https://example.com',
+      robotsTxt: true,
+    }),
+  ],
+});
+```
+
+Creates `robots.txt`:
+
+```
+User-agent: *
+Allow: /
+Sitemap: https://example.com/sitemap.xml
+```
+
+## Multi-Language
+
+For i18n sites:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: 'https://example.com',
+      languages: [
+        { lang: 'en', defaultFor: ['en', 'en-US'] },
+        { lang: 'es', defaultFor: ['es', 'es-ES'] },
+        { lang: 'fr', defaultFor: ['fr', 'fr-FR'] },
+      ],
+    }),
+  ],
+});
+```
+
+## Integration with SEO
+
+Works with the `@manicjs/seo` plugin for complete SEO:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [
+    seo({ siteUrl: 'https://example.com' }),
+    sitemap({ hostname: 'https://example.com' }),
+  ],
+});
+```
+
+## See Also
+
+- [SEO](/docs/framework/seo) - Meta tags and OG
+- [Google Search Console](https://search.google.com/search-console)
+- [Sitemap Protocol](https://www.sitemaps.org/protocol.html)

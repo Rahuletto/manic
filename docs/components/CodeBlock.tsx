@@ -5,18 +5,25 @@ import React from 'react';
 
 const Mermaid = dynamic(() => import('./Mermaid'), { ssr: false });
 
-export function CodeBlock({ children, ...props }: any) {
-  // Check if this is a mermaid code block
-  const child = React.Children.toArray(children)[0];
-  
-  if (
-    child &&
-    typeof child === 'object' &&
-    'props' in child &&
-    child.props.className === 'language-mermaid'
-  ) {
-    return <Mermaid chart={child.props.children} />;
+export function CodeBlock(props: React.ComponentProps<'pre'>) {
+  const { children, className, ...rest } = props;
+
+  const childArray = React.Children.toArray(children);
+  if (childArray.length > 0) {
+    const child = childArray[0] as React.ReactElement<{ className?: string; children?: React.ReactNode }>;
+
+    if (child?.props?.className === 'language-mermaid') {
+      const chartText = String(child.props.children ?? '');
+      return <Mermaid chart={chartText} />;
+    }
   }
 
-  return <defaultMdxComponents.pre {...props}>{children}</defaultMdxComponents.pre>;
+  return (
+    <defaultMdxComponents.pre
+      className={className}
+      {...rest}
+    >
+      {children}
+    </defaultMdxComponents.pre>
+  );
 }

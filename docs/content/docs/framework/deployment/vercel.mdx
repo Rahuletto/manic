@@ -1,0 +1,49 @@
+---
+title: Vercel
+description: Deploying Manic to Vercel's global infrastructure.
+---
+
+# Deploying to Vercel
+
+Manic integrates with Vercel using the official `@manicjs/providers` package. This provider transforms your built application into the [Vercel Build Output API](https://vercel.com/docs/build-output-api/v3) format.
+
+## Setup
+
+First, ensure you have the provider installed:
+
+```bash
+bun add @manicjs/providers
+```
+
+Then, configure it in `manic.config.ts`:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { vercel } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [vercel({
+    regions: ['sfo1'],
+  })],
+});
+```
+
+## Deployment
+
+Simply run the Vercel CLI from your project root:
+
+```bash
+vercel
+```
+
+For production:
+
+```bash
+vercel --prod
+```
+
+## How It Works
+
+- **Static Files**: Files in `dist/client/` are mapped to Vercel's static output.
+- **Server**: The Hono server is bundled as a Vercel Serverless Function (or Edge Function depending on config).
+- **API**: API routes are correctly routed through the Vercel edge.

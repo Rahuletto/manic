@@ -1,72 +1,422 @@
 ---
-title: High-Level Architecture
-description: Understanding the building blocks and design philosophy of Manic.
-icon: Layers
+title: Architecture Overview
+description: Deep dive into Manic's design, build pipeline, and core systems.
 ---
 
 # Architecture Overview
 
-Manic is a fullstack React framework that prioritizes absolute performance and uncompromising developer experience. To achieve this, we vertically integrate the entire toolchain—from the runtime to the minifier.
+Manic is built on three core pillars: **type-safe routing**, **zero-config build engine**, and **plugin-driven extensibility**.
 
-## The Manic Philosophy
-
-The framework is built on three core pillars:
-1.  **Vertical Integration**: By owning the toolchain (Bun + OXC), we eliminate the compatibility and configuration overhead of legacy tools like Babel and Webpack.
-2.  **Standards-First**: We avoid proprietary APIs where possible, preferring standard Web APIs like `Request`, `Response`, and `fetch`.
-3.  **Zero-Config Discovery**: Simply adding a file to `app/routes/` or `app/api/` should be the only step required to build a feature.
-
----
-
-## Technical Stack
-
-Manic intentionally replaces standard industry tools with more efficient, modern alternatives:
-
-| Layer | Traditional Choice | Manic Choice |
-| :--- | :--- | :--- |
-| **Runtime** | Node.js | **Bun** |
-| **Bundler** | Webpack / Vite | **Bun.build** |
-| **Transformer** | Babel / SWC | **OXC** |
-| **Server** | Express / Fastify | **Hono** |
-| **Linter** | ESLint | **Oxlint** |
-
----
-
-## System Layers
-
-### 1. The CLI (Orchestrator)
-The CLI is the brain of the framework. It manages:
-- **Config Loading**: Parsing and merging `manic.config.ts`.
-- **Plugin Registry**: Handling preloads and build hooks.
-- **Environment Management**: Injecting `MANIC_PUBLIC_` variables.
-
-### 2. The Build Engine
-A proprietary pipeline that processes your `app/` directory. It uses a **Manifest-First** approach: it scans the directory tree exactly once to generate a static route registry before starting the heavy bundling work.
-
-### 3. The Server (Hono)
-The production server is a high-performance Hono instance running on `Bun.serve`. It is responsible for:
-- **SSR (Server-Side Rendering)**: Injecting React components into a static HTML shell.
-- **API Mounting**: Dynamically loading and serving Hono instances from `app/api`.
-- **Static Resolution**: High-speed serving of assets via Bun's native file system APIs.
-
-### 4. The Client Router (React)
-A custom React routing engine that:
-- **Matches**: Uses a pre-scored regex scanner for O(1) matching.
-- **Loads**: Lazy-loads route chunks exactly when needed.
-- **Transitions**: Provides cinematic navigation via the native View Transitions API.
-
----
-
-## Data Flow: Request Lifecycle
+## System Design
 
 ```mermaid
 graph TD
-  Req[Inbound Request] --> Server[Bun + Hono Server]
-  Server --> Match{Route Type?}
-  Match -->|API| HonoAPI[API Instance Handler]
-  Match -->|Page| SSR[React SSR Engine]
-  SSR --> HTML[Injected HTML + JS Chunks]
-  HTML --> Browser[Client Hydration]
-  Browser --> Router[React Client Router]
+    subgraph Client["Browser (Client)"]
+        Router["React SPA Router"]
+        Lazy["Lazy Load Chunks"]
+        VT["View Transitions"]
+        Prefetch["Hover Prefetch"]
+    end
+
+    subgraph Server["Bun.serve (Server)"]
+        Hono["Hono API Router"]
+        OpenAPI["OpenAPI Discovery"]
+        RPC["Type-safe RPC"]
+        
+        Static["Static Assets"]
+        Tailwind["Tailwind CSS v4"]
+    end
+
+    Client -- "HTTP /api/*" --> Hono
+    Client -- "Static Assets" --> Static
 ```
 
-By maintaining total control over the request lifecycle, Manic can optimize performance bottlenecks that are typically impossible to address in more fragmented framework ecosystems.
+## Build Pipeline
+
+### Development: `manic dev`
+
+Starts a live development server with HMR:
+
+```mermaid
+graph TB
+    Lint["1. Lint (oxlint)"]
+    Discovery["2. Route Scan"]
+    Generate["3. Generated Manifest"]
+    Serve["4. Bun.serve"]
+    Watch["5. Hot Reload"]
+
+    Lint --> Discovery
+    Discovery --> Generate
+    Generate --> Serve
+    Serve <--> Watch
+```
+
+Key files:
+- `app/~routes.generated.ts` — Route registry (auto-generated, **never edit**)
+- `manic.config.ts` — Plugin & config definition
+- `~manic.ts` — Server entry point (auto-generated)
+
+### Production: `manic build`
+
+Optimized, minified production output:
+
+```mermaid
+graph TD
+    Lint["1. Lint (oxlint)"]
+    Discovery["2. Route Discovery"]
+    Client["3. Client Bundling"]
+    API["4. API Bundling"]
+    Server["5. Server Bundling"]
+    Minify["6. OXC Minify"]
+    Provider["7. Provider Pack"]
+
+    Lint --> Discovery
+    Discovery --> Client
+    Discovery --> API
+    Client --> Server
+    API --> Server
+    Server --> Minify
+    Minify --> Provider
+```
+
+Output structure:
+<Files>
+  <Folder name="dist" defaultOpen>
+    <Folder name="client">
+      <File name="[name].js" />
+      <File name="index.html" />
+    </Folder>
+    <Folder name="api">
+      <File name="[name].js" />
+    </Folder>
+    <File name="server.js" />
+    <File name="manifest.json" />
+  </Folder>
+</Files>
+
+## Router (Client-Side)
+
+### Route Scoring: How Routes Are Matched
+
+Manic uses a **scoring algorithm** to determine which route handles a URL:
+
+```ts
+// Example routes
+app/routes/posts/new.tsx         // Score: 200 (static + static)
+app/routes/posts/[id].tsx        // Score: 110 (static + dynamic)
+app/routes/posts/[...slug].tsx   // Score: 101 (static + catch-all)
+```
+
+**Scoring Rules:**
+- Static segment: `+100`
+- Dynamic segment: `+10`
+- Catch-all segment: `+1`
+
+**URL Match Process:**
+```
+/posts/new
+├─ new.tsx → 200 ✓ (WINNER)
+├─ [id].tsx → 110
+└─ [...slug].tsx → 101
+
+/posts/123
+├─ new.tsx → No match
+├─ [id].tsx → 110 ✓ (WINNER)
+└─ [...slug].tsx → 101
+```
+
+This ensures **correct precedence without order dependency**.
+
+### Code Splitting Strategy: Lazy Loading
+
+Each route's component is **lazy-loaded on first navigation**:
+
+```ts
+// Generated in app/~routes.generated.ts
+const routes = [
+  {
+    path: '/posts/[id]',
+    component: null,  // Lazy
+    loader: () => import('./routes/posts/[id].tsx'),
+  },
+];
+```
+
+**Prefetch Behavior:**
+
+```tsx
+import { Link } from 'manicjs';
+
+// On mouse enter or focus:
+// → fetch('/api/__manifest.json')
+// → Preload /posts/123's JS chunk
+<a href="/posts/123" prefetch>
+  View Post
+</a>
+```
+
+Benefits:
+- Only ship JS needed for current page
+- Chunks cached in memory after first load
+- Smooth prefetch without janky loads
+
+### Client Navigation Flow
+
+```mermaid
+graph TD
+    Click["User clicks Link"] --> Prevent["preventDefault()"]
+    Prevent --> Load["Lazy Load JS Chunk"]
+    Load --> Match["Match Route"]
+    Match --> Render["React Render"]
+    Render --> VT["View Transition"]
+    VT --> History["Update History"]
+    History --> Scroll["Scroll to Top"]
+```
+
+**Hook Access:**
+
+```tsx
+import { useRouter, useParams, useQueryParams } from 'manicjs';
+
+export default function PostPage() {
+  const router = useRouter();      // navigate(path, options)
+  const { id } = useParams();       // Route params
+  const [query, setQuery] = useQueryParams();  // URL search
+  
+  return <div>Post {id}</div>;
+}
+```
+
+## API Routes (Server-Side)
+
+### File-Based API Routes
+
+<Files>
+  <Folder name="app/api" defaultOpen>
+    <Folder name="users">
+      <File name="index.ts" />
+      <File name="[id].ts" />
+    </Folder>
+    <Folder name="posts">
+      <File name="index.ts" />
+    </Folder>
+    <Folder name="search">
+      <File name="index.ts" />
+    </Folder>
+  </Folder>
+</Files>
+
+Each `index.ts` exports a Hono route handler:
+
+```ts
+// app/api/users/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', async (c) => {
+  const users = await db.query('SELECT * FROM users');
+  return c.json(users);
+});
+
+export default app;
+```
+
+### Auto-Generated OpenAPI
+
+Manic scans all API routes and generates an **OpenAPI schema**:
+
+```json
+{
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/users": {
+      "get": {
+        "operationId": "listUsers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "type": "array" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Discovery:** `GET /.well-known/openapi.json`
+
+Use with tools like Scalar, Swagger, or postman for docs.
+
+### Type-Safe Client
+
+Manic generates a **type-safe RPC client** from your API routes:
+
+```ts
+// Type-safe API client using Hono RPC
+import type { AppType } from '../api/index';
+import { hc } from 'hono/client';
+
+const client = hc<AppType>('/api');
+
+// Type-safe API calls
+const users = await client.users.$get();
+const user = await client.users[':id'].get({ param: { id: '123' } });
+```
+
+Uses Hono's RPC for full type inference from your API routes.
+
+## Plugin System
+
+### Core Plugin API
+
+```ts
+import { createPlugin } from 'manicjs/config';
+
+export function myPlugin(options = {}) {
+  return createPlugin({
+    name: 'my-plugin',
+    
+    // Option 1: Static files (recommended)
+    staticFiles: [
+      {
+        path: '/robots.txt',
+        content: 'User-agent: *\nDisallow: /',
+        contentType: 'text/plain; charset=utf-8',
+      },
+    ],
+    
+    // Option 2: Server hooks (dev-only routes)
+    configureServer(ctx) {
+      ctx.addRoute('/health', () => new Response('ok'));
+      ctx.injectHtml('<meta name="my-plugin" content="true">');
+      ctx.addLinkHeader('<https://example.com>; rel="preconnect"');
+    },
+    
+    // Option 3: Build hooks (emit & inject)
+    build(ctx) {
+      ctx.emitClientFile('/__manifest.json', JSON.stringify({
+        routes: ctx.pageRoutes,
+      }));
+      ctx.injectHtml('<link rel="dns-prefetch" href="https://api.example.com">');
+    },
+  });
+}
+```
+
+### Official Plugins
+
+| Package | Purpose | Status |
+|---------|---------|--------|
+| `@manicjs/tailwind` | Tailwind CSS v4 | ✓ Stable |
+| `@manicjs/seo` | robots.txt, meta tags, Link headers | ✓ Stable |
+| `@manicjs/sitemap` | Auto-generate sitemap.xml | ✓ Stable |
+| `@manicjs/mcp` | Model Context Protocol endpoint | ✓ Stable |
+| `@manicjs/api-docs` | Scalar API reference UI | ✓ Stable |
+
+Example config:
+
+```ts
+// manic.config.ts
+import { defineTool } from 'manicjs/config';
+import tailwind from '@manicjs/tailwind';
+import seo from '@manicjs/seo';
+import sitemap from '@manicjs/sitemap';
+
+export default defineTool({
+  plugins: [
+    tailwind(),
+    seo({
+      robots: 'follow',
+      canonical: 'https://example.com',
+    }),
+    sitemap(),
+  ],
+});
+```
+
+## Configuration
+
+### Framework Configuration
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import tailwind from '@manicjs/tailwind';
+
+export default defineConfig({
+  // App metadata
+  name: 'My App',
+  description: 'Built with Manic',
+  
+  // Plugins & extensions
+  plugins: [
+    tailwind(),
+    // ... more plugins
+  ],
+  
+  // Build options
+  build: {
+    minify: true,
+    sourcemaps: false,
+  },
+  
+  // Server options
+  server: {
+    port: 3000,
+    host: '0.0.0.0',
+  },
+});
+```
+
+### Managing Secrets
+
+Create `.env.local` for development:
+
+```bash
+MANIC_PUBLIC_API_URL=http://localhost:3000/api
+DATABASE_URL=postgres://user:pass@localhost/db
+```
+
+Access in routes:
+
+```ts
+import { getEnv } from 'manicjs/env';
+
+const apiUrl = getEnv('MANIC_PUBLIC_API_URL');  // Client
+const dbUrl = getEnv('DATABASE_URL');           // Server
+```
+
+<Callout type="warn">
+ 
+Never commit `.env.local`. Add to `.gitignore`.
+ 
+</Callout>
+
+<Callout type="info">
+
+Use `MANIC_PUBLIC_` prefix for client-exposed variables. Server vars are never exposed.
+
+</Callout>
+## Performance
+
+Manic is designed for **extreme speed**:
+
+- **OXC Transforms** — 50-100x faster than SWC/Babel
+- **Parallel Minification** — All bundles minified in parallel
+- **Lazy Loading** — Only ship JS for current route
+- **Prefetch** — Pre-download route chunks before navigation
+- **Zero Runtime** — No Manic runtime overhead; just vanilla React
+
+**Typical Build Times:**
+- Development: `<500ms` full rebuild
+- Production: under one second for most projects
+- Minification: under 100ms for all bundles combined
+
+---
+
+Questions? See [troubleshooting](/docs/framework/troubleshooting/index) or [CLI Reference](/docs/cli/index).

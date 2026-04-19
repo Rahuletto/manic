@@ -1,7 +1,6 @@
 ---
 title: Plugins
 description: Full reference for the Manic Plugin API and development lifecycle.
-icon: Plug
 ---
 
 # Plugins Reference
@@ -13,6 +12,7 @@ Plugins are the primary way to extend Manic's functionality. They allow you to h
 The `createPlugin` helper simplifies plugin development by providing a unified interface for both development and production environments.
 
 ```ts twoslash
+//
 import { createPlugin } from 'manicjs/config';
 
 // Conceptual helper
@@ -50,13 +50,30 @@ export const sitemapPlugin = (options: { enabled?: boolean }) => {
 
 ### `ManicPlugin` Interface
 
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `name` | `string` | Unique identifier for the plugin. |
-| `preload` | `string` | Absolute path to a Bun plugin script to preload. |
-| `bunfig` | `string` | TOML snippet to merge into `bunfig.toml` during dev. |
-| `configureServer` | `Function` | Runtime hook for the development server. |
-| `build` | `Function` | Build-time hook for production packaging. |
+<TypeTable
+  type={{
+    name: {
+      type: "string",
+      description: "Unique identifier for the plugin.",
+    },
+    preload: {
+      type: "string",
+      description: "Absolute path to a Bun plugin script to preload.",
+    },
+    bunfig: {
+      type: "string",
+      description: "TOML snippet to merge into bunfig.toml during dev.",
+    },
+    configureServer: {
+      type: "(ctx: ManicServerPluginContext) => void | Promise<void>",
+      description: "Runtime hook for the development server.",
+    },
+    build: {
+      type: "(ctx: ManicBuildPluginContext) => void | Promise<void>",
+      description: "Build-time hook for production packaging.",
+    },
+  }}
+/>
 
 ---
 
@@ -65,26 +82,73 @@ export const sitemapPlugin = (options: { enabled?: boolean }) => {
 Both `configureServer` and `build` hooks receive a context object that provides access to the project's state.
 
 ### `ManicPluginContext` (Shared)
-- **`config`**: The full merged `ManicConfig`.
-- **`pageRoutes`**: Array of discovered page routes (path, file path).
-- **`apiRoutes`**: Array of discovered API routes.
-- **`prod`**: Boolean indicating if the environment is production.
+
+<TypeTable
+  type={{
+    config: {
+      type: "ManicConfig",
+      description: "The full merged ManicConfig object.",
+    },
+    pageRoutes: {
+      type: "PageRoute[]",
+      description: "Array of discovered page routes.",
+    },
+    apiRoutes: {
+      type: "ApiRoute[]",
+      description: "Array of discovered API routes.",
+    },
+    prod: {
+      type: "boolean",
+      description: "Boolean indicating if the environment is production.",
+    },
+  }}
+/>
 
 ### `ManicServerPluginContext` (Server Only)
-- **`addRoute(path, handler)`**: Register a Hono route on the dev server.
-- **`addLinkHeader(value)`**: Injects a Link header (RFC 8288) into responses.
-- **`injectHtml(tags)`**: Appends HTML to the `<head>` of served pages.
+
+<TypeTable
+  type={{
+    addRoute: {
+      type: "(path: string, handler: Handler) => void",
+      description: "Register a Hono route on the dev server.",
+    },
+    addLinkHeader: {
+      type: "(value: string) => void",
+      description: "Injects a Link header into responses.",
+    },
+    injectHtml: {
+      type: "(tags: string) => void",
+      description: "Appends HTML to the <head> of served pages.",
+    },
+  }}
+/>
 
 ### `ManicBuildPluginContext` (Build Only)
-- **`emitClientFile(path, content)`**: Writes a static asset to the client output.
-- **`injectHtml(tags)`**: Appends HTML to the `<head>` of the built `index.html`.
+
+<TypeTable
+  type={{
+    emitClientFile: {
+      type: "(path: string, content: string) => void",
+      description: "Writes a static asset to the client output.",
+    },
+    injectHtml: {
+      type: "(tags: string) => void",
+      description: "Appends HTML to the <head> of the built index.html.",
+    },
+  }}
+/>
 
 ---
 
 ## Best Practices
 
-> [!IMPORTANT]
-> **Production Parity**: If you register a route in `configureServer` using `addRoute`, make sure to also emit the same content in a `build` hook (or use the `staticFiles` shorthand) so your application behaves identically in production and development.
+<Callout type="info">
 
-> [!TIP]
-> Use the `staticFiles` shorthand in `createPlugin` whenever possible. It handles the dev/prod parity logic for you automatically.
+**Production Parity**: If you register a route in `configureServer` using `addRoute`, make sure to also emit the same content in a `build` hook (or use the `staticFiles` shorthand) so your application behaves identically in production and development.
+
+</Callout>
+<Callout type="info">
+
+Use the `staticFiles` shorthand in `createPlugin` whenever possible. It handles the dev/prod parity logic for you automatically.
+
+</Callout>

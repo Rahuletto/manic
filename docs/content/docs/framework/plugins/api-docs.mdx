@@ -1,0 +1,265 @@
+---
+title: API Docs
+description: Auto-generate interactive API reference documentation.
+---
+
+# API Docs
+
+Generates interactive API reference documentation using Scalar.
+
+## Installation
+
+```bash
+bun add @manicjs/api-docs
+```
+
+## Quick Start
+
+### 1. Install Plugin
+
+```bash
+bun add @manicjs/api-docs
+```
+
+### 2. Configure
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
+
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      route: '/api/docs',
+    }),
+  ],
+});
+```
+
+### 3. Add OpenAPI Specs
+
+The plugin generates docs from your API routes automatically.
+
+## Options
+
+<TypeTable
+  type={{
+    route: {
+      type: 'string',
+      default: '"/api/docs"',
+      description: 'Route for API docs UI',
+    },
+    spec: {
+      type: 'OpenAPISpec',
+      description: 'Manual OpenAPI spec',
+    },
+    output: {
+      type: 'string',
+      description: 'Output file path',
+    },
+    theme: {
+      type: "'scalar' | 'openapi' | 'stoplight'",
+      default: '"scalar"',
+      description: 'Documentation theme',
+    },
+    title: {
+      type: 'string',
+      default: '"API Reference"',
+      description: 'Document title',
+    },
+    favicon: {
+      type: 'string',
+      description: 'Favicon path',
+    },
+  }}
+/>
+
+## Auto-Generation
+
+The plugin scans your API routes and generates OpenAPI spec:
+
+```ts
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
+
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      // Auto-generates from app/api/
+      autoGenerate: true,
+    }),
+  ],
+});
+```
+
+## Manual Spec
+
+Provide custom OpenAPI spec:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
+
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      spec: {
+        openapi: '3.0.0',
+        info: {
+          title: 'My API',
+          version: '1.0.0',
+        },
+        paths: {
+          '/users': {
+            get: {
+              summary: 'List users',
+              responses: {
+                '200': {
+                  description: 'OK',
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ],
+});
+```
+
+## Themes
+
+### Scalar (Default)
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
+
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      theme: 'scalar',
+    }),
+  ],
+});
+```
+
+### OpenAPI
+
+```ts
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      theme: 'openapi',
+    }),
+  ],
+});
+```
+
+## Authentication
+
+Add auth to docs:
+
+```ts
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      route: '/api/docs',
+      auth: {
+        type: 'bearer',
+        token: process.env.API_DOCS_TOKEN,
+      },
+    }),
+  ],
+});
+```
+
+## Custom Branding
+
+```ts
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      title: 'My App API',
+      favicon: '/favicon.ico',
+      colors: {
+        primary: '#3b82f6',
+      },
+    }),
+  ],
+});
+```
+
+## Generated UI Features
+
+- Interactive request/response playground
+- Request body editor with JSON validation
+- Authentication header support
+- Code examples in multiple languages
+- Search and filtering
+- Dark/light mode
+
+## Example Output
+
+```
+┌─────────────────────────────────────────────┐
+│  API Reference                        [■]  │
+├─────────────────────────────────────────────┤
+│  GET  /api/users                     [Try] │
+│  ────────────────────────────────────────  │
+│  Lists all users in the system              │
+│  ┌─────────────────────────────────────┐   │
+│  │ Response 200                        │   │
+│  │ {                                   │   │
+│  │   "users": [                        │   │
+│  │     { "id": 1, "name": "Alice" }  │   │
+│  │   ]                                 │   │
+│  │ }                                   │   │
+│  └─────────────────────────────────────┘   │
+│                                             │
+│  POST  /api/users                     [Try]│
+│  ────────────────────────────────────────  │
+└─────────────────────────────────────────────┘
+```
+
+## Integration with OpenAPI
+
+Export spec for other tools:
+
+```ts
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      output: './openapi.json',
+      // Also generate spec file
+      generateFile: true,
+    }),
+  ],
+});
+```
+
+## Security
+
+<Callout type="warn">
+
+**Protect production docs** - Use authentication or disable in production.
+
+</Callout>
+
+```ts
+export default defineConfig({
+  plugins: [
+    apiDocs({
+      enabled: Bun.env.NODE_ENV !== 'production',
+    }),
+  ],
+});
+```
+
+## See Also
+
+- [API Routes](/docs/framework/server) - Your API endpoints
+- [Scalar](https://scalar.com) - API documentation tool
+- [OpenAPI Specification](https://swagger.io/specification/)

@@ -1,18 +1,89 @@
 @import 'tailwindcss';
+@import 'fumadocs-twoslash/twoslash.css';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
-@import 'fumadocs-twoslash/twoslash.css';
 
 @theme {
   --color-fd-primary: #f15156;
   --color-primary: var(--color-fd-primary);
 }
 
+:root[data-root="framework"] {
+  --color-fd-primary: #f15156;
+}
+
+:root[data-root="api"] {
+  --color-fd-primary: #3b82f6;
+}
+
+:root[data-root="cli"] {
+  --color-fd-primary: #10b981;
+}
+
+:root[data-root="core"] {
+  --color-fd-primary: #8b5cf6;
+}
+
+:root[data-root="advanced"] {
+  --color-fd-primary: #f59e0b;
+}
+
+:root[data-root="troubleshooting"] {
+  --color-fd-primary: #eab308;
+}
+
 html {
   scrollbar-gutter: stable;
 }
 
-html > body[data-scroll-locked] {
+/* Ensure switcher and sidebar icons use the primary accent color */
+.fd-sidebar-tab svg,
+[data-active='true'] svg,
+.fd-sidebar-banner svg,
+[role="menuitem"] svg,
+button[aria-haspopup="menu"] svg:first-child {
+  color: var(--color-fd-primary) !important;
+  opacity: 1 !important;
+}
+
+html>body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Premium rounding for all code containers */
+.fd-codeblock pre,
+.twoslash,
+.mermaid {
+  border-radius: 1rem !important;
+  /* 2xl */
+}
+
+.fd-type-table {
+  border-radius: 1.25rem !important;
+  overflow: hidden;
+}
+
+/* Twoslash Popover Styles */
+.fd-twoslash-popover {
+  background-color: var(--color-fd-popover);
+  color: var(--color-fd-popover-foreground);
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  max-width: 400px;
+  z-index: 1000;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.twoslash-hover {
+  border-bottom: 1px dotted var(--color-fd-primary);
+  cursor: help;
+  transition: opacity 0.2s;
+}
+
+.twoslash-hover:hover {
+  opacity: 0.8;
 }
