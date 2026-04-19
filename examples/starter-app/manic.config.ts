@@ -1,5 +1,6 @@
 import { defineConfig } from 'manicjs/config';
 import { apiDocs } from '@manicjs/api-docs';
+import { tailwind } from '@manicjs/tailwind';
 
 export default defineConfig({
   app: {
@@ -10,5 +11,5 @@ export default defineConfig({
     port: 6070,
   },
 
-  plugins: [apiDocs()],
+  plugins: [tailwind(), apiDocs()],
 });
