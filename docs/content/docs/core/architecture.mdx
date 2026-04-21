@@ -322,19 +322,19 @@ Example config:
 
 ```ts
 // manic.config.ts
-import { defineTool } from 'manicjs/config';
-import tailwind from '@manicjs/tailwind';
-import seo from '@manicjs/seo';
-import sitemap from '@manicjs/sitemap';
+import { defineConfig } from 'manicjs/config';
+import { tailwind } from '@manicjs/tailwind';
+import { seo } from '@manicjs/seo';
+import { sitemap } from '@manicjs/sitemap';
 
-export default defineTool({
+export default defineConfig({
   plugins: [
     tailwind(),
     seo({
-      robots: 'follow',
-      canonical: 'https://example.com',
+      hostname: 'https://example.com',
+      title: 'My App',
     }),
-    sitemap(),
+    sitemap({ hostname: 'https://example.com' }),
   ],
 });
 ```
@@ -346,12 +346,13 @@ export default defineTool({
 ```ts
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import tailwind from '@manicjs/tailwind';
+import { tailwind } from '@manicjs/tailwind';
 
 export default defineConfig({
   // App metadata
-  name: 'My App',
-  description: 'Built with Manic',
+  app: {
+    name: 'My App',
+  },
   
   // Plugins & extensions
   plugins: [
@@ -362,13 +363,12 @@ export default defineConfig({
   // Build options
   build: {
     minify: true,
-    sourcemaps: false,
+    sourcemap: false,
   },
   
   // Server options
   server: {
     port: 3000,
-    host: '0.0.0.0',
   },
 });
 ```

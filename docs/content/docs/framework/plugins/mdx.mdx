@@ -15,13 +15,7 @@ bun add @manicjs/mdx
 
 ## Quick Start
 
-### 1. Install Plugin
-
-```bash
-bun add @manicjs/mdx
-```
-
-### 2. Configure
+### 1. Configure
 
 ```ts
 // manic.config.ts
@@ -33,7 +27,7 @@ export default defineConfig({
 });
 ```
 
-### 3. Create MDX Content
+### 2. Create MDX Content
 
 ```mdx
 # Hello World
@@ -47,47 +41,58 @@ This is **Markdown** with React components.
 
 <TypeTable
   type={{
-    gfm: {
+    filter: {
+      type: 'RegExp',
+      default: '/\\.mdx?$/',
+      description: 'File extensions to treat as MDX',
+    },
+    frontmatterName: {
+      type: 'string',
+      default: "'frontmatter'",
+      description: 'Name of the exported frontmatter variable',
+    },
+    disableGfm: {
       type: 'boolean',
-      default: 'true',
-      description: 'Enable GitHub Flavored Markdown',
+      default: 'false',
+      description: 'Disable built-in GFM (GitHub Flavored Markdown) support',
     },
-    remarkPlugins: {
-      type: 'Plugin[]',
-      description: 'Remark plugins to add',
-    },
-    rehypePlugins: {
-      type: 'Plugin[]',
-      description: 'Rehype plugins to add',
-    },
-    frontmatter: {
+    disableFrontmatter: {
       type: 'boolean',
-      default: 'true',
-      description: 'Parse YAML frontmatter',
+      default: 'false',
+      description: 'Disable built-in frontmatter extraction',
     },
     toc: {
       type: 'boolean',
       default: 'false',
-      description: 'Extract table of contents',
+      description: 'Export a toc array from each MDX file via fumadocs-core',
+    },
+    highlight: {
+      type: "boolean | { light: string; dark: string }",
+      default: 'false',
+      description: 'Enable syntax highlighting via rehype-pretty-code',
+    },
+    mdxOptions: {
+      type: 'CompileOptions',
+      description: 'Pass-through @mdx-js/mdx CompileOptions (minus plugin arrays)',
     },
   }}
 />
 
 ## GFM Support
 
-Enabled by default:
+GFM is enabled by default. Set `disableGfm: true` to turn it off.
 
-| Feature | Support |
-|---------|---------|
-| Tables | ✓ |
-| Task lists | ✓ |
-| Strikethrough | ✓ |
-| Autolinks | ✓ |
-| Footnotes | ✓ |
+| Feature       | Support |
+| ------------- | ------- |
+| Tables        | ✓       |
+| Task lists    | ✓       |
+| Strikethrough | ✓       |
+| Autolinks     | ✓       |
+| Footnotes     | ✓       |
 
 ## Frontmatter
 
-Add metadata at the top of your MDX files:
+Frontmatter parsing is enabled by default. The parsed YAML is exported as a named export (default name `frontmatter`):
 
 ```mdx
 ---
@@ -101,6 +106,20 @@ tags: [react, manic]
 
 Written by {frontmatter.author}
 ```
+
+You can change the export name with `frontmatterName`:
+
+```ts
+mdx({ frontmatterName: 'metadata' })
+```
+
+Then access it as `{metadata.title}` in your MDX, or import it from another file:
+
+```ts
+import { metadata } from './my-post.mdx';
+```
+
+Set `disableFrontmatter: true` to disable frontmatter extraction entirely.
 
 ## Using Components
 
@@ -116,28 +135,9 @@ import { Callout } from '~/components/Callout';
 </Callout>
 ```
 
-## Custom Components
-
-Pass custom components to MDX pages:
-
-```tsx
-// app/routes/blog/[slug].tsx
-import { getPost } from '~/lib/posts';
-
-export default function BlogPost({ slug }) {
-  const post = await getPost(slug);
-  
-  return (
-    <article>
-      <MDX source={post.content} components={post.components} />
-    </article>
-  );
-}
-```
-
 ## Table of Contents
 
-Enable TOC extraction:
+Enable TOC extraction with `toc: true`. This uses `fumadocs-core` to export a `toc` array from each MDX file:
 
 ```ts
 // manic.config.ts
@@ -153,18 +153,32 @@ export default defineConfig({
 });
 ```
 
-Access in your page:
+Then import `toc` directly from the MDX file:
 
-```tsx
-import { toc } from '~/toc';
+```ts
+import { toc } from './my-post.mdx';
 
-console.log(toc.headings);
-// [{ depth: 1, title: 'Introduction', id: 'introduction' }, ...]
+// toc is an array of heading objects:
+// [{ depth: 1, url: '#introduction', title: 'Introduction' }, ...]
 ```
 
 ## Syntax Highlighting
 
-Code blocks use Shiki by default:
+Syntax highlighting is **opt-in** via `rehype-pretty-code`. Enable it with `highlight: true` for the default `github-light` / `github-dark` themes:
+
+```ts
+mdx({
+  highlight: true,
+})
+```
+
+Or pass custom theme names:
+
+```ts
+mdx({
+  highlight: { light: 'min-light', dark: 'night-owl' },
+})
+```
 
 ````mdx
 ```ts
@@ -173,25 +187,37 @@ console.log(greeting);
 ```
 ````
 
-## Custom Remark/Rehype
+## Custom Remark/Rehype Plugins
 
-Add remark/rehype plugins:
+The `mdx()` plugin function serializes options to an environment variable so the Bun preload script can read them. This means **function values** like remark/rehype plugin arrays cannot be passed through `mdx()`.
+
+To add custom remark or rehype plugins, use `mdxBunPlugin()` from `@manicjs/mdx/bun-plugin` directly and register it as a Bun plugin:
 
 ```ts
-import { defineConfig } from 'manicjs/config';
-import { mdx } from '@manicjs/mdx';
-import remarkGfm from 'remark-gfm';
-import rehypeSlug from 'rehype-slug';
+// plugins/my-mdx.ts
+import { plugin } from 'bun';
+import { mdxBunPlugin } from '@manicjs/mdx/bun-plugin';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
-export default defineConfig({
-  plugins: [
-    mdx({
-      remarkPlugins: [remarkGfm],
-      rehypePlugins: [rehypeSlug],
-    }),
-  ],
-});
+plugin(
+  mdxBunPlugin({
+    toc: true,
+    highlight: true,
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
+  }),
+);
 ```
+
+Then register this file as a preload in your `bunfig.toml`:
+
+```toml
+[serve.static]
+plugins = ["./plugins/my-mdx.ts"]
+```
+
+When using `mdxBunPlugin()` directly, you do **not** need the `mdx()` Manic plugin in your config — the Bun plugin handles everything.
 
 ## MDX File Structure
 
@@ -200,7 +226,7 @@ app/
 ├── routes/
 │   ├── blog/
 │   │   ├── index.tsx       # Blog listing
-│   │   └── [slug].tsx     # Blog post
+│   │   └── [slug].tsx      # Blog post
 │   └── content/
 │       └── posts/
 │           ├── getting-started.mdx

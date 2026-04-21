@@ -5,7 +5,7 @@ description: Tailwind CSS v4 integration for Manic.
 
 # Tailwind CSS
 
-Integrates Tailwind CSS v4 with zero configuration. Uses `bun-plugin-tailwind` under the hood.
+Zero-config Tailwind CSS v4 integration. A thin wrapper around [`bun-plugin-tailwind`](https://bun.sh/docs/bundler/plugins/tailwind) — the plugin takes no options and simply registers the Bun Tailwind plugin for both dev and build.
 
 ## Installation
 
@@ -15,13 +15,7 @@ bun add @manicjs/tailwind
 
 ## Quick Start
 
-### 1. Install Plugin
-
-```bash
-bun add @manicjs/tailwind
-```
-
-### 2. Configure
+### 1. Configure
 
 ```ts
 // manic.config.ts
@@ -33,7 +27,7 @@ export default defineConfig({
 });
 ```
 
-### 3. Add CSS
+### 2. Add CSS
 
 ```css
 /* app/app.css */
@@ -42,47 +36,32 @@ export default defineConfig({
 
 That's it! Tailwind is now integrated.
 
-## Options
+## Customization
 
-<TypeTable
-  type={{
-    content: {
-      type: 'string | string[]',
-      default: '["app/**/*.tsx", "app/**/*.css"]',
-      description: 'Files to scan for classes',
-    },
-    darkMode: {
-      type: "'selector' | 'class'",
-      default: "'selector'",
-      description: 'How to enable dark mode',
-    },
-    safelist: {
-      type: 'string[]',
-      description: 'Classes to always include',
-    },
-  }}
-/>
+The plugin itself has no options. To customize Tailwind, use standard Tailwind CSS v4 mechanisms:
 
-## Example Configuration
+### `@theme` Directive
 
-```ts
-import { defineConfig } from 'manicjs/config';
-import { tailwind } from '@manicjs/tailwind';
+Define design tokens directly in your CSS:
 
-export default defineConfig({
-  plugins: [
-    tailwind({
-      content: ['app/**/*.{tsx,css}'],
-      darkMode: 'selector',
-      safelist: ['bg-primary', 'text-primary'],
-    }),
-  ],
-});
+```css
+/* app/app.css */
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #64748b;
+  --font-family-sans: "Inter", sans-serif;
+}
 ```
+
+### `tailwind.config.ts`
+
+For more advanced configuration, create a `tailwind.config.ts` at the project root. Tailwind v4 will pick it up automatically.
 
 ## Dark Mode
 
-This plugin uses Tailwind's selector-based dark mode:
+Use Tailwind's selector-based dark mode with a `@custom-variant`:
 
 ```css
 /* app/app.css */

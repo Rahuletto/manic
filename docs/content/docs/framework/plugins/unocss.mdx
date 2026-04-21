@@ -15,13 +15,7 @@ bun add @manicjs/unocss
 
 ## Quick Start
 
-### 1. Install Plugin
-
-```bash
-bun add @manicjs/unocss
-```
-
-### 2. Configure
+### 1. Add the Plugin
 
 ```ts
 // manic.config.ts
@@ -33,62 +27,37 @@ export default defineConfig({
 });
 ```
 
-### 3. Add Presets (Optional)
+The `unocss()` plugin takes no options. It registers `bun-plugin-unocss` which auto-detects your UnoCSS configuration from the project root.
+
+### 2. Create `uno.config.ts`
+
+All UnoCSS configuration lives in `uno.config.ts` at your project root:
 
 ```ts
-import { presetUno, presetAttributify } from 'unocss';
+// uno.config.ts
+import { defineConfig, presetUno, presetAttributify } from 'unocss';
 
 export default defineConfig({
-  plugins: [
-    unocss({
-      presets: [
-        presetUno(),
-        presetAttributify(),
-      ],
-    }),
+  presets: [
+    presetUno(),
+    presetAttributify(),
   ],
 });
 ```
-
-## Options
-
-<TypeTable
-  type={{
-    presets: {
-      type: 'Preset[]',
-      description: 'UnoCSS presets to use',
-    },
-    rules: {
-      type: 'CustomRule[]',
-      description: 'Custom CSS rules',
-    },
-    shortcuts: {
-      type: 'Shortcut[]',
-      description: 'Shortcut mappings',
-    },
-    theme: {
-      type: 'ThemeConfig',
-      description: 'Custom theme values',
-    },
-  }}
-/>
 
 ## UnoCSS Presets
 
 ### Core Presets
 
 ```ts
-import { presetUno, presetIcons, presetWebFonts } from 'unocss';
+// uno.config.ts
+import { defineConfig, presetUno, presetIcons, presetWebFonts } from 'unocss';
 
 export default defineConfig({
-  plugins: [
-    unocss({
-      presets: [
-        presetUno(),           // Core utilities
-        presetIcons(),         // Icon set
-        presetWebFonts(),     // Google Fonts
-      ],
-    }),
+  presets: [
+    presetUno(),           // Core utilities
+    presetIcons(),         // Icon set
+    presetWebFonts(),      // Google Fonts
   ],
 });
 ```
@@ -96,22 +65,20 @@ export default defineConfig({
 ### Attributify Mode
 
 ```ts
-import { presetAttributify } from 'unocss';
+// uno.config.ts
+import { defineConfig, presetUno, presetAttributify } from 'unocss';
 
 export default defineConfig({
-  plugins: [
-    unocss({
-      presets: [
-        presetAttributify({
-          /* attributify options */
-        }),
-      ],
+  presets: [
+    presetUno(),
+    presetAttributify({
+      /* attributify options */
     }),
   ],
 });
 ```
 
-Then use in HTML:
+Then use in JSX:
 
 ```tsx
 <div class="flex gap-2" />
@@ -122,14 +89,14 @@ Then use in HTML:
 ## Custom Rules
 
 ```ts
+// uno.config.ts
+import { defineConfig, presetUno } from 'unocss';
+
 export default defineConfig({
-  plugins: [
-    unocss({
-      rules: [
-        [/^text-(.*)$/, ([c]) => ({ color: c })],
-        ['custom-shadow', { 'box-shadow': '0 4px 6px rgba(0,0,0,0.1)' }],
-      ],
-    }),
+  presets: [presetUno()],
+  rules: [
+    [/^text-(.*)$/, ([c]) => ({ color: c })],
+    ['custom-shadow', { 'box-shadow': '0 4px 6px rgba(0,0,0,0.1)' }],
   ],
 });
 ```
@@ -139,14 +106,14 @@ export default defineConfig({
 Define reusable class combinations:
 
 ```ts
+// uno.config.ts
+import { defineConfig, presetUno } from 'unocss';
+
 export default defineConfig({
-  plugins: [
-    unocss({
-      shortcuts: [
-        ['btn', 'px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600'],
-        ['input-field', 'w-full px-3 py-2 border border-gray-300 rounded'],
-      ],
-    }),
+  presets: [presetUno()],
+  shortcuts: [
+    ['btn', 'px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600'],
+    ['input-field', 'w-full px-3 py-2 border border-gray-300 rounded'],
   ],
 });
 ```
@@ -160,20 +127,16 @@ Usage:
 
 ## Icon Sets
 
-Use UnoCSS icon presets:
-
 ```ts
-import { presetIcons } from 'unocss';
+// uno.config.ts
+import { defineConfig, presetUno, presetIcons } from 'unocss';
 
 export default defineConfig({
-  plugins: [
-    unocss({
-      presets: [
-        presetIcons({
-          scale: 1.2,
-          cdn: 'https://esm.sh/',
-        }),
-      ],
+  presets: [
+    presetUno(),
+    presetIcons({
+      scale: 1.2,
+      cdn: 'https://esm.sh/',
     }),
   ],
 });
@@ -187,17 +150,17 @@ export default defineConfig({
 ## Theme Integration
 
 ```ts
+// uno.config.ts
+import { defineConfig, presetUno } from 'unocss';
+
 export default defineConfig({
-  plugins: [
-    unocss({
-      theme: {
-        colors: {
-          primary: '#3b82f6',
-          secondary: '#8b5cf6',
-        },
-      },
-    }),
-  ],
+  presets: [presetUno()],
+  theme: {
+    colors: {
+      primary: '#3b82f6',
+      secondary: '#8b5cf6',
+    },
+  },
 });
 ```
 

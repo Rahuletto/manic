@@ -52,7 +52,8 @@ export interface McpConfig {
  *   ],
  * })
  */
-export function mcp(config: McpConfig = {}): ManicPlugin {
+/**
+ * Builds the inline script injected into the HTML that registers MCP tools
  * (navigator.modelContext). Each tool delegates execution to the MCP server
  * via fetch, so tools are defined once and work in both contexts.
  */

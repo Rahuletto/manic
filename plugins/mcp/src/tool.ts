@@ -18,15 +18,6 @@ export interface McpTool {
   /** Execute function with parsed arguments */
   execute(args: Record<string, unknown>): Promise<unknown> | unknown;
 }
-  name: string;
-  description: string;
-  inputSchema: {
-    type: 'object';
-    properties?: Record<string, unknown>;
-    required?: string[];
-  };
-  execute(args: Record<string, unknown>): Promise<unknown> | unknown;
-}
 
 type ToolDef<S extends ZodObject<ZodRawShape>> = {
   description: string;
@@ -56,9 +47,6 @@ type ToolDef<S extends ZodObject<ZodRawShape>> = {
  * })
  */
 export function defineTool<S extends ZodObject<ZodRawShape>>(
-  name: string,
-  def: ToolDef<S>
-): McpTool {
   name: string,
   def: ToolDef<S>
 ): McpTool {
