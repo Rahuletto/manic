@@ -299,7 +299,7 @@ export function myPlugin(options = {}) {
     
     // Option 3: Build hooks (emit & inject)
     build(ctx) {
-      ctx.emitClientFile('/__manifest.json', JSON.stringify({
+      ctx.emitClientFile('__manifest.json', JSON.stringify({
         routes: ctx.pageRoutes,
       }));
       ctx.injectHtml('<link rel="dns-prefetch" href="https://api.example.com">');
