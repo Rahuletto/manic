@@ -18,6 +18,7 @@ type LinkProps = {
   replace?: boolean;
   viewTransitionName?: string;
   className?: string;
+  style?: React.CSSProperties;
   children?: React.ReactNode;
 };
 ```
@@ -140,21 +141,36 @@ export function LargeList() {
 }
 ```
 
-### Disable View Transitions
+### Named view transitions
+
+Optional `viewTransitionName` sets `view-transition-name` on the anchor so you can target this element in CSS for shared-element-style animations:
 
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
 import { Link } from 'manicjs';
 
-export function InstantNav() {
+export function ProfileLink() {
   return (
-    <Link to="/page" viewTransitionName="fade">
-      Go Instant
+    <Link to="/user/1" viewTransitionName="user-card">
+      Open profile
     </Link>
   );
 }
 ```
+
+### Disabling view transitions globally
+
+Per-link toggle is not exposed on `<Link>`. Turn transitions off for all navigations via config or runtime:
+
+```tsx twoslash
+// @errors: 2322
+import { setViewTransitions } from 'manicjs';
+
+setViewTransitions(false);
+```
+
+Or set `router.viewTransitions: false` in [`manic.config.ts`](/docs/api/config).
 
 ## Type Definitions
 
@@ -165,6 +181,7 @@ interface LinkProps {
   replace?: boolean;
   viewTransitionName?: string;
   className?: string;
+  style?: React.CSSProperties;
   children?: ReactNode;
 }
 
@@ -202,6 +219,6 @@ sequenceDiagram
 
 ## See Also
 
-- [navigate](/docs/api/navigate) - Programmatic navigation
-- [useRouter](/docs/api/use-router) - Router state and hooks
-- [useQueryParams](/docs/api/use-query-params) - URL query params
+- [navigate](/docs/api/router/navigate) - Programmatic navigation
+- [useRouter](/docs/api/router/use-router) - Router state and hooks
+- [useQueryParams](/docs/api/router/use-query-params) - URL query params

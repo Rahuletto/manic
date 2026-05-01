@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "fumadocs-mdx",
     "build": "next build",
+    "predev": "fumadocs-mdx",
     "dev": "next dev",
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",

@@ -5,11 +5,22 @@ description: Client-side utilities and patterns in Manic.
 
 # Client
 
-This page covers client-side patterns available in Manic.
+Patterns for browser-only code, plus the typed RPC helper.
 
-## Fetch Pattern
+---
 
-The recommended way to call APIs from the client:
+## API reference
+
+<Cards>
+  <Card title="createClient" description="hono/client hc wrapper manicjs manicjs/client" href="/docs/api/client/create-client" />
+  <Card title="RPC patterns" description="Routes typing AppType usage examples" href="/docs/api/client/rpc" />
+</Cards>
+
+---
+
+## Fetch pattern
+
+The recommended way to call APIs without RPC typing:
 
 ```ts twoslash
 // Basic fetch pattern

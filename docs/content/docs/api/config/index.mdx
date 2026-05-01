@@ -13,6 +13,17 @@ Complete reference for `manic.config.ts` - covers all configuration options with
 
 The `manic.config.ts` file (or `.js`) is the source of truth for your application's build and runtime behavior. Use the `defineConfig` helper to ensure full type safety.
 
+---
+
+## Config helpers
+
+<Cards>
+  <Card title="defineConfig" description="Typed manic.config.ts default export" href="/docs/api/config/define-config" />
+  <Card title="loadConfig" description="Async load merge defaults cache" href="/docs/api/config/load-config" />
+  <Card title="getConfig" description="Sync cached config manicjs/config only" href="/docs/api/config/get-config" />
+  <Card title="createPlugin" description="Author plugins staticFiles hooks" href="/docs/api/config/plugins" />
+</Cards>
+
 ```ts
 import { defineConfig } from 'manicjs/config';
 
@@ -22,7 +33,7 @@ export default defineConfig({
     name: 'My Manic App',
   },
   server: {
-    port: 3000,
+    port: 6070,
   },
 });
 ```
@@ -264,31 +275,11 @@ export default defineConfig({
 
 ---
 
-## Environment Variables
+## Environment variables
 
-Access environment variables via the `env` option:
+`manic.config.ts` does **not** declare runtime env vars. Use `.env` / `.env.local` files and read values with [`getEnv`](/docs/api/env) from `manicjs/env` (client: `MANIC_PUBLIC_*` only) or `process.env` on the server.
 
-```ts
-import { defineConfig } from 'manicjs/config';
-
-export default defineConfig({
-  // Public variables (exposed to browser)
-  env: {
-    MANIC_PUBLIC_API_URL: 'https://api.example.com',
-  },
-});
-```
-
-Access in code:
-
-```ts
-// Client-side
-import { env } from 'manicjs/env';
-console.log(env.MANIC_PUBLIC_API_URL);
-
-// Server-side
-const secret = process.env.DATABASE_URL;
-```
+See [Environment variables](/docs/framework/advanced/environment-variables).
 
 ---
 
@@ -307,7 +298,7 @@ export default defineConfig({
   },
 
   server: {
-    port: 3000,
+    port: 6070,
     hmr: true,
   },
 

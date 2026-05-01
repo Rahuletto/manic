@@ -1,60 +1,88 @@
 ---
 title: Build Pipeline
-description: Deep dive into Manic's custom toolchain and bundling flow.
+description: Exact manic build ordering — lint, Bun.build graphs, plugin hooks, minify, providers — grounded in packages/manic/src/cli/commands/build.ts.
 ---
 
-# Build Pipeline
+# Build pipeline
 
-Manic does not use Vite, Webpack, or Turbopack. It implements a proprietary build pipeline built exclusively with **Bun** and **OXC**. This vertical integration allows for optimizations that are physically impossible in multi-tool ecosystems.
+Manic does **not** ship Vite, Webpack, or Turbopack. **`manic build`** (`packages/manic/src/cli/commands/build.ts`) orchestrates **`oxlint`**, **`writeRoutesManifest`**, three **`Bun.build`** graphs (client → optional API → server), **`oxc-minify`**, and finally **`provider.build`**.
 
-## Pipeline Flow
+---
+
+## Ordering (authoritative)
 
 ```mermaid
-graph TD
-  Start[manic build] --> Lint[oxlint scan]
-  Lint --> Manifest[Discovery: Scan app/routes]
-  Manifest --> WriteManifest[Write app/~routes.generated.ts]
-  WriteManifest --> Client[Bun.build Client: browser target]
-  Client --> API[Bun.build API: Scan app/api, bundle per route]
-  API --> Server[Bun.build Server: Transform ~manic.ts + Inject HTML]
-  Server --> Minify[oxc-minify: Parallel Client/API/Server]
-  Minify --> Provider[Provider.build: Package for Vercel/CF]
+flowchart TD
+  L["oxlint ."]
+  CL["rm -rf outdir scaffold client"]
+  BP["Register Bun.plugins from plugins preload"]
+  WM["writeRoutesManifest"]
+  CB["Bun.build client browser"]
+  HTML["Patch write client index.html"]
+  PB["Plugin build hooks + reinject HTML"]
+  AB["Bun.build API entries"]
+  SB["Bun.build server.js"]
+  MN["Parallel oxc-minify client api root"]
+  STAT["Print sizes timing"]
+  PV["provider.build adapters"]
+
+  L --> CL --> BP --> WM --> CB --> HTML --> PB --> AB --> SB --> MN --> STAT --> PV
 ```
 
 ---
 
-## Stage Deep Dives
+## Stage reference
 
-### 1. Mandatory Linting
-Every build begins with an `oxlint` pass. By treating linting as a first-class build step rather than an optional check, Manic ensures that production builds are always compliant with project standards.
-
-### 2. The Route Manifest
-Unlike other frameworks that resolve routes at runtime, Manic generates a static manifest during the build.
-- **Dynamic Imports**: Each page is wrapped in an `import()` statement.
-- **Dependency Tracking**: The manifest tracks which modules are shared between routes to optimize chunking.
-
-### 3. OXC Transformation
-We use OXC to handle JSX and TypeScript transformation. 
-- **ESNext Target**: We transform source code directly to `ES2022`, the modern standard for all providers.
-- **Import Extensions**: We automatically rewrite `.ts` and `.tsx` extensions to `.js` in the output, ensuring native compatibility without a resolver layer.
-
-### 4. API Route Isolation
-Manic's API builder treats each endpoint folder as a standalone entry point. This allows the framework to produce extremely small, focused bundles for serverless functions, dramatically reducing cold starts compared to "Monolithic API" approaches.
-
-### 5. Parallel Minification
-Minification is one of the most CPU-intensive parts of a build. Manic executes `oxc-minify` in parallel using Bun's worker threads, compressing the Client, API, and Server codebases simultaneously. 
-
-### 6. Provider Transformation
-This is the "Final Mile". The framework hands over the `.manic/` artifacts to a specialized **Provider** (Vercel, Cloudflare, etc.).
-- **Static Assets**: Providers move `dist/client` to the platform's static edge directory.
-- **Serverless Mapping**: Providers generate platform-specific meta files (like `.vercel/output/config.json`) to route traffic to the built chunks.
+| Step | Source artifact | Notes |
+| :--- | :--- | :--- |
+| **1 · Lint** | — | **`node_modules/.bin/oxlint`** else **`oxlint`** on **`PATH`**; **`oxlint .`** (no enforced **`--config`** — align CI with **`manic lint`**, see [Caveats](/docs/core/caveats)) |
+| **2 · Clean** | **`<outdir>`** | **`rm -rf`**, **`mkdir -p …/client`** |
+| **3 · Bun plugin registration** | **`plugins[].preload`** modules | Imports **`default`** or **`plugin`** **`BunPlugin`** → **`Bun.plugin(...)`** |
+| **4 · Manifest** | **`app/~routes.generated.ts`** | **`writeRoutesManifest`** without **`touch`** |
+| **5 · Client bundle** | **`app/main.*`** → **`<outdir>/client`** | **`oxcPlugin()`**, **`bun-plugin-tailwind`**, hashed naming |
+| **6 · HTML** | **`app/index.html`** → **`<outdir>/client/index.html`** | Rewrites Tailwind placeholder / **`main.tsx`** script references |
+| **7 · Plugin `build`** | Optional emits under **`client/`** | **`discoverRoutes()`** snapshot → **`pageRoutes`**; **`apiRoutes`** forced **`[]`** |
+| **8 · API bundles** | **`app/api/**/index.ts`** | Skipped when **`mode === 'frontend'`** or folder missing |
+| **9 · RFC catalog** | **`<outdir>/client/.well-known/api-catalog`** | Written when ≥1 API bundle exists |
+| **10 · Server bundle** | **`~manic.ts`** → **`server.js`** | Rewrites HTML import + temp **`_entry.ts`** |
+| **11 · Minify** | **JS under client / api / dist root** | **`minifySync`**, **`es2022`**, mangle |
+| **12 · Providers** | Adapter-specific dirs | Executes **after** minification completes |
 
 ---
 
-## Debugging the Build
+## Output layout (default **`build.outdir === '.manic'`**)
 
-If a build fails, Manic provides detailed diagnostics. You can run the build with the `--debug` flag to see the exact transformation logs and timing for each stage.
+| Path | Contents |
+| :--- | :--- |
+| **`.manic/client/`** | Hashed **`main-*.js`**, **`chunks/`**, **`assets/`**, **`index.html`**, optional **`.well-known/`** |
+| **`.manic/api/`** | One **`*.js`** per **`app/api/**/index.ts`** entry |
+| **`.manic/server.js`** | **`createManicServer`** bootstrap |
 
-```bash
-manic build --debug
-```
+Providers may synthesize extra directories (`.vercel/output`, `_worker.js`, etc.) **beside** this tree.
+
+---
+
+## Failure modes engineers debug first
+
+| Symptom | Likely cause |
+| :--- | :--- |
+| Lint exits **`1`** before bundles | **`oxlint`** failures across repo |
+| **`app/main.tsx not found`** | Resolver cannot find **`./app/main`** entry |
+| **`~manic.ts not found`** | Missing server entry at repo root |
+| API routes missing in prod | **`mode: 'frontend'`** or files not named **`index.ts`** |
+| Plugins diverge dev/prod | **`configureServer`** without **`build`** emits |
+
+---
+
+## Debugging builds today
+
+There is **no** **`manic build --debug`** flag in the CLI — instrumentation means reading **`build.ts`** logs (`● Bundling…`), inspecting **`<outdir>`**, or temporarily flipping **`build.minify`** / commenting stages locally.
+
+---
+
+## See also
+
+- [Bundler transform](/docs/core/bundler-transform) — **`oxcPlugin`**, **`Bun.build`** matrices
+- [Discovery engine](/docs/core/discovery-engine) — manifest contents
+- [Performance model](/docs/core/performance-model) — why stages cost what they cost
+- [manic build CLI](/docs/cli/build) — operator workflows

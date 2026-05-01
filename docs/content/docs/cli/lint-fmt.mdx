@@ -1,59 +1,84 @@
 ---
 title: manic lint & fmt
-description: Reliable code quality and formatting powered by OXC.
+description: oxlint and oxfmt wrappers invoked exactly as wired in the CLI.
 ---
 
-# Linting & Formatting
+# Linting & formatting (`manic lint`, `manic fmt`)
 
-Reliability is a core pillar of the Manic framework. To ensure that every project follows best practices and remains bug-free, we integrate **OXC** directy into the toolchain for lightning-fast diagnostics and formatting.
-
-## manic lint
-
-The `manic lint` command invokes `oxlint`, a high-performance linter that is up to 100x faster than ESLint.
-
-```bash
-manic lint
-```
-
-### Why oxlint?
-Legacy linters often become the bottleneck in CI/CD pipelines. Manic chooses `oxlint` because:
-- **No Configuration Required**: It comes with sensible defaults for React and TypeScript out of the box.
-- **Actionable Diagnostics**: Provides clear, high-fidelity error messages that help you fix issues faster.
-- **Safety**: Specifically catches common React pitfalls like incorrect Hook usage or missing dependencies.
-
-### Build Guard
-By default, [manic build](/docs/cli/build) executes a mandatory lint pass. If critical errors are found, the build will terminate. This ensures that broken code never reaches your production users.
+Manic wraps **OXC**’s **`oxlint`** and **`oxfmt`** binaries via **`bun x`** so you don’t memorize paths.
 
 ---
 
-## manic fmt
+## Tools vs build gate
 
-For code consistency, Manic provides the `manic fmt` command, powered by the OXC formatter.
+```mermaid
+flowchart LR
+  subgraph daily["Editor / CI hygiene"]
+    ML["manic lint"]
+    MF["manic fmt"]
+  end
+  subgraph prod["Production bundle"]
+    MB["manic build"]
+    MB --> MBXL["oxlint . first gate"]
+  end
+```
+
+| Invocation | Config file | Notes |
+| :--- | :--- | :--- |
+| **`manic lint`** | **`.oxlintrc.json`** (explicit **`--config`**) | Same rules you expect from local dev |
+| **`manic build`** (first step) | **oxlint** default discovery | Uses **`node_modules/.bin/oxlint`** or **`PATH`** — align with **`.oxlintrc.json`** location so CI matches **`manic lint`** |
+| **`manic fmt`** | **`.oxfmt.json`** via **`-c`** | No argv forwarding; use **`bun x oxfmt`** for **`--check`** |
+
+---
+
+Sources:
+
+- [`packages/manic/src/cli/commands/lint.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/lint.ts)
+- [`packages/manic/src/cli/commands/fmt.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/fmt.ts)
+
+---
+
+## `manic lint`
+
+Runs exactly:
 
 ```bash
-manic fmt [options]
+bun x oxlint --config .oxlintrc.json .
 ```
 
-### Features
-- **Consistency**: Enforces a unified coding style across your entire project.
-- **Blazing Fast**: Formats thousands of lines in milliseconds, making it ideal for pre-commit hooks.
-- **Compatibility**: Designed to be highly compatible with Prettier's default rules, reducing the friction of migration.
+### Requirements
 
-### Usage Options
-- `--write`: (Default) Overwrites files with the formatted version.
-- `--check`: Returns a non-zero exit code if any files are not formatted.
+- **`.oxlintrc.json`** at the repo root — the CLI always passes **`--config .oxlintrc.json`**.
 
-## Configuration Integration
+### Relation to `manic build`
 
-Manic aims for zero-config, but we understand the need for customization.
-- **Linter**: Place an `.oxlintrc.json` in your project root to customize rules.
-- **Formatter**: Manic respects `.prettierrc` files for basic formatting options to ensure harmony with existing team workflows.
+See **Tools vs build gate** above — **`build`** invokes **`oxlint`** directly without **`manic lint`**’s explicit **`--config`** path.
 
-```json
-// .oxlintrc.json
-{
-  "rules": {
-    "no-console": "off"
-  }
-}
+---
+
+## `manic fmt`
+
+Runs exactly:
+
+```bash
+bun x oxfmt -c .oxfmt.json .
 ```
+
+### Requirements
+
+- **`.oxfmt.json`** at the repository root (**`-c`** points there).
+
+### Passing extra formatter flags
+
+The **`manic`** CLI **does not forward** additional argv tokens to **`oxfmt`**. For **`--check`**, includes/excludes, etc., call **`bun x oxfmt …`** directly.
+
+---
+
+Scaffold templates should ship **`.oxlintrc.json`** and **`.oxfmt.json`** at the repo root so **`manic lint`** / **`manic fmt`** work immediately.
+
+---
+
+## See also
+
+- [CLI Overview](/docs/cli)
+- [manic build](/docs/cli/build) — mandatory lint step before bundling

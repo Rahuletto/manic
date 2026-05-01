@@ -1,0 +1,60 @@
+---
+title: Environment
+description: MANIC_PUBLIC_ prefix, getEnv, getPublicEnv, and server-side env access.
+---
+
+# Environment API
+
+Runtime helpers live in **`manicjs/env`**. They complement build-time injection documented under **[Environment variables](/docs/framework/advanced/environment-variables)**.
+
+---
+
+## Functions
+
+<Cards>
+  <Card title="getEnv" description="Single key — public prefix enforced in browser" href="/docs/api/env/get-env" />
+  <Card title="getPublicEnv" description="All MANIC_PUBLIC_* keys as an object" href="/docs/api/env/get-public-env" />
+</Cards>
+
+```ts
+import { getEnv, getPublicEnv } from 'manicjs/env';
+```
+
+---
+
+## Server-side access
+
+On the server, prefer **`process.env`** directly for secrets:
+
+```ts
+const databaseUrl = process.env.DATABASE_URL;
+```
+
+---
+
+## Environment files
+
+Common layout:
+
+| File | Scope |
+| :--- | :--- |
+| **`.env`** | Defaults |
+| **`.env.local`** | Machine-specific (gitignored) |
+| **`.env.development`** / **`.env.production`** | Mode overrides |
+
+---
+
+## Best practices
+
+<Callout type="warn">
+
+Only **`MANIC_PUBLIC_*`** belongs in browser bundles. Never expose database credentials or API tokens client-side.
+
+</Callout>
+
+---
+
+## See also
+
+- [Configuration](/docs/api/config)
+- [Deployment](/docs/framework/deployment)

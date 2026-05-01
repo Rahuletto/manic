@@ -59,7 +59,7 @@ manic build
 manic start
 ```
 
-This launches a high-performance Hono server. Configure the port with the `PORT` environment variable.
+This launches the production Bun server from **`.manic/server.js`**. Configure the port with **`PORT`**, **`server.port`** in `manic.config.ts`, or **`manic start --port`** (default **6070**).
 
 ### Docker
 
@@ -71,8 +71,9 @@ COPY . .
 RUN bun install
 RUN bun run build
 
-EXPOSE 3000
-CMD ["bun", "run", ".manic/server/index.js"]
+EXPOSE 6070
+ENV PORT=6070
+CMD ["bun", ".manic/server.js"]
 ```
 
 ## How Providers Work

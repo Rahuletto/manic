@@ -35,62 +35,55 @@ graph TD
 
 ### Development: `manic dev`
 
-Starts a live development server with HMR:
+The CLI **does not** run **`oxlint`** when you save files — it **`loadConfig()`**, merges **`bunfig.toml`**, then **`Bun.spawn`** s **`bun --watch`** against **`~manic.ts`** with plugin **`--preload`** flags and **`PORT` / `HOST` / `NETWORK`** env vars. Watching **`manic.config.*`** kills and respawns the child so plugins stay fresh.
 
 ```mermaid
-graph TB
-    Lint["1. Lint (oxlint)"]
-    Discovery["2. Route Scan"]
-    Generate["3. Generated Manifest"]
-    Serve["4. Bun.serve"]
-    Watch["5. Hot Reload"]
-
-    Lint --> Discovery
-    Discovery --> Generate
-    Generate --> Serve
-    Serve <--> Watch
+graph LR
+  CFG["loadConfig"]
+  BF["writeBunfig"]
+  SP["spawn bun --watch ~manic.ts"]
+  CFG --> BF --> SP
+  SP -.->|"watch"| HOT["OXC transform + HMR + Bun.serve"]
 ```
 
 Key files:
-- `app/~routes.generated.ts` — Route registry (auto-generated, **never edit**)
-- `manic.config.ts` — Plugin & config definition
-- `~manic.ts` — Server entry point (auto-generated)
+
+- **`app/~routes.generated.ts`** — Route registry (generated — **never edit**)
+- **`manic.config.ts`** — Plugins and framework options
+- **`~manic.ts`** — Your server entry (**you** author this file)
+
+See **[manic dev](/docs/cli/dev)** for flags.
 
 ### Production: `manic build`
 
-Optimized, minified production output:
+Exact ordering (plugins vs API graphs vs minify) is pinned in **[Build pipeline](/docs/core/build-pipeline)** — higher-level diagram:
 
 ```mermaid
 graph TD
-    Lint["1. Lint (oxlint)"]
-    Discovery["2. Route Discovery"]
-    Client["3. Client Bundling"]
-    API["4. API Bundling"]
-    Server["5. Server Bundling"]
-    Minify["6. OXC Minify"]
-    Provider["7. Provider Pack"]
+  Lint["oxlint gate"]
+  Client["client Bun.build"]
+  Plugins["plugin build hooks"]
+  API["optional API Bun.build"]
+  Server["server Bun.build"]
+  Min["oxc-minify parallel"]
+  Prov["provider.build"]
 
-    Lint --> Discovery
-    Discovery --> Client
-    Discovery --> API
-    Client --> Server
-    API --> Server
-    Server --> Minify
-    Minify --> Provider
+  Lint --> Client --> Plugins --> API --> Server --> Min --> Prov
 ```
 
-Output structure:
+Default artifact tree (**`build.outdir`**, usually **`.manic`**):
+
 <Files>
-  <Folder name="dist" defaultOpen>
+  <Folder name=".manic" defaultOpen>
     <Folder name="client">
-      <File name="[name].js" />
+      <File name="main-[hash].js" />
+      <Folder name="chunks" />
       <File name="index.html" />
     </Folder>
     <Folder name="api">
-      <File name="[name].js" />
+      <File name="*.js" />
     </Folder>
     <File name="server.js" />
-    <File name="manifest.json" />
   </Folder>
 </Files>
 
@@ -144,16 +137,7 @@ const routes = [
 
 **Prefetch Behavior:**
 
-```tsx
-import { Link } from 'manicjs';
-
-// On mouse enter or focus:
-// → fetch('/api/__manifest.json')
-// → Preload /posts/123's JS chunk
-<a href="/posts/123" prefetch>
-  View Post
-</a>
-```
+When **`prefetch`** is **`true`** (default), **`Link`** calls **`preloadRoute(to)`** on hover/focus so the lazy chunk begins downloading before navigation ([Router preloadRoute](/docs/api/router/preload-route)).
 
 Benefits:
 - Only ship JS needed for current page
@@ -176,14 +160,20 @@ graph TD
 **Hook Access:**
 
 ```tsx
-import { useRouter, useParams, useQueryParams } from 'manicjs';
+import { useRouter, useQueryParams } from 'manicjs';
 
 export default function PostPage() {
-  const router = useRouter();      // navigate(path, options)
-  const { id } = useParams();       // Route params
-  const [query, setQuery] = useQueryParams();  // URL search
-  
-  return <div>Post {id}</div>;
+  const { path, navigate, params } = useRouter();
+  const id = params.id;
+  const searchParams = useQueryParams();
+  const q = searchParams.get('q');
+
+  return (
+    <div>
+      <p>Post {id}</p>
+      <button type="button" onClick={() => navigate('/other')}>Go</button>
+    </div>
+  );
 }
 ```
 
@@ -368,7 +358,7 @@ export default defineConfig({
   
   // Server options
   server: {
-    port: 3000,
+    port: 6070,
   },
 });
 ```
@@ -378,7 +368,7 @@ export default defineConfig({
 Create `.env.local` for development:
 
 ```bash
-MANIC_PUBLIC_API_URL=http://localhost:3000/api
+MANIC_PUBLIC_API_URL=http://localhost:6070/api
 DATABASE_URL=postgres://user:pass@localhost/db
 ```
 
@@ -402,21 +392,10 @@ Never commit `.env.local`. Add to `.gitignore`.
 Use `MANIC_PUBLIC_` prefix for client-exposed variables. Server vars are never exposed.
 
 </Callout>
-## Performance
+## Performance snapshot
 
-Manic is designed for **extreme speed**:
-
-- **OXC Transforms** — 50-100x faster than SWC/Babel
-- **Parallel Minification** — All bundles minified in parallel
-- **Lazy Loading** — Only ship JS for current route
-- **Prefetch** — Pre-download route chunks before navigation
-- **Zero Runtime** — No Manic runtime overhead; just vanilla React
-
-**Typical Build Times:**
-- Development: `<500ms` full rebuild
-- Production: under one second for most projects
-- Minification: under 100ms for all bundles combined
+Manic prioritizes **fast dev startup**, **parallel minification**, and **per-route lazy graphs**. Architectural reasoning + honest caveats live in **[Performance model](/docs/core/performance-model)**; reproducible timings vs other frameworks are in **[Benchmarks](/docs/framework/benchmarks)**.
 
 ---
 
-Questions? See [troubleshooting](/docs/framework/troubleshooting/index) or [CLI Reference](/docs/cli/index).
+Questions? See **[Troubleshooting](/docs/framework/troubleshooting/index)** or **[CLI Reference](/docs/cli)**.

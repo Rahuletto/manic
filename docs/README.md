@@ -6,10 +6,17 @@ This is a Next.js application generated with
 Run development server:
 
 ```bash
+bun install   # postinstall runs fumadocs-mdx → fills docs/.source/server.ts (gitignored)
+bun run dev   # predev runs fumadocs-mdx again so stale/empty .source never breaks imports
+```
+
+If you see **`Export docs doesn't exist`** from **`collections/server`**, **`docs/.source/server.ts`** was missing or empty — run **`bun x fumadocs-mdx`** in **`docs/`** (or reinstall so **`postinstall`** runs).
+
+Legacy package managers:
+
+```bash
 npm run dev
-# or
 pnpm dev
-# or
 yarn dev
 ```
 

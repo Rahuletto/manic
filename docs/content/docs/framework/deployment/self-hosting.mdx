@@ -9,16 +9,11 @@ Manic can be deployed anywhere that supports the Bun runtime. This is the most f
 
 ## Setup
 
-First, use the `direct` provider in `manic.config.ts`:
+`manic build` writes a **`.manic/`** directory (by default) with `server.js`, the client bundle, and API bundles. Run **`manic start`** to launch the Bun server.
 
-```ts
-import { defineConfig } from 'manicjs/config';
-import { direct } from '@manicjs/providers';
+You **do not need a deployment provider** for plain self-hosting. Providers from `@manicjs/providers` (`vercel`, `cloudflare`, `netlify`) only adapt that output for specific platforms.
 
-export default defineConfig({
-  providers: [direct()],
-});
-```
+The listen port defaults to **`6070`** from config (`server.port`). `manic start` also sets the **`PORT`** environment variable for the process (CLI `--port` / `-p` overrides).
 
 ## Running the Server
 
@@ -32,7 +27,7 @@ export default defineConfig({
    manic start
    ```
 
-By default, the server listens on port `3000`. You can change this using the `PORT` environment variable.
+By default, the server listens on port **`6070`**. Override with `server.port` in `manic.config.ts`, **`PORT`** in the environment, or **`manic start --port`**.
 
 ## Docker Deployment
 
@@ -53,16 +48,17 @@ COPY --from=builder /build/.manic .manic
 COPY --from=builder /build/node_modules node_modules
 
 ENV NODE_ENV=production
-EXPOSE 3000
+ENV PORT=6070
+EXPOSE 6070
 
-CMD ["bun", ".manic/server/index.js"]
+CMD ["bun", ".manic/server.js"]
 ```
 
 Build and run:
 
 ```bash
 docker build -t my-manic-app .
-docker run -p 3000:3000 -e NODE_ENV=production my-manic-app
+docker run -p 6070:6070 -e NODE_ENV=production my-manic-app
 ```
 
 ## Systemd Service
@@ -80,8 +76,8 @@ Type=simple
 User=www-data
 WorkingDirectory=/var/www/manic
 Environment="NODE_ENV=production"
-Environment="PORT=3000"
-ExecStart=/usr/bin/bun /var/www/manic/.manic/server/index.js
+Environment="PORT=6070"
+ExecStart=/usr/bin/bun /var/www/manic/.manic/server.js
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -111,7 +107,7 @@ Configure Nginx to proxy requests:
 
 ```nginx
 upstream manic {
-  server localhost:3000;
+  server localhost:6070;
 }
 
 server {
@@ -159,9 +155,15 @@ Add a simple health check:
 
 ```ts
 // app/api/health/index.ts
-export async function GET() {
-  return Response.json({ status: 'ok', timestamp: new Date().toISOString() });
-}
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) =>
+  c.json({ status: 'ok', timestamp: new Date().toISOString() })
+);
+
+export default app;
 ```
 
 Monitor with a simple script:
@@ -169,7 +171,7 @@ Monitor with a simple script:
 ```bash
 #!/bin/bash
 while true; do
-  curl -f http://localhost:3000/api/health || systemctl restart manic
+  curl -f http://localhost:6070/api/health || systemctl restart manic
   sleep 30
 done
 ```
@@ -178,14 +180,11 @@ done
 
 ### Bun Server Options
 
-Pass options to `manic start`:
+Pass options to the **`manic start`** command (for example **`manic start --port 8080`**). The production entry point is **`.manic/server.js`** after `manic build`.
 
 ```bash
-# Increase file descriptor limit
+# Raise open-file limit on Linux before high-traffic deploys
 ulimit -n 65536
-
-# Run with multiple workers
-bun .manic/server/index.js --workers=4
 ```
 
 ### Database Connection Pooling
@@ -208,9 +207,15 @@ export const db = new Pool({
 Configure HTTP caching headers in API routes:
 
 ```ts
-export async function GET({ request }: { request: Request }) {
-  const response = Response.json({ data: 'cached' });
-  response.headers.set('Cache-Control', 'public, max-age=3600');
-  return response;
-}
+// app/api/example/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  c.header('Cache-Control', 'public, max-age=3600');
+  return c.json({ data: 'cached' });
+});
+
+export default app;
 ```

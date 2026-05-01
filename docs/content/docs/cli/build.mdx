@@ -1,73 +1,110 @@
 ---
 title: manic build
-description: Deep dive into the Manic production build pipeline.
+description: Production pipeline — lint, Bun bundles, OXC minify, provider hooks.
 ---
 
 # manic build
 
-The `manic build` command is responsible for transforming your source code into a highly optimized, production-ready bundle. It leverages Bun's native bundling power and OXC's lightning-fast transformation and minification.
+**`manic build`** produces the **`build.outdir`** bundle (default **`.manic/`**): browser client, optional API bundles, **`server.js`**, minification, then **`provider.build`** adapters.
 
-## The Build Pipeline
-
-Manic uses a multi-stage pipeline to ensure that both your React frontend and Hono backend are perfectly synced and optimized.
-
-### 1. Route Discovery & Manifest
-The build process starts by scanning `app/routes/` and `app/api/`. It generates a static manifest (`app/~routes.generated.ts`) that contains dynamic `import()` statements. This is the foundation of Manic's automatic code-splitting.
-
-### 2. Client Bundling
-Using `Bun.build` with the `browser` target, Manic bundles your React pages.
-- **Entry Point**: `~manic.ts` (browser side).
-- **Plugins**: Includes `bun-plugin-tailwind` and custom OXC transforms.
-- **Output**: Chunks are placed in `dist/client/`.
-
-### 3. API Bundling
-Each directory in `app/api/` is treated as an independent service.
-- **Isolation**: Every endpoint is bundled into its own standalone JS file.
-- **Efficiency**: API routes only import the code they actually need, reducing cold start times in serverless environments.
-
-### 4. Server Entry Transformation
-This is a critical step where the framework bridges the gap between static assets and the runtime server.
-- The build engine reads your `app/index.html` template.
-- It injects script tags for the built client chunks.
-- It replaces the `import app from './app/index.html'` statement in your server code with a static file pointer.
-
-### 5. OXC Minification
-Unlike other frameworks that use slower minifiers like Terser, Manic uses **OXC-Minify** in parallel across all output paths. This results in production-grade compression at a fraction of the time.
-
-### 6. Provider Transformation
-Finally, the configured [Provider](/docs/framework/deployment) takes over. It maps the bundled assets to the specific requirements of platforms like Vercel, Cloudflare, or Netlify.
+Implementation: [`packages/manic/src/cli/commands/build.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/build.ts).
 
 ---
 
-## Technical Reference
+## Pipeline map
 
-### Usage
-```bash
-manic build [options]
+Stages Group roughly into **quality**, **bundles**, **polish**, and **providers**:
+
+```mermaid
+flowchart LR
+  subgraph Q["Quality"]
+    OXL["oxlint gate"]
+    CLN["clean outdir"]
+  end
+  subgraph B["Bundles"]
+    MAN["routes manifest"]
+    CLI["client Bun.build"]
+    HTML["index.html"]
+    PLG["plugin build hooks"]
+    API["API bundles"]
+    SRV["server.js"]
+    MAN --> CLI --> HTML --> PLG --> API --> SRV
+  end
+  subgraph P["Polish"]
+    MIN["oxc-minify"]
+  end
+  subgraph PV["Providers"]
+    PRV["provider.build each"]
+  end
+  OXL --> CLN --> MAN
+  SRV --> MIN --> PRV
 ```
 
-### Options
-- `--out-dir`: Customize where the artifacts are stored (default: `.manic`).
+### Stage checklist
 
-```ts twoslash
-// @errors: 2322
-// manic.config.ts
-import { defineConfig } from 'manicjs/config';
-
-export default defineConfig({
-  build: {
-    outdir: '.manic',
-    minify: true,
-    splitting: true,
-    sourcemap: 'inline',
-  },
-});
-```
+| Stage | Artifact / effect |
+| :--- | :--- |
+| oxlint | Aborts build on failures |
+| Clean | Fresh **`outdir/client`** tree |
+| Bun plugins | **`plugins[].preload`** registered before **`Bun.build`** |
+| Manifest | **`app/~routes.generated.ts`** |
+| Client | Hashed chunks under **`outdir/client`** |
+| HTML | **`outdir/client/index.html`** (+ plugin **`injectHtml`**) |
+| Plugin **`build`** | **`emitClientFile`**, HTML mutations |
+| API | **`outdir/api/*.js`** or skipped in **`frontend`** mode |
+| Server | **`outdir/server.js`** |
+| Minify | **`client/`**, **`api/`**, **`server.js`** |
+| Providers | Vercel / Cloudflare / Netlify adapters |
 
 ---
 
-## See Also
+## Pipeline (ordered)
 
-- [Configuration](/docs/api/config) - Build settings
-- [CLI Dev](/docs/cli/dev) - Development server
-- [CLI Lint-Fmt](/docs/cli/lint-fmt) - Code quality
+1. **Oxlint gate** — Runs **`oxlint .`** (prefers **`node_modules/.bin/oxlint`**). **Build aborts** on failure.
+
+2. **Clean & scaffold** — **`rm -rf <outdir>`**, **`mkdir -p <outdir>/client`**.
+
+3. **Register Bun plugins** — Imports each **`plugins[].preload`** and registers **`default`** / **`plugin`** via **`Bun.plugin()`** before bundling.
+
+4. **Route manifest** — Writes **`app/~routes.generated.ts`** via **`writeRoutesManifest`**.
+
+5. **Client bundle** — Resolves **`./app/main`** (**`app/main.tsx`** / **`.jsx`** required). **`Bun.build`** with **`target: 'browser'`**, **`oxcPlugin()`**, **`bun-plugin-tailwind`**, hashed **`entry` / `chunk` / `asset`** names under **`<outdir>/client`**.
+
+6. **HTML** — Reads **`app/index.html`** when present; injects built JS (and Tailwind CSS link); otherwise emits a minimal shell with **`#root`**. Writes **`<outdir>/client/index.html`**.
+
+7. **Optional `assets/` copy** — If a root **`assets/`** folder exists, copies it to **`<outdir>/client/assets`**.
+
+8. **`plugins[].build`** — Runs Manic **`build`** hooks with **`emitClientFile`**, **`injectHtml`**, discovered **`pageRoutes`**, **`dist`**, etc.; **`apiRoutes`** passed here is **`[]`** during this stage.
+
+9. **API bundles** — Skipped when **`mode === 'frontend'`**. Otherwise globs **`app/api/**/index.ts`**, **`Bun.build`** each entry (**`target: 'bun'`**, **`dependencies` externalized from `package.json`**), outputs **`<outdir>/api/<route-path>.js`**. Writes **`/.well-known/api-catalog`** under **`client`** when any API route exists.
+
+10. **Server bundle** — Rewrites **`~manic.ts`** HTML import to **`Bun.file("<outdir>/client/index.html").text()`**, emits **`server.js`** (**`target: 'bun'`**, **`oxcPlugin()`**).
+
+11. **Minify** — Parallel **oxc-minify** (**es2022**, mangle) over **`client/`**, **`api/`** (if present), and **`server.js`**.
+
+12. **Providers** — Invokes **`provider.build({ dist, config, apiEntries, clientDir, serverFile })`** for each configured **`ManicProvider`**.
+
+Console ends with artifact sizes and **`Start: bun start`** hint.
+
+---
+
+## Output layout
+
+Default **`<outdir>`** is **`.manic`** — configurable via **`build.outdir`** in **`manic.config.ts`** ([Configuration](/docs/api/config)).
+
+---
+
+## CLI notes
+
+- **`manic build`** does **not** expose **`--out-dir`** as a CLI flag; change **`build.outdir`** in config.
+- Parsed **`--port`** / **`--network`** from the root CLI are **not read** inside **`build()`** today.
+
+---
+
+## See also
+
+- [CLI Overview](/docs/cli)
+- [manic dev](/docs/cli/dev)
+- [manic start](/docs/cli/start)
+- [Core build pipeline](/docs/core/build-pipeline)
+- [Discovery engine](/docs/core/discovery-engine)

@@ -1,22 +1,19 @@
 {
   "root": true,
   "title": "API Reference",
-  "description": "Complete reference for all manicjs exports.",
+  "description": "All manicjs exports by module, with framework context.",
   "icon": "Library",
   "pages": [
     "index",
+    "package",
     "router",
-    "navigate",
-    "link",
-    "use-router",
-    "use-query-params",
     "config",
     "server",
-    "plugins",
     "theme",
     "transitions",
     "env",
     "client",
-    "error-handling"
+    "plugin-loaders",
+    "errors"
   ]
 }

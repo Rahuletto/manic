@@ -5,40 +5,107 @@ description: Complete technical reference for all Manic exports.
 
 # API Reference
 
-Complete reference for all exports from the `manicjs` package. Each page covers function signatures, TypeTables, and examples.
+Complete reference for exports from the `manicjs` package (every subpath is listed on [**Package exports**](/docs/api/package)). Nested sections group runtime APIs by concern — **each export has its own page** where practical.
 
 ## Navigation
 
 <Cards>
-  <Card title="Router" description="Link, navigate, useRouter for navigation" href="/docs/api/router" />
-  <Card title="navigate" description="Programmatic navigation function" href="/docs/api/navigate" />
-  <Card title="Link" description="Declarative navigation component" href="/docs/api/link" />
-  <Card title="useRouter" description="Router context hook" href="/docs/api/use-router" />
-  <Card title="useQueryParams" description="URL search parameters" href="/docs/api/use-query-params" />
-  <Card title="config" description="defineConfig, loadConfig types" href="/docs/api/config" />
-  <Card title="server" description="createManicServer, hooks" href="/docs/api/server" />
-  <Card title="plugins" description="createPlugin, types" href="/docs/api/plugins" />
-  <Card title="theme" description="ThemeProvider, useTheme, ThemeToggle" href="/docs/api/theme" />
-  <Card title="transitions" description="ViewTransitions, setViewTransitions" href="/docs/api/transitions" />
-  <Card title="env" description="getEnv, getPublicEnv" href="/docs/api/env" />
-  <Card title="client" description="Client-side patterns" href="/docs/api/client" />
-  <Card title="error-handling" description="NotFound, ErrorOverlay, ServerError" href="/docs/api/error-handling" />
+  <Card title="Package exports" description="Full manicjs export matrix by entry point" href="/docs/api/package" />
+  <Card title="Router" description="Router Link hooks preloadRoute" href="/docs/api/router" />
+  <Card title="Config & plugins" description="ManicConfig defineConfig loadConfig createPlugin" href="/docs/api/config" />
+  <Card title="Server" description="createManicServer Bun bootstrap" href="/docs/api/server" />
+  <Card title="Theme" description="ThemeProvider useTheme ThemeToggle initTheme" href="/docs/api/theme" />
+  <Card title="Transitions" description="ViewTransitions setViewTransitions" href="/docs/api/transitions" />
+  <Card title="Environment" description="getEnv getPublicEnv" href="/docs/api/env" />
+  <Card title="Client & RPC" description="createClient typed hono client" href="/docs/api/client" />
+  <Card title="Plugin loaders" description="apiLoaderPlugin fileImporterPlugin" href="/docs/api/plugin-loaders" />
+  <Card title="Errors & shells" description="NotFound ErrorOverlay ServerError" href="/docs/api/errors" />
 </Cards>
 
-## Quick Reference
+### Router
 
-| Export | Module | Description |
-|--------|--------|-------------|
-| `Link` | `manicjs` | Navigation component |
-| `navigate` | `manicjs` | Navigation function |
-| `useRouter` | `manicjs` | Router context hook |
-| `useQueryParams` | `manicjs` | URL search params |
-| `defineConfig` | `manicjs/config` | Config helper |
-| `createPlugin` | `manicjs/config` | Plugin builder |
-| `ThemeProvider` | `manicjs` | Theme context |
-| `useTheme` | `manicjs` | Theme hook |
-| `ViewTransitions` | `manicjs` | View transitions wrapper |
-| `getEnv` | `manicjs/env` | Env variable getter |
+<Cards>
+  <Card title="Router" description="Root SPA router" href="/docs/api/router/router" />
+  <Card title="Link" description="Declarative navigation + prefetch" href="/docs/api/router/link" />
+  <Card title="navigate" description="Programmatic navigation" href="/docs/api/router/navigate" />
+  <Card title="useRouter" description="Matched route, params, navigation" href="/docs/api/router/use-router" />
+  <Card title="useQueryParams" description="Reactive URLSearchParams" href="/docs/api/router/use-query-params" />
+  <Card title="preloadRoute" description="Manual chunk warmup" href="/docs/api/router/preload-route" />
+  <Card title="RouterContext" description="Low-level router React context" href="/docs/api/router/router-context" />
+</Cards>
+
+### Theme
+
+<Cards>
+  <Card title="ThemeProvider" description="Context + persistence + html.dark" href="/docs/api/theme/theme-provider" />
+  <Card title="useTheme" description="Hook for theme state" href="/docs/api/theme/use-theme" />
+  <Card title="ThemeToggle" description="Accessible toggle button" href="/docs/api/theme/theme-toggle" />
+  <Card title="initTheme" description="Apply stored theme early manicjs/theme" href="/docs/api/theme/init-theme" />
+</Cards>
+
+### Errors
+
+<Cards>
+  <Card title="NotFound" description="Router 404 shell" href="/docs/api/errors/not-found" />
+  <Card title="ErrorOverlay" description="Dev error overlay" href="/docs/api/errors/error-overlay" />
+  <Card title="ServerError" description="Fatal error shell" href="/docs/api/errors/server-error" />
+</Cards>
+
+### Environment
+
+<Cards>
+  <Card title="getEnv" description="Single variable MANIC_PUBLIC guard in browser" href="/docs/api/env/get-env" />
+  <Card title="getPublicEnv" description="All public vars object" href="/docs/api/env/get-public-env" />
+</Cards>
+
+### View transitions
+
+<Cards>
+  <Card title="ViewTransitions.*" description="Shared-element wrappers" href="/docs/api/transitions/view-transitions" />
+  <Card title="setViewTransitions" description="Runtime toggle" href="/docs/api/transitions/set-view-transitions" />
+</Cards>
+
+### Config helpers
+
+<Cards>
+  <Card title="defineConfig" description="Typed manic.config.ts export" href="/docs/api/config/define-config" />
+  <Card title="loadConfig" description="Async load + merge defaults" href="/docs/api/config/load-config" />
+  <Card title="getConfig" description="Cached sync accessor manicjs/config" href="/docs/api/config/get-config" />
+  <Card title="createPlugin" description="Plugin authoring helper" href="/docs/api/config/plugins" />
+</Cards>
+
+### Client
+
+<Cards>
+  <Card title="createClient" description="hono/client hc wrapper" href="/docs/api/client/create-client" />
+  <Card title="RPC patterns" description="Examples AppType" href="/docs/api/client/rpc" />
+</Cards>
+
+### Server & loaders
+
+<Cards>
+  <Card title="createManicServer" description="Bun.serve entry fullstack frontend" href="/docs/api/server/create-manic-server" />
+  <Card title="apiLoaderPlugin" description="Discover app/api routes" href="/docs/api/plugin-loaders/api-loader-plugin" />
+  <Card title="fileImporterPlugin" description="serveStatic helper" href="/docs/api/plugin-loaders/file-importer-plugin" />
+</Cards>
+
+## Quick reference
+
+| Export | Preferred import | Description |
+| :--- | :--- | :--- |
+| `Router`, `Link`, `navigate`, `useRouter`, `useQueryParams` | `manicjs` or `manicjs/router` | SPA routing |
+| `preloadRoute`, `RouterContext` | `manicjs/router` only | Advanced routing ([RouterContext](/docs/api/router/router-context)) |
+| `defineConfig`, `createPlugin`, `loadConfig`, `getConfig` | `manicjs/config` | Config & plugins ([plugins](/docs/api/config/plugins)) |
+| `createManicServer` | `manicjs/server` | Bun server entry ([page](/docs/api/server/create-manic-server)) |
+| `createClient` | `manicjs` or `manicjs/client` | Typed RPC ([createClient](/docs/api/client/create-client)) |
+| `ViewTransitions`, `setViewTransitions` | `manicjs` or `manicjs/transitions` | View Transitions API |
+| `ThemeProvider`, `useTheme`, `ThemeToggle` | `manicjs` or `manicjs/theme` | Theme |
+| `initTheme` | `manicjs/theme` only | Early theme apply |
+| `getEnv`, `getPublicEnv` | `manicjs/env` | Env access |
+| `NotFound`, `ErrorOverlay`, `ServerError` | `manicjs` | Error UI |
+| `apiLoaderPlugin`, `fileImporterPlugin` | `manicjs/plugins` | Low-level loaders |
+
+See [**Package exports**](/docs/api/package) for types-only exports (`RouteDef`, `ManicPluginContext`, …).
 
 ## Installation
 
@@ -46,19 +113,17 @@ Complete reference for all exports from the `manicjs` package. Each page covers 
 bun add manicjs
 ```
 
-All exports are available from the main package:
-
 ```ts
-// Most exports
+// App code — shortest path
 import { Link, useRouter, navigate } from 'manicjs';
 
-// Config
-import { defineConfig } from 'manicjs/config';
+// manic.config.ts
+import { defineConfig, createPlugin } from 'manicjs/config';
 
-// Environment
-import { getEnv } from 'manicjs/env';
+// Advanced routing
+import { preloadRoute } from 'manicjs/router';
 ```
 
 ## TypeScript
 
-Manic is written in TypeScript and provides full type definitions.
+Manic ships TypeScript sources as its published types — full IntelliSense across every entry point.

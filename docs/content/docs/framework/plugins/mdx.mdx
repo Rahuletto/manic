@@ -235,17 +235,22 @@ When using `mdxBunPlugin()` directly, you do **not** need the `mdx()` Manic plug
 
 ## MDX File Structure
 
-```
-app/
-├── routes/
-│   ├── blog/
-│   │   ├── index.tsx       # Blog listing
-│   │   └── [slug].tsx      # Blog post
-│   └── content/
-│       └── posts/
-│           ├── getting-started.mdx
-│           └── advanced.mdx
-```
+<Files>
+  <Folder name="app" defaultOpen>
+    <Folder name="routes" defaultOpen>
+      <Folder name="blog">
+        <File name="index.tsx" />
+        <File name="[slug].tsx" />
+      </Folder>
+      <Folder name="content">
+        <Folder name="posts">
+          <File name="getting-started.mdx" />
+          <File name="advanced.mdx" />
+        </Folder>
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
 
 ## See Also
 

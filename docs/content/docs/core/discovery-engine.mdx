@@ -149,7 +149,13 @@ app/api/users/[id]/index.ts           → /api/users/:id
 app/api/posts/[id]/comments/index.ts  → /api/posts/:id/comments
 ```
 
-Each endpoint is bundled into its own JavaScript file inside `dist/api/` so that serverless deployments only ship the code an individual endpoint needs.
+Each endpoint is bundled into its own JavaScript file inside **`build.outdir`/api** so serverless deployments ship minimal graphs.
+
+<Callout type="info">
+
+**`manic build`** currently globs **`app/api/**/index.ts`** only. **`tsx`** handlers load during **`apiLoaderPlugin`** dev scans (`*.ts`, `*.tsx`, `*.js`) but **won’t** receive a production **`Bun.build`** entry unless they use **`index.ts`** or the pipeline changes ([Bundler integration](/docs/core/bundler-transform)).
+
+</Callout>
 
 ---
 

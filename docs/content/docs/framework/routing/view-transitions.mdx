@@ -7,7 +7,11 @@ description: Smooth page transitions and animations using the View Transitions A
 
 <Callout type="info" title="TL;DR">
 
-Manic supports the View Transitions API for smooth, animated navigation between pages. Enable via `setViewTransitions()` for cross-document transitions or use the `<ViewTransitions>` component for container-scoped animations.
+Manic supports the View Transitions API for smooth, animated **client navigations**. Use [`setViewTransitions`](/docs/api/transitions#setviewtransitionsenabled) or config `router.viewTransitions`, and [`ViewTransitions`](/docs/api/transitions) / `viewTransitionName` on [`Link`](/docs/api/router/link) for shared-element-style CSS.
+
+**Cross-document** transitions are a browser feature between full page loads; Manic focuses on SPA navigations (`history` + React render).
+
+See the [API reference](/docs/api/transitions) for `ViewTransitions` helpers.
 
 </Callout>
 ## What It Is
@@ -28,7 +32,7 @@ View Transitions provide **native browser animations** when navigating between p
 ## Prerequisites
 
 - [Routing Guide](/docs/framework/routing) - Navigation basics
-- [Theme & Styling](/docs/framework/theme-dark-mode) - For CSS customization
+- [Theme](/docs/api/theme) — CSS variables and dark mode
 
 ---
 
@@ -68,16 +72,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Router, setViewTransitions } from 'manicjs';
 
-type RouteDef = { path: string; component: React.ComponentType };
-const routes: RouteDef[] = [];
-
 setViewTransitions(true);
 
 declare const document: any;
 const root = createRoot(document.getElementById('root')!);
-root.render(
-  <Router routes={routes} />
-);
+root.render(<Router />);
 ```
 
 ---
@@ -172,4 +171,4 @@ setViewTransitions(false);
 
 - [Routing Guide](/docs/framework/routing) - Navigation basics
 - [Router API](/docs/api/router) - Complete router documentation
-- [Theme & Styling](/docs/framework/theme-dark-mode) - For CSS customization
+- [Theme](/docs/api/theme) — CSS variables and dark mode

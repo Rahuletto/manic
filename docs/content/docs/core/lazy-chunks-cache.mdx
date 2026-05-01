@@ -1,0 +1,54 @@
+---
+title: Lazy chunks & cache
+description: Router componentCache preloadRoute aborted navigations memory versus bandwidth tradeoffs.
+---
+
+# Lazy chunks & cache
+
+Manic’s SPA router treats each manifest entry as a **lazy `import()`**. Understanding **`componentCache`** explains perceived navigation speed and memory use.
+
+---
+
+## `componentCache`
+
+**`packages/manic/src/router/lib/Router.tsx`** stores **`path → React.ComponentType`** after the first successful **`loader()`**:
+
+```ts
+const componentCache = new Map<string, ComponentType>();
+```
+
+**Effects:**
+
+| Aspect | Detail |
+| :--- | :--- |
+| **Bandwidth** | First visit downloads chunk; revisiting same route reuses cached constructor |
+| **Memory** | Cached components stay resident until reload / HMR clear |
+| **Aborted navigations** | **`loadComponent`** respects **`AbortSignal`** — aborted fetches skip **`componentCache.set`** |
+
+---
+
+## `preloadRoute`
+
+**`preloadRoute(path)`** mirrors **`Router`** matching via **`RouteRegistry`**, finds the loader, and schedules **`loader()`** **without** navigating — fills **`componentCache`** ahead of clicks ([API](/docs/api/router/preload-route)).
+
+**`<Link prefetch>`** calls **`preloadRoute(to)`** on hover/focus by default.
+
+---
+
+## Speed narrative
+
+| Technique | Benefit |
+| :--- | :--- |
+| **Lazy boundaries** | Initial HTML + **`main`** payload excludes unused routes |
+| **Prefetch** | Amortizes latency before user commits to navigation |
+| **Regex registry** | Matching stays bounded by route count, not React tree depth |
+
+**Limits:** Extremely large manifests increase **`RouteRegistry`** compile cost once per session; thousands of routes mean thousands of potential chunks — browsers parallelize **`import()`**, but not infinitely ([Performance model](/docs/core/performance-model), [Bundler transform](/docs/core/bundler-transform)).
+
+---
+
+## See also
+
+- [Router runtime](/docs/core/router-runtime)
+- [Discovery engine](/docs/core/discovery-engine)
+- [HMR & Fast Refresh](/docs/core/hmr-fast-refresh)

@@ -7,6 +7,8 @@
     "index",
     "dev",
     "build",
+    "start",
+    "deploy",
     "lint-fmt"
   ]
 }

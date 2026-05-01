@@ -7,7 +7,7 @@ description: Implementing user authentication, sessions, cookies, and protected 
 
 <Callout type="info" title="TL;DR">
 
-Manic implements authentication via API routes for login/logout, cookies for session management, and React Context for global auth state. Protect routes server-side or client-side.
+Manic **does not** ship a `cookies()` helper. API routes are **Hono apps** (`export default`). Use **`hono/cookie`** (`setCookie`, `getCookie`, `deleteCookie`) for sessions, plus React Context (or similar) on the client.
 
 </Callout>
 ## What It Is
@@ -40,28 +40,38 @@ Authentication patterns in Manic:
 
 ### Create Auth API
 
-```tsx
+```ts
 // app/api/auth/login/index.ts
-import { cookies } from 'manicjs';
+import { Hono } from 'hono';
+import { setCookie } from 'hono/cookie';
 
-export async function POST({ request }: { request: Request }) {
-  const { email, password } = await request.json();
+declare function validateUser(
+  email: string,
+  password: string
+): Promise<{ id: string; email: string; token: string } | null>;
+
+const app = new Hono();
+
+app.post('/', async (c) => {
+  const { email, password } = await c.req.json<{ email: string; password: string }>();
 
   const user = await validateUser(email, password);
   if (!user) {
-    return Response.json({ error: 'Invalid credentials' }, { status: 401 });
+    return c.json({ error: 'Invalid credentials' }, 401);
   }
 
-  // Set session cookie
-  cookies().set('session', user.token, {
+  setCookie(c, 'session', user.token, {
     httpOnly: true,
     secure: true,
-    sameSite: 'lax',
+    sameSite: 'Lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/',
   });
 
-  return Response.json({ user: { id: user.id, email: user.email } });
-}
+  return c.json({ user: { id: user.id, email: user.email } });
+});
+
+export default app;
 ```
 
 ---
@@ -132,9 +142,10 @@ interface ProtectedOptions {
 
 ### Example 1: Login API
 
-```tsx
+```ts
 // app/api/auth/login/index.ts
-import { cookies } from 'manicjs';
+import { Hono } from 'hono';
+import { setCookie } from 'hono/cookie';
 import bcrypt from 'bcrypt';
 
 interface User {
@@ -143,77 +154,88 @@ interface User {
   passwordHash: string;
 }
 
-export async function POST({ request }: { request: Request }) {
-  const { email, password } = await request.json();
+declare const db: {
+  users: { find: (q: { email: string }) => Promise<User | null> };
+};
+declare function createSessionToken(userId: string): Promise<string>;
 
-  // Find user
+const app = new Hono();
+
+app.post('/', async (c) => {
+  const { email, password } = await c.req.json<{ email: string; password: string }>();
+
   const user = await db.users.find({ email });
   if (!user) {
-    return Response.json(
-      { error: 'Invalid email or password' },
-      { status: 401 }
-    );
+    return c.json({ error: 'Invalid email or password' }, 401);
   }
 
-  // Verify password
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
-    return Response.json(
-      { error: 'Invalid email or password' },
-      { status: 401 }
-    );
+    return c.json({ error: 'Invalid email or password' }, 401);
   }
 
-  // Create session
   const token = await createSessionToken(user.id);
 
-  // Set cookie
-  cookies().set('session', token, {
+  setCookie(c, 'session', token, {
     httpOnly: true,
     secure: true,
-    sameSite: 'lax',
+    sameSite: 'Lax',
     maxAge: 60 * 60 * 24 * 7,
+    path: '/',
   });
 
-  return Response.json({
-    user: { id: user.id, email: user.email }
+  return c.json({
+    user: { id: user.id, email: user.email },
   });
-}
+});
+
+export default app;
 ```
 
 ### Example 2: Logout API
 
-```tsx
+```ts
 // app/api/auth/logout/index.ts
-import { cookies } from 'manicjs';
+import { Hono } from 'hono';
+import { deleteCookie } from 'hono/cookie';
 
-export async function POST() {
-  cookies().delete('session');
+const app = new Hono();
 
-  return Response.json({ success: true });
-}
+app.post('/', (c) => {
+  deleteCookie(c, 'session', { path: '/' });
+  return c.json({ success: true });
+});
+
+export default app;
 ```
 
 ### Example 3: Get Current User
 
-```tsx
+```ts
 // app/api/auth/me/index.ts
-import { cookies } from 'manicjs';
+import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
 
-export async function GET() {
-  const sessionToken = cookies().get('session');
+declare function validateSession(token: string): Promise<{ id: string; email: string } | null>;
+
+const app = new Hono();
+
+app.get('/', async (c) => {
+  const sessionToken = getCookie(c, 'session');
 
   if (!sessionToken) {
-    return Response.json({ user: null });
+    return c.json({ user: null });
   }
 
   const user = await validateSession(sessionToken);
   if (!user) {
-    return Response.json({ user: null });
+    return c.json({ user: null });
   }
 
-  return Response.json({ user: { id: user.id, email: user.email } });
-}
+  return c.json({ user: { id: user.id, email: user.email } });
+});
+
+export default app;
 ```
 
 ### Example 4: Auth Context Provider
@@ -225,6 +247,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface User {
   id: string;
   email: string;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -375,55 +398,71 @@ export function useSessionExtend() {
 
 ### Pattern 2: JWT with Refresh Token
 
-```tsx
+```ts
 // app/api/auth/refresh/index.ts
-import { cookies } from 'manicjs';
+import { Hono } from 'hono';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 
-export async function POST() {
-  const refreshToken = cookies().get('refreshToken');
+declare function refreshAccessToken(token: string): Promise<string>;
+
+const app = new Hono();
+
+app.post('/', async (c) => {
+  const refreshToken = getCookie(c, 'refreshToken');
 
   if (!refreshToken) {
-    return Response.json({ error: 'No refresh token' }, { status: 401 });
+    return c.json({ error: 'No refresh token' }, 401);
   }
 
   try {
     const newAccessToken = await refreshAccessToken(refreshToken);
-    cookies().set('session', newAccessToken, {
+    setCookie(c, 'session', newAccessToken, {
       httpOnly: true,
       secure: true,
       maxAge: 15 * 60, // 15 minutes
+      path: '/',
     });
 
-    return Response.json({ success: true });
+    return c.json({ success: true });
   } catch {
-    cookies().delete('refreshToken');
-    return Response.json({ error: 'Invalid token' }, { status: 401 });
+    deleteCookie(c, 'refreshToken', { path: '/' });
+    return c.json({ error: 'Invalid token' }, 401);
   }
-}
+});
+
+export default app;
 ```
 
 ### Pattern 3: CSRF Protection
 
-```tsx
-// Generate CSRF token
-export async function GET() {
+```ts
+import { Hono } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
+
+declare function generateCSRF(): string;
+
+const app = new Hono();
+
+// Issue a CSRF token (call from a dedicated route)
+app.get('/csrf-token', (c) => {
   const token = generateCSRF();
-  cookies().set('csrf', token, { httpOnly: true });
+  setCookie(c, 'csrf', token, { httpOnly: true, path: '/' });
+  return c.json({ token });
+});
 
-  return Response.json({ token });
-}
+// Verify on mutations
+app.post('/mutate', async (c) => {
+  const csrf = c.req.header('X-CSRF-TOKEN');
+  const cookieCSRF = getCookie(c, 'csrf');
 
-// Verify CSRF on mutations
-export async function POST({ request }: { request: Request }) {
-  const csrf = request.headers.get('X-CSRF-TOKEN');
-  const cookieCSRF = cookies().get('csrf');
-
-  if (csrf !== cookieCSRF) {
-    return Response.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  if (!csrf || csrf !== cookieCSRF) {
+    return c.json({ error: 'Invalid CSRF token' }, 403);
   }
 
-  // Process mutation...
-}
+  return c.json({ ok: true });
+});
+
+export default app;
 ```
 
 ---
@@ -454,17 +493,23 @@ fetch('/api/auth/me', {
 
 **Solution:**
 
-```tsx
-// Server: Set SameSite appropriately
-cookies().set('session', token, {
-  sameSite: 'lax',  // or 'none' for cross-origin
-  secure: true,     // required for cross-origin
-});
+```ts
+import { setCookie } from 'hono/cookie';
 
-// Client: Include credentials
+// Inside your Hono handler (`async (c) => { ... }`):
+setCookie(c, 'session', token, {
+  sameSite: 'Lax', // or 'None' for cross-site (requires `Secure`)
+  secure: true,
+  path: '/',
+});
+```
+
+```ts
+// Client: send cookies on same-origin API calls
 fetch('/api/auth/login', {
   method: 'POST',
   credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email, password }),
 });
 ```

@@ -1,13 +1,15 @@
 ---
 title: Testing
-description: Testing Manic applications with Bun's built-in test runner and Playwright.
+description: Unit and integration tests with Bun's built-in runner (bun test, bun:test); end-to-end tests with Playwright.
 ---
 
 # Testing
 
 <Callout type="info" title="TL;DR">
- 
-Manic uses Bun's built-in test runner (`bun test`) for unit and integration tests, and Playwright for end-to-end tests. Test components, hooks, API routes, and full user flows.
+
+Use **`bun test`** with imports from **`bun:test`**—the runner documented at **[Writing tests](https://bun.com/docs/test)** (CLI flags, lifecycle hooks, mocks, snapshots, coverage). Use **Playwright** only for **E2E** in a real browser.
+
+Do **not** default to Vitest or Jest for Manic apps—you already have a fast, native runner. Reach for Vitest/Jest only when you have a specific compatibility need.
 
 </Callout>
 ## What It Is
@@ -24,20 +26,33 @@ Testing patterns in Manic:
 
 ## Prerequisites
 
-- [Project Structure](/docs/framework/getting-started/project-structure) - Test files organization
-- [API Routes](/docs/framework/server) - Testing backend
+- [Project structure](/docs/framework/project-structure) — where to put tests (`tests/`, `*.test.ts`, etc.)
+- [API routes](/docs/framework/server) — testing Hono handlers
 
 ---
 
 ## Quick Start
 
-### Install Testing Tools
+### Install tooling
 
 ```bash
-bun add -d @playwright/test
+bun add -d @testing-library/react @testing-library/jest-dom @playwright/test
 ```
 
-Bun's test runner (`bun test`) is built-in and requires no configuration.
+- **`bun test`** — built-in runner; APIs and CLI options are covered in **[Bun’s test documentation](https://bun.com/docs/test)** (`bun:test`, `--watch`, `--coverage`, etc.).
+- **Testing Library** — render components and assert DOM (works with Bun’s runner).
+- **Playwright** — browser E2E only.
+
+Add a script in `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "bun test",
+    "test:e2e": "playwright test"
+  }
+}
+```
 
 ---
 
@@ -47,8 +62,9 @@ Bun's test runner (`bun test`) is built-in and requires no configuration.
 
 ```tsx
 // tests/Button.test.tsx
-import { describe, it, expect } from 'bun:test';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, mock } from 'bun:test';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { Button } from '../app/routes/~components/Button';
 
 describe('Button', () => {
@@ -57,12 +73,12 @@ describe('Button', () => {
     expect(screen.getByText('Click me')).toBeInTheDocument();
   });
 
-  it('handles click', async () => {
-    const onClick = vi.fn();
+  it('handles click', () => {
+    const onClick = mock(() => {});
     render(<Button onClick={onClick}>Click me</Button>);
 
-    await userEvent.click(screen.getByText('Click me'));
-    expect(onClick).toHaveBeenCalled();
+    fireEvent.click(screen.getByText('Click me'));
+    expect(onClick.mock.calls.length).toBe(1);
   });
 });
 ```
@@ -90,34 +106,47 @@ describe('useCounter', () => {
 });
 ```
 
-### Example 3: Router Test
+### Example 3: Programmatic navigation (`navigate`)
 
-```tsx
-// tests/router.test.ts
-import { describe, it, expect, vi } from 'bun:test';
+`navigate()` forwards to `window.__MANIC_NAVIGATE__` when the client bundle is loaded. In unit tests, stub that hook and assert arguments:
+
+```ts
+// tests/navigate.test.ts
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { navigate } from 'manicjs';
 
-vi.mock('manicjs', () => ({
-  useRouter: () => ({
-    navigate: vi.fn(),
-  }),
-}));
+describe('navigate', () => {
+  const spy = mock<(to: string, opts?: { replace?: boolean }) => void>(() => {});
 
-describe('navigation', () => {
-  it('navigates to path', () => {
-    const router = useRouter();
-    router.navigate('/about');
+  beforeEach(() => {
+    (globalThis as unknown as { window: Window }).window = {
+      __MANIC_NAVIGATE__: spy,
+    } as unknown as Window;
+  });
 
-    expect(router.navigate).toHaveBeenCalledWith('/about');
+  afterEach(() => {
+    spy.mockClear();
+    Reflect.deleteProperty(globalThis, 'window');
+  });
+
+  it('delegates to the Manic runtime', () => {
+    navigate('/about');
+    expect(spy.mock.calls.length).toBe(1);
+    expect(spy.mock.calls[0]?.[0]).toBe('/about');
+  });
+
+  it('passes replace', () => {
+    navigate('/login', { replace: true });
+    expect(spy.mock.calls[0]).toEqual(['/login', { replace: true }]);
   });
 });
 ```
 
 ### Example 4: API Route Test
 
-Hono routes can be tested directly by calling their handlers:
+Default-exported Hono apps implement the `fetch` API—invoke them like a Worker:
 
-```tsx
+```ts
 // tests/api/users.test.ts
 import { describe, it, expect } from 'bun:test';
 import users from '../../app/api/users/index';
@@ -132,6 +161,7 @@ describe('/api/users', () => {
   it('creates user', async () => {
     const req = new Request('http://localhost/api/users', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'test@test.com' }),
     });
     const res = await users.fetch(req);
@@ -140,7 +170,7 @@ describe('/api/users', () => {
 });
 ```
 
-This works because Hono instances export a `.fetch(req)` method.
+Prefer **`bun test`** for these; no separate Node test runner required.
 
 ---
 
@@ -155,8 +185,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   webServer: {
-    command: 'bun dev',
-    port: 3000,
+    command: 'manic dev',
+    port: 6070,
     reuseExistingServer: true,
   },
 });
@@ -192,20 +222,31 @@ test('form submission', async ({ page }) => {
 
 ## Running Tests
 
-### Unit Tests
+### Unit / integration (`bun test`)
+
+See **[Writing tests](https://bun.com/docs/test)** for the full CLI (filtering, timeouts, reporters) and **`bun:test`** APIs.
 
 ```bash
 bun test
 bun test --watch
 ```
 
-### E2E Tests
+Filter by path or name:
 
 ```bash
-npx playwright test
+bun test tests/api
+bun test --test-name-pattern="Button"
 ```
 
-### Coverage
+### E2E (Playwright)
+
+Playwright is a separate CLI; invoke it with Bun:
+
+```bash
+bunx playwright test
+```
+
+### Coverage (Bun)
 
 ```bash
 bun test --coverage
@@ -221,9 +262,9 @@ bun test --coverage
 
 </Callout>
 <Callout type="warn">
- 
-**Mock external dependencies** — APIs, databases, etc.
- 
+
+**Mock external dependencies** — APIs, databases, etc. Use `mock()` / `spyOn` from **`bun:test`**, not Vitest’s `vi`.
+
 </Callout>
 
 <Callout type="info">
@@ -234,5 +275,7 @@ bun test --coverage
 ---
 
 See also:
-- [API Routes](/docs/framework/server)
-- [Project Structure](/docs/framework/getting-started/project-structure)
+
+- [API routes](/docs/framework/server)
+- [Project structure](/docs/framework/project-structure)
+- [Writing tests (Bun)](https://bun.com/docs/test)

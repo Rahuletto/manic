@@ -117,18 +117,30 @@ Size of production build directory.
 
 ### Output Composition (Manic)
 
-```
-.manic/
-├── client/           # 1.99MB
-│   ├── index.js     # Main bundle
-│   └── chunks/    # Route chunks (lazy-loaded)
-├── server/         # 495KB  
-│   ├── index.js   # Hono server
-│   └── routes/   # API route handlers
-└── api/           # Per-route bundles
-    ├── users/
-    └── posts/
-```
+Approximate layout after `manic build` (exact chunk names are hashed):
+
+<Files>
+  <Folder name=".manic" defaultOpen>
+    <Folder name="client" defaultOpen>
+      <File name="index.html" />
+      <File name="main-[hash].js" />
+      <Folder name="chunks">
+        <File name="[route]-[hash].js" />
+      </Folder>
+    </Folder>
+    <Folder name="api" defaultOpen>
+      <Folder name="users">
+        <File name="index.js" />
+      </Folder>
+      <Folder name="posts">
+        <File name="index.js" />
+      </Folder>
+    </Folder>
+    <File name="server.js" />
+  </Folder>
+</Files>
+
+Typical sizes from this benchmark run: client bundle ~1.99MB (before CDN gzip), API + `server.js` add the remainder of the `.manic/` total (~2.5MB unminified in the table above).
 
 ---
 

@@ -95,11 +95,11 @@ Configure rules in `.oxlintrc.json`:
 
 ## OXC Formatter — `manic fmt`
 
-`manic fmt` writes formatted output using OXC's formatter. It targets parity with Prettier's defaults and is fast enough to be safe inside pre-commit hooks.
+`manic fmt` invokes **`bun x oxfmt -c .oxfmt.json .`** — it **does not forward extra argv**. For **`--check`** / CI dry-runs, call **`oxfmt`** directly ([Lint & format CLI](/docs/cli/lint-fmt)).
 
 ```bash
-bunx manic fmt           # write formatted output (default)
-bunx manic fmt --check   # CI mode: non-zero exit if anything is unformatted
+manic fmt           # format workspace via manic wrapper
+bun x oxfmt -c .oxfmt.json --check .   # CI-style check (manual)
 ```
 
 A `.oxfmt.json` file at the project root tunes formatter options (line width, indentation, semicolons, etc.).

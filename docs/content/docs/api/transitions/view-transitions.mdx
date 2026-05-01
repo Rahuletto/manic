@@ -1,0 +1,84 @@
+---
+title: ViewTransitions
+description: Factory components that set viewTransitionName for shared-element transitions across navigations.
+---
+
+# `ViewTransitions`
+
+Namespace of element helpers — each key is a standard HTML tag. Every component requires a stable **`name`** string that matches between the outgoing and incoming route.
+
+```tsx twoslash
+// @errors: 2322
+import React from 'react';
+import { Link, ViewTransitions } from 'manicjs';
+
+export function ProductCard({ id, image, title }: { id: string; image: string; title: string }) {
+  return (
+    <Link to={`/products/${id}`}>
+      <ViewTransitions.img name={`product-${id}`} src={image} alt={title} />
+      <ViewTransitions.h2 name={`product-title-${id}`}>{title}</ViewTransitions.h2>
+    </Link>
+  );
+}
+```
+
+---
+
+## Supported tags
+
+| Group | Elements |
+| :--- | :--- |
+| Layout | `div`, `span`, `main`, `section`, `article`, `header`, `footer`, `nav`, `aside` |
+| Headings | `h1`, `h2`, `h3` |
+| Content | `p`, `img`, `button`, `a`, `ul`, `li` |
+
+---
+
+## Props
+
+Each helper forwards native DOM props **except** it injects **`style.viewTransitionName`** from **`name`**.
+
+<TypeTable
+  type={{
+    name: {
+      type: 'string',
+      description: 'Unique transition name shared across navigations.',
+    },
+    children: {
+      type: 'ReactNode',
+      description: 'Optional for void elements such as img.',
+    },
+    className: {
+      type: 'string',
+      description: 'Forwarded to the DOM element.',
+    },
+    style: {
+      type: 'CSSProperties',
+      description: 'Merged with injected viewTransitionName.',
+    },
+  }}
+/>
+
+---
+
+## CSS customization
+
+```css title="app/global.css"
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+}
+```
+
+---
+
+## Browser support
+
+When **`document.startViewTransition`** is missing, Manic swaps routes instantly — no runtime errors.
+
+---
+
+## See also
+
+- [setViewTransitions](/docs/api/transitions/set-view-transitions)
+- [Transitions overview](/docs/api/transitions)

@@ -1,85 +1,195 @@
 ---
 title: CLI Overview
-description: Every command exposed by the manic binary, with flags and examples.
+description: Every manic command, global flags, and what the binary actually runs.
 ---
 
 # CLI Overview
 
-The `manic` binary is the single entry point for everything the framework does locally and in CI: starting the dev server, producing a production build, running the production server, and code-quality tasks. It is installed automatically when you add `manicjs` to your project.
+The **`manic`** binary ships with **`manicjs`** and is the entry point for dev, production builds, local production serves, deploy helpers, lint, and format.
 
 ```bash
 bunx manic <command> [options]
 ```
 
-When the package is installed globally (`bun add -g manicjs`), the `manic` command works without `bunx`.
+With a global install (`bun add -g manicjs`), you can run **`manic`** without **`bunx`**.
 
 ---
 
-## Commands
+## Commands at a glance
 
-| Command | Purpose | Page |
-| :--- | :--- | :--- |
-| `manic dev` | Start the development server with HMR and route discovery. | [Reference](/docs/cli/dev) |
-| `manic build` | Produce an optimized production bundle in `.manic/`. | [Reference](/docs/cli/build) |
-| `manic start` | Serve the production build locally with the Bun runtime. | — |
-| `manic deploy` | Hand the build artifacts to the configured provider. | — |
-| `manic lint` | Run `oxlint` across the project. | [Reference](/docs/cli/lint-fmt) |
-| `manic fmt` | Format the codebase with the OXC formatter. | [Reference](/docs/cli/lint-fmt) |
+<Cards>
+  <Card title="manic dev" description="Spawn Bun --watch on ~manic.ts, merged bunfig, config hot reload" href="/docs/cli/dev" />
+  <Card title="manic build" description="Lint gate, bundles, minify, provider adapters" href="/docs/cli/build" />
+  <Card title="manic start" description="Run production server.js from outdir" href="/docs/cli/start" />
+  <Card title="manic deploy" description="Print or run provider deploy commands" href="/docs/cli/deploy" />
+  <Card title="manic lint / fmt" description="oxlint and oxfmt via bun x" href="/docs/cli/lint-fmt" />
+</Cards>
 
-Every command supports `--help` for inline usage information.
-
----
-
-## Global Options
-
-| Flag | Default | Description |
-| :--- | :--- | :--- |
-| `-h`, `--help` | — | Show usage information. |
-| `-v`, `--version` | — | Print the framework version. |
-| `-p`, `--port <port>` | `6070` | Override the dev/start port. |
-| `--network` | `false` | Bind the dev server to `0.0.0.0` so it is reachable on the LAN. |
-
----
-
-## Typical Workflows
-
-```bash
-# Local development
-bunx manic dev
-bunx manic dev --port 3000
-bunx manic dev --network          # share with phones / other devices
-
-# Production
-bunx manic build
-bunx manic start                  # validate the build locally
-bunx manic deploy                 # provider-specific packaging
-
-# Code quality
-bunx manic lint
-bunx manic fmt
-```
-
----
-
-## How the CLI Boots
+### Typical workflows
 
 ```mermaid
-graph LR
-  Parse["Parse argv"] --> Load["loadConfig() + plugins"]
-  Load --> Discover["Route + API discovery"]
-  Discover --> Run["Run command (dev / build / start / lint / fmt / deploy)"]
+flowchart TB
+  subgraph devloop["Daily development"]
+    DEV["manic dev"] --> LIVE["HMR + plugins"]
+  end
+  subgraph ship["Shipping"]
+    BUILD["manic build"] --> ART["outdir client api server.js"]
+    ART --> START["manic start"]
+    ART --> DEPLOY["manic deploy"]
+    DEPLOY --> DC{"--run?"}
+    DC -->|yes| VENDOR["vercel / wrangler / netlify CLI"]
+    DC -->|no| PRINT["Print commands only"]
+  end
 ```
 
-1. **Argument parsing** — A simple lookup against the `commands` registry in [packages/manic/src/cli/index.ts](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/index.ts).
-2. **Configuration** — `loadConfig()` reads `manic.config.ts`, merges defaults, and exposes the resolved object to plugins.
-3. **Discovery** — Pages and API routes are scanned and the manifest at `app/~routes.generated.ts` is written. See [Discovery Engine](/docs/core/discovery-engine).
-4. **Command execution** — The selected command runs with the prepared context (Bun watcher, `Bun.build`, OXC plugins, providers).
+### Command comparison
+
+| Command | Primary output | Honors `-p` / `--port` | Honors `--network` | Spawns a child Bun process |
+| :--- | :--- | :---: | :---: | :---: |
+| **`dev`** | Running dev server + writes **`bunfig.toml`** | Yes → **`PORT`** | Yes → **`HOST`** + **`NETWORK`** | Yes (**`bun --watch ~manic.ts`**) |
+| **`build`** | **`<outdir>/`** bundles | Parsed globally; **ignored** inside **`build()`** | Parsed; **ignored** | No |
+| **`start`** | Foreground **`server.js`** logs | Yes → **`PORT`** env on child | Yes → **`NETWORK`** | Yes (**`bun server.js`**) |
+| **`deploy`** | stdout hints or vendor CLI runs | Ignored | Ignored | Sometimes (**`--run`** → **`Bun.spawn`**) |
+| **`lint`** | oxlint diagnostics | — | — | Yes (**`bun x oxlint`** subprocess) |
+| **`fmt`** | Rewrites sources via oxfmt | — | — | Yes (**`bun x oxfmt`** subprocess) |
 
 ---
 
-## See Also
+## Global behavior
 
-- [manic dev](/docs/cli/dev) — development server internals
-- [manic build](/docs/cli/build) — production pipeline
-- [manic lint & fmt](/docs/cli/lint-fmt) — linting and formatting
-- [Configuration](/docs/api/config) — `defineConfig` reference
+| Flag | When it applies | What it does |
+| :--- | :--- | :--- |
+| `-h`, `--help` | Always (no command or as an arg) | Prints full usage text and exits. |
+| `-v`, `--version` | Anywhere in argv | Prints a version string and exits (today: the literal `latest` from the CLI; for the precise package version use `bun pm ls manicjs` or `package.json`). |
+| `-p`, `--port <n>` | Parsed for **`dev`**, **`build`**, **`start`**, **`deploy`** | Currently only **dev** and **start** consumers use it: they set **`process.env.PORT`** on the spawned **`bun`** process. **`build`** accepts the parsed object today but **does not** change output or bind ports. **`deploy`** does not spawn your app server. **`createManicServer`** reads **`server.port`** from **`manic.config.ts`** (via **`loadConfig()`**, default **6070**), not **`PORT`**—set **`server.port`** to match CLI expectations, or read **`process.env.PORT`** in custom **`~manic.ts`** if you rely on the CLI flag. |
+| `--network` | Parsed for **`dev`**, **`build`**, **`start`**, **`deploy`** | Only **dev** / **start** set **`NETWORK`** on the child process (**dev** also toggles **`HOST`**). Other commands ignore it. |
+
+Commands that do not spawn your **`~manic`** server (**`build`**, **`lint`**, **`fmt`**, **`deploy`**) receive parsed **`port`**/**`network`** from argv but **do not use them** in their implementations today.
+
+---
+
+## Command summary
+
+| Command | Purpose |
+| :--- | :--- |
+| [`manic dev`](/docs/cli/dev) | Development: generate **`bunfig.toml`**, spawn **`bun --watch`** on **`~manic.ts`** with plugin preloads, watch **`manic.config.*`**. |
+| [`manic build`](/docs/cli/build) | Production: lint, clean output dir, client + API + server bundles, minify, run **provider.build** hooks. |
+| [`manic start`](/docs/cli/start) | Run **`${outdir}/server.js`** with **`NODE_ENV=production`**. |
+| [`manic deploy`](/docs/cli/deploy) | Ensure build output exists, print (or run) provider deploy commands. |
+| [`manic lint`](/docs/cli/lint-fmt) | Run **oxlint** with **`.oxlintrc.json`**. |
+| [`manic fmt`](/docs/cli/lint-fmt) | Run **oxfmt** with **`.oxfmt.json`**. |
+
+### argv routing (same binary, different handlers)
+
+```mermaid
+flowchart LR
+  subgraph opts["Parsed for server-ish commands"]
+    P["--port / -p"]
+    N["--network"]
+  end
+  subgraph cmds["Handlers"]
+    DEV["dev"]
+    BUILD["build"]
+    START["start"]
+    DEPLOY["deploy"]
+    TOOLS["lint · fmt"]
+  end
+  P --> DEV
+  P --> START
+  N --> DEV
+  N --> START
+  P -.->|"ignored"| BUILD
+  N -.->|"ignored"| BUILD
+  P -.->|"ignored"| DEPLOY
+  N -.->|"ignored"| DEPLOY
+```
+
+---
+
+## `manic dev` (in depth)
+
+**Handler:** [`packages/manic/src/cli/commands/dev.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/dev.ts)
+
+1. **`loadConfig()`** reads **`manic.config.ts`** / **`.js`** from the project root.
+2. **`writeBunfig()`** merges each plugin’s **`bunfig`** string: collects **`[serve.static].plugins`** entries from every plugin and writes a root **`bunfig.toml`** prefixed with `# Auto-generated by manic dev — do not edit`. Other non-static snippets are appended.
+3. Spawns:
+
+   ```txt
+   bun --watch [--preload <plugin.preload> ...] ~manic.ts
+   ```
+
+   with **`env`** including **`PORT`**, **`HOST`** (**`localhost`** vs **`0.0.0.0`**), and **`NETWORK`**.
+
+4. If **`manic.config.ts`** or **`manic.config.js`** exists, **`fs.watch`** debounces (~100ms) and **kills + respawns** the child after re-importing config so plugin list and bunfig stay fresh.
+
+**Does not parse:** `--no-hmr`, `--no-view-transitions` (those are not CLI flags today—use **`manic.config.ts`** **`server.hmr`** and **`router.viewTransitions`**).
+
+---
+
+## `manic build` (in depth)
+
+**Handler:** [`packages/manic/src/cli/commands/build.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/build.ts)
+
+Output directory: **`config.build.outdir`** (default **`.manic`**).
+
+1. **Lint:** Runs **oxlint** on `.` (prefers **`node_modules/.bin/oxlint`**, else **`oxlint`**). **Fails the build** on non-zero exit (no separate `--no-lint` flag).
+2. **Prepare:** **`rm -rf <outdir>`**, **`mkdir -p <outdir>/client`**.
+3. **Plugin Bun plugins:** For each **`plugins[].preload`**, dynamically **`import`** and registers **`default`** or **`plugin`** export via **`Bun.plugin()`** before **`Bun.build`**.
+4. **Routes manifest:** **`writeRoutesManifest('app/~routes.generated.ts')`**.
+5. **Client bundle:** **`Bun.build`** from resolved **`./app/main`** (**`app/main.tsx`** / **`.jsx`** required). Target **`browser`**, **`oxcPlugin()`**, **`bun-plugin-tailwind`**, hashed entry/chunk/asset names. Copies top-level **`assets/`** → **`<outdir>/client/assets`** if present. Rewrites **`app/index.html`** (or generates minimal HTML) so **`main`** script and Tailwind CSS point at built filenames; writes **`<outdir>/client/index.html`**.
+6. **Plugin `build` hooks:** Runs each plugin’s **`build()`** with **`emitClientFile`**, **`injectHtml`**, route lists, **`dist`**, etc.; reapplies HTML injections to **`index.html`**.
+7. **API bundles:** Skipped when **`mode === 'frontend'`**. Otherwise globs **`app/api/**/index.ts`**, bundles each with **`Bun.build`** (**`target: 'bun'`**, dependencies **external**), outputs under **`<outdir>/api`**. Writes **RFC 9727** **`/.well-known/api-catalog`** under **`<outdir>/client`** when any API exists.
+8. **Server bundle:** Reads **`~manic.ts`**, rewrites **`import … from './app/index.html'`** to **`Bun.file("<outdir>/client/index.html").text()`**, adjusts **`createManicServer({ html`** injection, writes temp **`<outdir>/_entry.ts`**, **`Bun.build`** → **`server.js`**, deletes temp entry.
+9. **Minify:** **oxc-minify** over **`<outdir>/client`**, **`<outdir>/api`** (if any), and **`server.js`** (**es2022**, mangle).
+10. **Providers:** For each **`config.providers`** with a **`build`** function, calls **`provider.build({ dist, config, apiEntries, clientDir, serverFile })`**.
+
+---
+
+## `manic start` (in depth)
+
+**Handler:** [`packages/manic/src/cli/commands/start.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/start.ts)
+
+- Requires **`<outdir>/server.js`** (exit **1** with “Run build first” if missing).
+- Runs **`bun <outdir>/server.js`** with **`NODE_ENV=production`**, **`PORT`**, **`NETWORK`** set from CLI/config parsing.
+
+See **[manic start](/docs/cli/start)** for workflows.
+
+---
+
+## `manic deploy` (in depth)
+
+**Handler:** [`packages/manic/src/cli/commands/deploy.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/deploy.ts)
+
+- Requires **`config.providers`** non-empty; otherwise exits with a hint to add **`@manicjs/providers`**.
+- If **`<outdir>`** missing, runs **`build()`** first.
+- For known providers (**`vercel`**, **`cloudflare`**, **`netlify`**), prints a suggested command and optionally generates **`vercel.json`** / **`netlify.toml`** if missing.
+- **`--run`** or **`-r`**: **`Bun.spawn`** the suggested command (split on spaces—keep paths without spaces).
+
+See **[manic deploy](/docs/cli/deploy)** for commands per provider.
+
+---
+
+## `manic lint` / `manic fmt` (in depth)
+
+**Handlers:** [`lint.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/lint.ts), [`fmt.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/commands/fmt.ts)
+
+- **`manic lint`:** **`bun x oxlint --config .oxlintrc.json .`**
+- **`manic fmt`:** **`bun x oxfmt -c .oxfmt.json .`**
+
+No extra argv is forwarded—you cannot pass **`oxfmt --check`** through **`manic fmt`** today; invoke **`bun x oxfmt …`** directly if needed.
+
+Details: **[Lint & format](/docs/cli/lint-fmt)**.
+
+Routing lives in [`packages/manic/src/cli/index.ts`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/cli/index.ts): **`lint`** / **`fmt`** ignore **`port`** & **`network`**; **`dev`**, **`build`**, **`start`**, **`deploy`** receive **`{ port, network }`** (see **argv routing** diagram above).
+
+---
+
+## See also
+
+- [manic dev](/docs/cli/dev)
+- [manic build](/docs/cli/build)
+- [manic start](/docs/cli/start)
+- [manic deploy](/docs/cli/deploy)
+- [Lint & format](/docs/cli/lint-fmt)
+- [Configuration](/docs/api/config)
+- [Discovery engine](/docs/core/discovery-engine)

@@ -1,0 +1,61 @@
+---
+title: ThemeProvider
+description: React context provider for light, dark, and system theme — toggles html.dark and persists manic-theme.
+---
+
+# `<ThemeProvider>`
+
+Wrap your tree once (typically around **`Router`** in **`app/main.tsx`**) so **`useTheme`**, **`ThemeToggle`**, and CSS **`dark`** class toggling work.
+
+```tsx twoslash
+// @errors: 2322
+import { ThemeProvider } from 'manicjs';
+import { Router } from 'manicjs';
+
+<>
+  <ThemeProvider>
+    <Router />
+  </ThemeProvider>
+</>
+```
+
+---
+
+## Props
+
+<TypeTable
+  type={{
+    children: {
+      type: 'ReactNode',
+      description: 'Your application subtree.',
+    },
+  }}
+/>
+
+---
+
+## Behavior
+
+| Detail | Implementation |
+| :--- | :--- |
+| **Persistence** | Reads/writes **`localStorage`** key **`manic-theme`** (`light` \| `dark` \| `system`). |
+| **DOM** | Adds/removes **`dark`** on **`<html>`** via **`applyTheme`**. |
+| **System** | Listens for **`prefers-color-scheme`** when preference is **`system`**. |
+
+---
+
+## Imports
+
+```ts
+import { ThemeProvider } from 'manicjs';
+import { ThemeProvider } from 'manicjs/theme';
+```
+
+---
+
+## See also
+
+- [useTheme](/docs/api/theme/use-theme)
+- [ThemeToggle](/docs/api/theme/theme-toggle)
+- [initTheme](/docs/api/theme/init-theme)
+- [Theme overview](/docs/api/theme)

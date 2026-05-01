@@ -46,23 +46,41 @@ vercel --prod
 
 ### Build Output Architecture
 
-The Vercel provider transforms Manic's unified `.manic/` output into the Vercel Build Output API (v3) format:
+The Vercel provider transforms Manic's unified `.manic/` output into the [Vercel Build Output API](https://vercel.com/docs/build-output-api/v3) (v3) layout.
 
-```
-dist/
-  ├── client/                 → .vercel/output/static/
-  ├── api/                    → .vercel/output/functions/
-  └── server/index.js         → .vercel/output/functions/[...].func/
+**Manic build output** (input to the provider):
 
-.vercel/output/
-  ├── config.json            (routing, env, regions)
-  ├── .vc-config.json        (provider config)
-  └── functions/             (Serverless + Edge Functions)
-```
+<Files>
+  <Folder name=".manic" defaultOpen>
+    <Folder name="client" defaultOpen>
+      <File name="index.html" />
+      <Folder name="chunks">
+        <File name="[hash].js" />
+      </Folder>
+    </Folder>
+    <Folder name="api">
+      <Folder name="hello">
+        <File name="index.js" />
+      </Folder>
+    </Folder>
+    <File name="server.js" />
+  </Folder>
+</Files>
 
-- **Static Files**: `dist/client/` → Vercel's global CDN
-- **Server**: Hono runtime as Serverless Function (default) or Edge Function (with `edge: true`)
-- **API Routes**: Auto-extracted from `dist/api/` and mounted on `/api/*`
+**Provider output** (under `.vercel/output/`):
+
+<Files>
+  <Folder name=".vercel/output" defaultOpen>
+    <File name="config.json" />
+    <File name=".vc-config.json" />
+    <Folder name="static" />
+    <Folder name="functions" />
+  </Folder>
+</Files>
+
+- **`client/`** → `.vercel/output/static/` (global CDN)
+- **`server.js`** and **`api/`** bundles → `.vercel/output/functions/` (Serverless by default, or Edge when `edge: true` on the provider)
+- Mounted **`/api/*`** routes stay on `/api/*` in production
 
 ### Regions & Functions
 
