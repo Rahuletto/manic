@@ -3,6 +3,13 @@ title: Framework
 description: Set up and deploy your first Manic SPA application in minutes.
 ---
 
+import {
+  HiOutlineArrowPath,
+  HiOutlineCpuChip,
+  HiOutlineMap,
+  HiOutlinePuzzlePiece,
+} from 'react-icons/hi2';
+
 # Framework
 
 Manic is a **zero-config React SPA framework** built exclusively on Bun with ultra-fast OXC transforms, Hono API routes, and native View Transitions support.
@@ -88,22 +95,26 @@ Everything is automatically wired. No webpack, no Vite, no config hell.
 <Cards>
   <Card 
     href="/docs/framework/routing" 
-    title="📍 Routing Guide"
+    icon={<HiOutlineMap aria-hidden />}
+    title="Routing Guide"
     description="File-based routing, dynamic segments, catch-all routes"
   />
   <Card 
     href="/docs/framework/server/data-fetching" 
-    title="🔄 Data Fetching"
+    icon={<HiOutlineArrowPath aria-hidden />}
+    title="Data Fetching"
     description="API routes, RPC clients, type-safe queries"
   />
   <Card 
     href="/docs/core/architecture" 
-    title="🏗️ Architecture"
+    icon={<HiOutlineCpuChip aria-hidden />}
+    title="Architecture"
     description="How Manic's build pipeline and router work"
   />
   <Card 
     href="/docs/framework/plugins" 
-    title="🔌 Plugins"
+    icon={<HiOutlinePuzzlePiece aria-hidden />}
+    title="Plugins"
     description="Extend Manic with SEO, sitemap, MCP, and more"
   />
 </Cards>

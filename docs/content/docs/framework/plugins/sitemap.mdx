@@ -15,7 +15,8 @@ bun add @manicjs/sitemap
 
 ## Quick Start
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { sitemap } from '@manicjs/sitemap';
@@ -59,7 +60,8 @@ The plugin uses `createPlugin` with `staticFiles`, so the sitemap is served as a
 
 ## Example Configuration
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { defineConfig } from 'manicjs/config';
 import { sitemap } from '@manicjs/sitemap';
 
@@ -110,7 +112,8 @@ Only static routes appear in the sitemap.
 
 Pair with `@manicjs/seo` for complete search engine optimization. The SEO plugin handles `robots.txt` (with automatic `/sitemap.xml` reference) and meta tags, while the sitemap plugin generates the XML sitemap:
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { defineConfig } from 'manicjs/config';
 import { seo } from '@manicjs/seo';
 import { sitemap } from '@manicjs/sitemap';

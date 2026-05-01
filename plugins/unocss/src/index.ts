@@ -7,7 +7,7 @@ import type { UserConfig } from 'unocss';
  * Uses bun-plugin-unocss for hot reloading support.
  * Config is read from uno.config.ts in the project root.
  *
- * @param config - Optional UnoCSS configuration (detected from uno.config.ts if not provided)
+ * @param config - Config is ignored — use uno.config.ts instead
  * @returns ManicPlugin for UnoCSS
  *
  * @example

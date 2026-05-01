@@ -10,6 +10,7 @@ The `useQueryParams` hook provides access to URL search parameters with a standa
 ## Hook Signature
 
 ```ts twoslash
+// @errors: 2322
 import { useQueryParams } from 'manicjs';
 
 export default function Page() {
@@ -40,8 +41,10 @@ class URLSearchParams {
 ### Reading Query Params
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useQueryParams } from 'manicjs';
+declare const replaceUrl: (_url: string) => void;
 
 export function SearchResults() {
   const searchParams = useQueryParams();
@@ -62,8 +65,10 @@ export function SearchResults() {
 ### Updating Query Params
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useQueryParams } from 'manicjs';
+declare const replaceUrl: (_url: string) => void;
 
 export function SearchInput() {
   const searchParams = useQueryParams();
@@ -74,13 +79,13 @@ export function SearchInput() {
     params.set('page', '1'); // Reset pagination
     
     // Update URL without navigation
-    window.history.replaceState({}, '', `?${params.toString()}`);
+    replaceUrl(`?${params.toString()}`);
   };
   
   return (
     <input
       defaultValue={searchParams.get('q') || ''}
-      onChange={(e) => handleSearch(e.target.value)}
+      onChange={(e: any) => handleSearch(e.target.value)}
     />
   );
 }
@@ -89,8 +94,10 @@ export function SearchInput() {
 ### Pagination
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useQueryParams } from 'manicjs';
+declare const replaceUrl: (_url: string) => void;
 
 export function Paginator() {
   const searchParams = useQueryParams();
@@ -99,7 +106,7 @@ export function Paginator() {
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams);
     params.set('page', String(page));
-    window.history.replaceState({}, '', `?${params.toString()}`);
+    replaceUrl(`?${params.toString()}`);
   };
   
   return (
@@ -119,10 +126,11 @@ export function Paginator() {
 ### Multiple Values
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useQueryParams } from 'manicjs';
+declare const replaceUrl: (_url: string) => void;
 
-// URL: /search?tag=react&tag=typescript
 export function TagFilter() {
   const searchParams = useQueryParams();
   
@@ -143,7 +151,7 @@ export function TagFilter() {
       params.append('tag', tag);
     }
     
-    window.history.replaceState({}, '', `?${params.toString()}`);
+    replaceUrl(`?${params.toString()}`);
   };
   
   return (
@@ -159,8 +167,10 @@ export function TagFilter() {
 ### With useEffect
 
 ```tsx twoslash
+// @errors: 2322 2345
 import React, { useEffect, useState } from 'react';
 import { useQueryParams } from 'manicjs';
+declare const replaceUrl: (_url: string) => void;
 
 export function DataFetcher() {
   const searchParams = useQueryParams();
@@ -173,7 +183,7 @@ export function DataFetcher() {
     
     fetch(`/api/items?q=${query}&page=${page}`)
       .then(res => res.json())
-      .then(setData);
+      .then((d: any) => setData(d));
   }, [searchParams.toString()]); // Re-run when params string changes
   
   if (!data) return <div>Loading...</div>;

@@ -17,10 +17,11 @@ bun add @manicjs/unocss
 
 ### 1. Add the Plugin
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { unocss } from '@manicjs/unocss';
+declare function unocss(options?: Record<string, unknown>): { name: string };
 
 export default defineConfig({
   plugins: [unocss()],
@@ -33,9 +34,12 @@ The `unocss()` plugin takes no options. It registers `bun-plugin-unocss` which a
 
 All UnoCSS configuration lives in `uno.config.ts` at your project root:
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno, presetAttributify } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): { presets: any[] };
+declare function presetUno(): { name: string };
+declare function presetAttributify(options?: Record<string, unknown>): { name: string };
 
 export default defineConfig({
   presets: [
@@ -49,9 +53,13 @@ export default defineConfig({
 
 ### Core Presets
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno, presetIcons, presetWebFonts } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): { presets: any[] };
+declare function presetUno(): { name: string };
+declare function presetIcons(options?: Record<string, unknown>): { name: string };
+declare function presetWebFonts(): { name: string };
 
 export default defineConfig({
   presets: [
@@ -64,9 +72,12 @@ export default defineConfig({
 
 ### Attributify Mode
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno, presetAttributify } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): unknown;
+declare function presetUno(): unknown;
+declare function presetAttributify(options?: Record<string, unknown>): unknown;
 
 export default defineConfig({
   presets: [
@@ -80,22 +91,27 @@ export default defineConfig({
 
 Then use in JSX:
 
-```tsx
-<div class="flex gap-2" />
-<div flex gap-2 />       {/* attributify */}
-<div bg-red-500 />        {/* color shortcuts */}
+```tsx twoslash
+// @errors: 2322
+<>
+  <div class="flex gap-2" />
+  <div flex gap-2 />       {/* attributify */}
+  <div bg-red-500 />        {/* color shortcuts */}
+</>
 ```
 
 ## Custom Rules
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): unknown;
+declare function presetUno(): unknown;
 
 export default defineConfig({
   presets: [presetUno()],
   rules: [
-    [/^text-(.*)$/, ([c]) => ({ color: c })],
+    [/^text-(.*)$/, ([c]: [string]) => ({ color: c })],
     ['custom-shadow', { 'box-shadow': '0 4px 6px rgba(0,0,0,0.1)' }],
   ],
 });
@@ -105,9 +121,11 @@ export default defineConfig({
 
 Define reusable class combinations:
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): unknown;
+declare function presetUno(): unknown;
 
 export default defineConfig({
   presets: [presetUno()],
@@ -120,16 +138,22 @@ export default defineConfig({
 
 Usage:
 
-```tsx
-<button class="btn">Click</button>
-<input class="input-field" />
+```tsx twoslash
+// @errors: 2322
+<>
+  <button class="btn">Click</button>
+  <input class="input-field" />
+</>
 ```
 
 ## Icon Sets
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno, presetIcons } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): unknown;
+declare function presetUno(): unknown;
+declare function presetIcons(options?: Record<string, unknown>): unknown;
 
 export default defineConfig({
   presets: [
@@ -142,16 +166,21 @@ export default defineConfig({
 });
 ```
 
-```tsx
-<i class="i-carbon-sun text-xl" />
-<i class="i-carbon-moon text-xl" />
+```tsx twoslash
+// @errors: 2322
+<>
+  <i class="i-carbon-sun text-xl" />
+  <i class="i-carbon-moon text-xl" />
+</>
 ```
 
 ## Theme Integration
 
-```ts
+```ts twoslash
+// @errors: 2322
 // uno.config.ts
-import { defineConfig, presetUno } from 'unocss';
+declare function defineConfig(options: Record<string, unknown>): unknown;
+declare function presetUno(): unknown;
 
 export default defineConfig({
   presets: [presetUno()],

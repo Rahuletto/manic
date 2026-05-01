@@ -26,7 +26,9 @@ The 404 page component displayed when no route matches the current URL.
 
 Create a file at `app/routes/~404.tsx`:
 
-```tsx title="app/routes/~404.tsx"
+```tsx twoslash
+// @errors: 2322
+// app/routes/~404.tsx
 import React from 'react';
 import { Link } from 'manicjs';
 
@@ -53,7 +55,8 @@ React error boundary overlay for client-side errors.
 
 ### Usage
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { ErrorOverlay } from 'manicjs';
 
@@ -75,7 +78,8 @@ export function ErrorPage({ error }: { error: Error }) {
 
 ### Example With Local Error State
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React, { useState } from 'react';
 import { ErrorOverlay } from 'manicjs';
 
@@ -102,7 +106,8 @@ Server-side error component for 500 errors.
 
 Create `app/routes/~500.tsx`:
 
-```tsx title="app/routes/~500.tsx"
+```tsx
+// app/routes/~500.tsx
 import React from 'react';
 
 export default function ServerError({ error }: { error?: Error }) {

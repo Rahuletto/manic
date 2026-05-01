@@ -59,39 +59,39 @@ graph TD
 
 ## Config Loading
 
-### How manic.config.ts Loads
+### How `manic.config.ts` Loads
 
 ```ts
-// Simplified config loading
-async function loadConfig() {
-  // 1. Try manic.config.ts
-  const configPath = findFile(['manic.config.ts', 'manic.config.js']);
-  
-  // 2. Import the file
-  const config = await import(configPath);
-  
-  // 3. Get default export
-  const userConfig = config.default;
-  
-  // 4. Merge with defaults
-  return mergeDeep(defaultConfig, userConfig);
+// Simplified loadConfig() implementation
+// (see packages/manic/src/config/index.ts)
+async function loadConfig(cwd = process.cwd()): Promise<ManicConfig> {
+  for (const file of ['manic.config.ts', 'manic.config.js']) {
+    const path = `${cwd}/${file}`;
+    if (await Bun.file(path).exists()) {
+      const mod = await import(path);
+      const userConfig = mod.default ?? mod;
+      return {
+        mode:    userConfig.mode    ?? DEFAULT_CONFIG.mode,
+        app:     { ...DEFAULT_CONFIG.app,    ...userConfig.app },
+        server:  { ...DEFAULT_CONFIG.server, ...userConfig.server },
+        router:  { ...DEFAULT_CONFIG.router, ...userConfig.router },
+        build:   { ...DEFAULT_CONFIG.build,  ...userConfig.build },
+        sitemap: userConfig.sitemap === false ? false : userConfig.sitemap,
+        oxc:     { ...DEFAULT_CONFIG.oxc,    ...userConfig.oxc },
+        providers: userConfig.providers,
+        plugins:   userConfig.plugins,
+      };
+    }
+  }
+  return DEFAULT_CONFIG;
 }
 ```
 
-### Schema Validation
+### Defaults & Merging
 
-Config is validated against a Zod schema:
+There is no Zod or runtime schema validator — Manic relies on TypeScript for validation at the call site of `defineConfig`. At load time, the user object is **shallow-merged** field by field with `DEFAULT_CONFIG`. Nested objects (`app`, `server`, `router`, `build`, `oxc`) are spread so user values override defaults without losing siblings.
 
-```ts
-const configSchema = z.object({
-  mode: z.enum(['fullstack', 'frontend']).default('fullstack'),
-  plugins: z.array(z.string()).optional(),
-  build: z.object({
-    target: z.string().optional(),
-    minify: z.boolean().optional(),
-  }).optional(),
-});
-```
+The loaded config is cached. Subsequent `loadConfig()` calls within the same process return the cached value — important because every plugin context reads from the same instance.
 
 ---
 
@@ -134,22 +134,23 @@ posts/[...slug].tsx [101]
 
 ## Manifest Generation
 
-### ~routes.generated.ts Structure
+### `~routes.generated.ts` Structure
 
-```ts
-// Auto-generated - DO NOT EDIT
-import { RouteRegistry } from 'manicjs/router';
-
+```ts title="app/~routes.generated.ts (auto-generated)"
+// DO NOT EDIT — regenerated on every dev start and build.
 export const routes = {
-  '/': () => import('./routes/index'),
-  '/about': () => import('./routes/about'),
-  '/posts': () => import('./routes/posts/index'),
-  '/posts/:id': () => import('./routes/posts/[id]'),
-  '/docs/*': () => import('./routes/docs/[...slug]'),
+  '/':              () => import('./routes/index.tsx'),
+  '/about':         () => import('./routes/about.tsx'),
+  '/posts':         () => import('./routes/posts/index.tsx'),
+  '/posts/:id':     () => import('./routes/posts/[id].tsx'),
+  '/docs/:...slug': () => import('./routes/docs/[...slug].tsx'),
 };
 
-export const registry = new RouteRegistry(routes);
+export const notFoundPage = () => import('./routes/~404.tsx');
+export const errorPage    = () => import('./routes/~500.tsx');
 ```
+
+The client `<Router>` reads these from `window.__MANIC_ROUTES__` and `window.__MANIC_ERROR_PAGES__`, which are populated by the entry script during application boot.
 
 ### Generation Process
 
@@ -171,34 +172,50 @@ sequenceDiagram
 
 ## Type Definitions
 
-### Route Definition
+### Discovered Route
 
 ```ts
-interface RouteDef {
-  path: string;
-  score: number;
-  file: string;
-  params: string[];
-  isDynamic: boolean;
-  isCatchAll: boolean;
+import type { PageRoute, ApiRoute } from 'manicjs/config';
+
+interface PageRoute {
+  path: string;       // URL pattern, e.g. "/posts/:id"
+  filePath: string;   // Source file path
+  dynamic: boolean;   // True when the path contains parameters
+}
+
+interface ApiRoute {
+  mountPath: string;  // Mount point, e.g. "/api/users"
+  filePath: string;
 }
 ```
 
-### Config Type
+### Config Type (Excerpt)
+
+The full `ManicConfig` shape is exported from `manicjs/config`. The excerpt below covers the fields you most commonly customize — see the [Configuration Reference](/docs/api/config) for everything.
 
 ```ts
 interface ManicConfig {
-  mode: 'fullstack' | 'frontend';
-  plugins: string[];
-  build: {
-    target?: string;
+  mode?: 'fullstack' | 'frontend';
+  app?: { name?: string };
+  server?: { port?: number; hmr?: boolean };
+  router?: {
+    viewTransitions?: boolean;
+    preserveScroll?: boolean;
+    scrollBehavior?: 'auto' | 'smooth';
+  };
+  build?: {
     minify?: boolean;
-    sourcemap?: boolean;
+    sourcemap?: boolean | 'inline' | 'external';
+    splitting?: boolean;
+    outdir?: string;
   };
-  server: {
-    port?: number;
-    hostname?: string;
+  oxc?: {
+    target?: string;
+    rewriteImportExtensions?: boolean;
+    refresh?: boolean;
   };
+  providers?: ManicProvider[];
+  plugins?: ManicPlugin[];
 }
 ```
 
@@ -282,16 +299,6 @@ Keep config at project root for discovery.
 Use debug logging to troubleshoot discovery issues.
 
 </Callout>
----
-
-## Version History
-
-| Version | Changes |
-|---------|---------|
-| v0.12.0 | Added route scoring |
-| v0.11.0 | Improved config loading |
-| v0.10.0 | Initial manifest generation |
-
 ---
 
 See also:

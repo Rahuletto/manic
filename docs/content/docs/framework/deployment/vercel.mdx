@@ -44,6 +44,105 @@ vercel --prod
 
 ## How It Works
 
-- **Static Files**: Files in `dist/client/` are mapped to Vercel's static output.
-- **Server**: The Hono server is bundled as a Vercel Serverless Function (or Edge Function depending on config).
-- **API**: API routes are correctly routed through the Vercel edge.
+### Build Output Architecture
+
+The Vercel provider transforms Manic's unified `.manic/` output into the Vercel Build Output API (v3) format:
+
+```
+dist/
+  ├── client/                 → .vercel/output/static/
+  ├── api/                    → .vercel/output/functions/
+  └── server/index.js         → .vercel/output/functions/[...].func/
+
+.vercel/output/
+  ├── config.json            (routing, env, regions)
+  ├── .vc-config.json        (provider config)
+  └── functions/             (Serverless + Edge Functions)
+```
+
+- **Static Files**: `dist/client/` → Vercel's global CDN
+- **Server**: Hono runtime as Serverless Function (default) or Edge Function (with `edge: true`)
+- **API Routes**: Auto-extracted from `dist/api/` and mounted on `/api/*`
+
+### Regions & Functions
+
+```ts
+export default defineConfig({
+  providers: [vercel({
+    regions: ['sfo1', 'iad1'],      // US West, US East
+    edge: false,                      // Use Serverless (default)
+    // edge: true,                    // Use Edge Functions (faster, limited runtime)
+  })],
+});
+```
+
+## Environment Variables
+
+Set environment variables in Vercel's dashboard or via the CLI:
+
+```bash
+vercel env add SECRET_KEY
+```
+
+Access them in API routes:
+
+```ts
+export async function GET() {
+  const secret = process.env.SECRET_KEY;
+  return Response.json({ secret });
+}
+```
+
+## Incremental Static Regeneration (ISR)
+
+Manic doesn't use ISR; however, you can implement server-side caching for static-like content:
+
+```ts
+// app/api/posts/index.ts
+import { runtime } from '@vercel/functions';
+
+export async function GET() {
+  const cached = await runtime.cache.get('posts');
+  if (cached) return cached;
+
+  const posts = await fetchPosts();
+  await runtime.cache.set('posts', Response.json(posts), {
+    tags: ['posts'],
+    revalidate: 3600, // 1 hour
+  });
+
+  return Response.json(posts);
+}
+```
+
+## Revalidate Routes
+
+Invalidate cached routes with Vercel's Revalidate API:
+
+```bash
+curl -X POST https://api.vercel.com/v1/deployments/<deployment-id>/revalidate \
+  -H "Authorization: Bearer $VERCEL_TOKEN" \
+  -d '{"paths": ["/posts"]}'
+```
+
+## Debugging Deployments
+
+### View Logs
+
+```bash
+vercel logs
+```
+
+### Inspect Function Output
+
+```bash
+vercel inspect
+```
+
+### Test Locally
+
+```bash
+vercel dev
+```
+
+This emulates the Vercel environment locally, including serverless function behavior.

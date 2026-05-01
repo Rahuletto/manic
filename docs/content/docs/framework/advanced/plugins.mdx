@@ -43,7 +43,8 @@ bun add @manicjs/tailwind
 
 ### Configure
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { tailwind } from '@manicjs/tailwind';
@@ -63,7 +64,8 @@ export default defineConfig({
 bun add @manicjs/tailwind
 ```
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { tailwind } from '@manicjs/tailwind';
@@ -79,10 +81,11 @@ export default defineConfig({
 bun add @manicjs/mdx
 ```
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { mdx } from '@manicjs/mdx';
+declare function mdx(options?: Record<string, unknown>): unknown;
 
 export default defineConfig({
   plugins: [mdx()],
@@ -95,7 +98,8 @@ export default defineConfig({
 bun add @manicjs/sitemap
 ```
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { sitemap } from '@manicjs/sitemap';
@@ -111,7 +115,8 @@ export default defineConfig({
 bun add @manicjs/seo
 ```
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { seo } from '@manicjs/seo';
@@ -134,7 +139,8 @@ export default defineConfig({
 bun add @manicjs/api-docs
 ```
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { apiDocs } from '@manicjs/api-docs';
@@ -161,6 +167,7 @@ interface ManicPlugin {
   configureServer?: (ctx: ManicServerPluginContext) => void | Promise<void>;
 }
 
+// Shared base context
 interface ManicPluginContext {
   config: ManicConfig;
   pageRoutes: PageRoute[];
@@ -170,11 +177,13 @@ interface ManicPluginContext {
   dist: string;
 }
 
+// Build-time context
 interface ManicBuildPluginContext extends ManicPluginContext {
   emitClientFile(relativePath: string, content: string | Uint8Array): Promise<void>;
   injectHtml(tags: string): void;
 }
 
+// Dev server context
 interface ManicServerPluginContext extends ManicPluginContext {
   addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
   addLinkHeader(value: string): void;
@@ -184,7 +193,8 @@ interface ManicServerPluginContext extends ManicPluginContext {
 
 ### createPlugin Helper
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { createPlugin } from 'manicjs/config';
 
 const myPlugin = createPlugin({
@@ -221,10 +231,11 @@ npm search @manicjs
 bun add @manicjs/unocss
 ```
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { unocss } from '@manicjs/unocss';
+declare function unocss(options?: Record<string, unknown>): unknown;
 
 export default defineConfig({
   plugins: [unocss()],
@@ -237,7 +248,8 @@ export default defineConfig({
 
 ### Custom Plugin
 
-```ts
+```ts twoslash
+// @errors: 2322
 // plugins/my-custom-plugin.ts
 import { createPlugin, type ManicPlugin } from 'manicjs/config';
 
@@ -264,8 +276,12 @@ export function myCustomPlugin(): ManicPlugin {
 
 ### Plugin Options
 
-```ts
+```ts twoslash
+// @errors: 2322
 // With options
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+
 export default defineConfig({
   plugins: [
     seo({
@@ -296,7 +312,10 @@ export default defineConfig({
 
 **Solution:** Check order or disable one:
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function defineConfig(config: any): any;
+
 export default defineConfig({
   plugins: [
     // Only one styling plugin
@@ -325,16 +344,6 @@ export default defineConfig({
 **Configure plugins early** — in manic.config.ts before other options.
 
 </Callout>
----
-
-## Version History
-
-| Version | Changes |
-|---------|---------|
-| v0.12.0 | Added MCP plugin |
-| v0.11.0 | Added API Docs plugin |
-| v0.10.0 | Added basic plugins |
-
 ---
 
 See also:

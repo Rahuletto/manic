@@ -34,9 +34,183 @@ export default defineConfig({
 
 By default, the server listens on port `3000`. You can change this using the `PORT` environment variable.
 
+## Docker Deployment
+
+Create a `Dockerfile`:
+
+```dockerfile
+FROM oven/bun:latest AS builder
+
+WORKDIR /build
+COPY . .
+RUN bun install
+RUN bun run build
+
+FROM oven/bun:latest
+
+WORKDIR /app
+COPY --from=builder /build/.manic .manic
+COPY --from=builder /build/node_modules node_modules
+
+ENV NODE_ENV=production
+EXPOSE 3000
+
+CMD ["bun", ".manic/server/index.js"]
+```
+
+Build and run:
+
+```bash
+docker build -t my-manic-app .
+docker run -p 3000:3000 -e NODE_ENV=production my-manic-app
+```
+
+## Systemd Service
+
+Deploy with `systemd` on Linux:
+
+```ini
+# /etc/systemd/system/manic.service
+[Unit]
+Description=Manic Application
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/manic
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+ExecStart=/usr/bin/bun /var/www/manic/.manic/server/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+
+```bash
+sudo systemctl enable manic
+sudo systemctl start manic
+sudo systemctl status manic
+```
+
+View logs:
+
+```bash
+sudo journalctl -u manic -f
+```
+
+## Nginx Reverse Proxy
+
+Configure Nginx to proxy requests:
+
+```nginx
+upstream manic {
+  server localhost:3000;
+}
+
+server {
+  listen 80;
+  server_name example.com;
+  
+  # Enable Gzip compression
+  gzip on;
+  gzip_types text/plain text/css application/json application/javascript;
+  
+  location / {
+    proxy_pass http://manic;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+  }
+}
+```
+
+Enable HTTPS with Certbot:
+
+```bash
+sudo certbot --nginx -d example.com
+```
+
 ## Production Checklist
 
-- **Reverse Proxy**: Use Nginx or Caddy to handle SSL/TLS termination and Gzip compression.
-- **Process Manager**: Use `systemd` or Docker to ensure the Bun process restarts automatically.
-- **Environment**: Set `NODE_ENV=production` for optimized performance and error handling.
-- **Port**: Ensure your firewall allows incoming traffic on your selected port.
+- [ ] **Reverse Proxy**: Use Nginx or Caddy for SSL/TLS and compression
+- [ ] **Process Manager**: Use `systemd`, Docker, or PM2 for auto-restart
+- [ ] **Environment**: Set `NODE_ENV=production`
+- [ ] **Port**: Firewall configured to allow incoming traffic
+- [ ] **Monitoring**: Set up logging and error tracking (Sentry, Grafana)
+- [ ] **Backups**: Database and configuration backups automated
+- [ ] **Health Checks**: Implement `/health` endpoint for uptime monitoring
+- [ ] **Rate Limiting**: Add rate limiting via Nginx or middleware
+
+## Health Check Endpoint
+
+Add a simple health check:
+
+```ts
+// app/api/health/index.ts
+export async function GET() {
+  return Response.json({ status: 'ok', timestamp: new Date().toISOString() });
+}
+```
+
+Monitor with a simple script:
+
+```bash
+#!/bin/bash
+while true; do
+  curl -f http://localhost:3000/api/health || systemctl restart manic
+  sleep 30
+done
+```
+
+## Performance Tuning
+
+### Bun Server Options
+
+Pass options to `manic start`:
+
+```bash
+# Increase file descriptor limit
+ulimit -n 65536
+
+# Run with multiple workers
+bun .manic/server/index.js --workers=4
+```
+
+### Database Connection Pooling
+
+Use connection pools for databases:
+
+```ts
+// app/lib/db.ts
+import { Pool } from 'pg';
+
+export const db = new Pool({
+  max: 20,      // Max connections
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+```
+
+### Static Asset Caching
+
+Configure HTTP caching headers in API routes:
+
+```ts
+export async function GET({ request }: { request: Request }) {
+  const response = Response.json({ data: 'cached' });
+  response.headers.set('Cache-Control', 'public, max-age=3600');
+  return response;
+}
+```

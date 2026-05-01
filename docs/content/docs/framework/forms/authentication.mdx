@@ -344,21 +344,28 @@ export default function AdminPage() {
 
 ## Advanced Patterns
 
-### Pattern 1: Session Expiry
+### Pattern 1: Session Expiry & Activity Extension
 
 ```tsx
-// Extend session on activity
+// Extend session on user activity
 export function useSessionExtend() {
   useEffect(() => {
+    let timeout: NodeJS.Timeout;
+
     const handleActivity = () => {
-      // Ping server to extend session
-      fetch('/api/auth/ping', { method: 'POST' });
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        // Ping server to extend session
+        fetch('/api/auth/ping', { method: 'POST' });
+      }, 15 * 60 * 1000); // Extend after 15 minutes of inactivity
     };
 
     document.addEventListener('click', handleActivity);
     document.addEventListener('keypress', handleActivity);
+    handleActivity(); // Initialize
 
     return () => {
+      clearTimeout(timeout);
       document.removeEventListener('click', handleActivity);
       document.removeEventListener('keypress', handleActivity);
     };
@@ -366,21 +373,32 @@ export function useSessionExtend() {
 }
 ```
 
-### Pattern 2: JWT Refresh
+### Pattern 2: JWT with Refresh Token
 
 ```tsx
 // app/api/auth/refresh/index.ts
-export async function POST() {
-  const oldToken = cookies().get('session');
+import { cookies } from 'manicjs';
 
-  if (!oldToken) {
-    return Response.json({ error: 'No session' }, { status: 401 });
+export async function POST() {
+  const refreshToken = cookies().get('refreshToken');
+
+  if (!refreshToken) {
+    return Response.json({ error: 'No refresh token' }, { status: 401 });
   }
 
-  const newToken = await refreshToken(oldToken);
-  cookies().set('session', newToken);
+  try {
+    const newAccessToken = await refreshAccessToken(refreshToken);
+    cookies().set('session', newAccessToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 15 * 60, // 15 minutes
+    });
 
-  return Response.json({ success: true });
+    return Response.json({ success: true });
+  } catch {
+    cookies().delete('refreshToken');
+    return Response.json({ error: 'Invalid token' }, { status: 401 });
+  }
 }
 ```
 
@@ -390,7 +408,7 @@ export async function POST() {
 // Generate CSRF token
 export async function GET() {
   const token = generateCSRF();
-  cookies().set('csrf', token);
+  cookies().set('csrf', token, { httpOnly: true });
 
   return Response.json({ token });
 }
@@ -401,8 +419,10 @@ export async function POST({ request }: { request: Request }) {
   const cookieCSRF = cookies().get('csrf');
 
   if (csrf !== cookieCSRF) {
-    return Response.json({ error: 'Invalid CSRF' }, { status: 403 });
+    return Response.json({ error: 'Invalid CSRF token' }, { status: 403 });
   }
+
+  // Process mutation...
 }
 ```
 
@@ -422,9 +442,9 @@ export async function POST({ request }: { request: Request }) {
 **Solution:**
 
 ```tsx
-// Include credentials
+// Include credentials in all requests
 fetch('/api/auth/me', {
-  credentials: 'include',  // Important!
+  credentials: 'include',  // Critical!
 });
 ```
 
@@ -435,11 +455,39 @@ fetch('/api/auth/me', {
 **Solution:**
 
 ```tsx
-// Server: Set SameSite
+// Server: Set SameSite appropriately
 cookies().set('session', token, {
   sameSite: 'lax',  // or 'none' for cross-origin
   secure: true,     // required for cross-origin
 });
+
+// Client: Include credentials
+fetch('/api/auth/login', {
+  method: 'POST',
+  credentials: 'include',
+  body: JSON.stringify({ email, password }),
+});
+```
+
+### Issue 3: Token Expiry Without Warning
+
+**Problem:** User gets logged out without notice.
+
+**Solution:** Implement token expiry warning:
+
+```tsx
+// Warn before logout
+export function useSessionWarning() {
+  useEffect(() => {
+    const warningTime = 5 * 60 * 1000; // Warn 5 mins before expiry
+    const timeout = setTimeout(() => {
+      alert('Your session will expire in 5 minutes. Click to extend.');
+      fetch('/api/auth/ping', { method: 'POST' });
+    }, warningTime);
+
+    return () => clearTimeout(timeout);
+  }, []);
+}
 ```
 
 ---
@@ -448,13 +496,13 @@ cookies().set('session', token, {
 
 <Callout type="warn">
  
-**Use HttpOnly cookies** — prevents JavaScript access to user sessions.
+**Use HttpOnly cookies** — prevents JavaScript access to session tokens.
  
 </Callout>
  
 <Callout type="warn">
  
-**Use Secure cookies** — HTTPS only in production environments.
+**Use Secure flag** — enforces HTTPS-only in production.
  
 </Callout>
  
@@ -466,24 +514,19 @@ cookies().set('session', token, {
 
 <Callout type="info">
 
-**Set reasonable session expiry** — 7 days is common.
+**Set reasonable session expiry** — 7 days for web apps, shorter for sensitive operations.
 
 </Callout>
 <Callout type="info">
 
-**Use secure password hashing** — bcrypt with salt.
+**Use bcrypt with salt** — never store plaintext passwords. Use `bcrypt.hash()` with salt rounds ≥ 10.
 
 </Callout>
----
+<Callout type="info">
 
-## Version History
+**Validate email on registration** — send confirmation email to verify ownership.
 
-| Version | Changes |
-|---------|---------|
-| v0.12.0 | Added session extension |
-| v0.11.0 | Added CSRF protection |
-| v0.10.0 | Initial auth support |
-
+</Callout>
 ---
 
 See also:

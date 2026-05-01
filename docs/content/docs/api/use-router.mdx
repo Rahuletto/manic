@@ -10,6 +10,7 @@ The `useRouter` hook provides access to the router's internal state, including c
 ## Hook Signature
 
 ```ts twoslash
+// @errors: 2322
 import { useRouter } from 'manicjs';
 
 export default function Page() {
@@ -42,6 +43,7 @@ export default function Page() {
 ### Basic Usage
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useRouter } from 'manicjs';
 
@@ -62,14 +64,14 @@ export default function UserProfile() {
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function PostList({ posts }: { posts: Array<{ slug: string; title: string }> }) {
   return (
     <ul>
       {posts.map(post => (
         <li key={post.slug}>
-          <ManicLink to={`/posts/${post.slug}`}>{post.title}</ManicLink>
+          <Link to={`/posts/${post.slug}`}>{post.title}</Link>
         </li>
       ))}
     </ul>
@@ -80,6 +82,7 @@ export function PostList({ posts }: { posts: Array<{ slug: string; title: string
 ### Multiple Route Parameters
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useRouter } from 'manicjs';
 
@@ -99,6 +102,7 @@ export default function UserPost() {
 ### Programmatic Navigation
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'manicjs';
@@ -151,25 +155,6 @@ export default function AdminPage() {
   if (!user?.isAdmin) return null;
   
   return <div>Admin Panel</div>;
-}
-```
-
-### Multiple Route Parameters
-
-```tsx twoslash
-import React from 'react';
-import { useRouter } from 'manicjs';
-
-// File: app/routes/users/[userId]/posts/[postId].tsx
-export default function UserPost() {
-  const { params } = useRouter();
-  // { userId: "123", postId: "456" }
-  
-  return (
-    <div>
-      User {params.userId}'s Post {params.postId}
-    </div>
-  );
 }
 ```
 

@@ -12,7 +12,7 @@ Plugins are the primary way to extend Manic's functionality. They allow you to h
 The `createPlugin` helper simplifies plugin development by providing a unified interface for both development and production environments.
 
 ```ts twoslash
-//
+// @errors: 2322
 import { createPlugin } from 'manicjs/config';
 
 // Conceptual helper
@@ -101,6 +101,14 @@ Both `configureServer` and `build` hooks receive a context object that provides 
       type: "boolean",
       description: "Boolean indicating if the environment is production.",
     },
+    cwd: {
+      type: "string",
+      description: "Current working directory.",
+    },
+    dist: {
+      type: "string",
+      description: "Output directory for build artifacts.",
+    },
   }}
 />
 
@@ -128,7 +136,7 @@ Both `configureServer` and `build` hooks receive a context object that provides 
 <TypeTable
   type={{
     emitClientFile: {
-      type: "(path: string, content: string) => void",
+      type: "(path: string, content: string | Uint8Array) => Promise<void>",
       description: "Writes a static asset to the client output.",
     },
     injectHtml: {

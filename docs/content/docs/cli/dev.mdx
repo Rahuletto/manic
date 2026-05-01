@@ -33,7 +33,11 @@ Manic uses **React Fast Refresh** integrated via our custom OXC transform plugin
 
 One of Manic's unique features is the ability for plugins to inject code directly into the dev server's preamble.
 
-```ts title="manic.config.ts"
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+
 export default defineConfig({
   plugins: [
     {
@@ -48,18 +52,18 @@ The CLI automatically detects these `preload` paths and passes them to the under
 
 ---
 
-## Technical Reference
+## CLI Flags
 
-### Usage
-```bash
-manic dev [options]
-```
+| Flag | Description |
+|------|-------------|
+| `--port` | Port to run the dev server on (default: 6070) |
+| `--no-hmr` | Disable hot module replacement |
+| `--no-view-transitions` | Disable View Transitions API |
 
-### Options
-- `--port, -p`: Specify the port (default: `6070`).
-- `--network`, `-n`: Expose the server to the local network (`0.0.0.0`).
-- `--mode`: Set the execution environment (`development` or `production`).
+---
 
-### Environment Variables
-- `PORT`: Overrides the default port.
-- `HOST`: Overrides the default host (usually `localhost`).
+## See Also
+
+- [Configuration](/docs/api/config) - Config options
+- [Plugins](/docs/framework/plugins) - Plugin system
+- [CLI Build](/docs/cli/build) - Production builds

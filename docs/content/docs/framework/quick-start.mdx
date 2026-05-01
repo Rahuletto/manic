@@ -50,10 +50,12 @@ bun add -d @types/react @types/react-dom
 
 Create the mandatory server entry point `~manic.ts` in the root.
 
-```ts title="~manic.ts"
+```ts twoslash
+// @errors: 2322
+// ~manic.ts
 import { createManicServer } from 'manicjs/server';
 
-const app = await createManicServer();
+const app = await createManicServer({ html: '<!doctype html><html><body><div id="root"></div></body></html>' });
 
 export default {
   port: process.env.PORT || 6070,
@@ -65,7 +67,9 @@ export default {
 
 Create the `app/routes` directory and add an `index.tsx` file.
 
-```tsx title="app/routes/index.tsx"
+```tsx twoslash
+// @errors: 2322
+// app/routes/index.tsx
 export default function Page() {
   return <h1>Hello from Manic!</h1>;
 }

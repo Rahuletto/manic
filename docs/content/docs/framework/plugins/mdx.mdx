@@ -17,10 +17,11 @@ bun add @manicjs/mdx
 
 ### 1. Configure
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { mdx } from '@manicjs/mdx';
+declare function mdx(options?: Record<string, unknown>): { name: string };
 
 export default defineConfig({
   plugins: [mdx()],
@@ -109,14 +110,18 @@ Written by {frontmatter.author}
 
 You can change the export name with `frontmatterName`:
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function mdx(options?: Record<string, unknown>): { name: string };
+
 mdx({ frontmatterName: 'metadata' })
 ```
 
 Then access it as `{metadata.title}` in your MDX, or import it from another file:
 
-```ts
-import { metadata } from './my-post.mdx';
+```ts twoslash
+// @errors: 2322
+declare const metadata: { title: string };
 ```
 
 Set `disableFrontmatter: true` to disable frontmatter extraction entirely.
@@ -139,10 +144,11 @@ import { Callout } from '~/components/Callout';
 
 Enable TOC extraction with `toc: true`. This uses `fumadocs-core` to export a `toc` array from each MDX file:
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { mdx } from '@manicjs/mdx';
+declare function mdx(options?: Record<string, unknown>): { name: string };
 
 export default defineConfig({
   plugins: [
@@ -155,8 +161,9 @@ export default defineConfig({
 
 Then import `toc` directly from the MDX file:
 
-```ts
-import { toc } from './my-post.mdx';
+```ts twoslash
+// @errors: 2322
+declare const toc: Array<{ depth: number; url: string; title: string }>;
 
 // toc is an array of heading objects:
 // [{ depth: 1, url: '#introduction', title: 'Introduction' }, ...]
@@ -166,7 +173,10 @@ import { toc } from './my-post.mdx';
 
 Syntax highlighting is **opt-in** via `rehype-pretty-code`. Enable it with `highlight: true` for the default `github-light` / `github-dark` themes:
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function mdx(options?: Record<string, unknown>): { name: string };
+
 mdx({
   highlight: true,
 })
@@ -174,7 +184,10 @@ mdx({
 
 Or pass custom theme names:
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function mdx(options?: Record<string, unknown>): { name: string };
+
 mdx({
   highlight: { light: 'min-light', dark: 'night-owl' },
 })
@@ -193,7 +206,8 @@ The `mdx()` plugin function serializes options to an environment variable so the
 
 To add custom remark or rehype plugins, use `mdxBunPlugin()` from `@manicjs/mdx/bun-plugin` directly and register it as a Bun plugin:
 
-```ts
+```ts twoslash
+// @errors: 2322 2307
 // plugins/my-mdx.ts
 import { plugin } from 'bun';
 import { mdxBunPlugin } from '@manicjs/mdx/bun-plugin';

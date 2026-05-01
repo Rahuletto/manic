@@ -34,7 +34,8 @@ Plugins extend Manic's core functionality:
 
 ### Create a Simple Plugin
 
-```ts
+```ts twoslash
+// @errors: 2322
 // my-plugin.ts
 import { createPlugin } from 'manicjs/config';
 
@@ -42,7 +43,7 @@ export function myPlugin(options?: { name?: string }) {
   return createPlugin({
     name: 'my-plugin',
     
-    build(ctx) {
+    build(ctx: { injectHtml: (tags: string) => void }) {
       console.log('Building with my plugin!');
       ctx.injectHtml('<meta name="my-plugin" content="true">');
     },
@@ -52,10 +53,14 @@ export function myPlugin(options?: { name?: string }) {
 
 ### Use in Config
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { myPlugin } from './plugins/my-plugin';
+
+function myPlugin(_opts?: { name?: string }) {
+  return { name: 'my-plugin' as const };
+}
 
 export default defineConfig({
   plugins: [
@@ -75,28 +80,36 @@ interface ManicPlugin {
   name: string;
   
   // Build-time hooks
-  build?: (ctx: ManicPluginBuildContext) => void | Promise<void>;
+  build?: (ctx: ManicBuildPluginContext) => void | Promise<void>;
   
   // Dev server hooks  
-  configureServer?: (ctx: ManicPluginServerContext) => void | Promise<void>;
+  configureServer?: (ctx: ManicServerPluginContext) => void | Promise<void>;
   
   // Static file generation
   staticFiles?: StaticFile[];
 }
 
-interface ManicPluginBuildContext {
-  pageRoutes: string[];
-  apiRoutes: string[];
+interface ManicBuildPluginContext {
+  config: ManicConfig;
+  pageRoutes: { path: string; filePath: string; dynamic: boolean }[];
+  apiRoutes: { mountPath: string; filePath: string }[];
+  prod: boolean;
+  cwd: string;
   dist: string;
-  emitClientFile: (path: string, content: string) => void;
-  injectHtml: (tags: string) => void;
+  emitClientFile(path: string, content: string | Uint8Array): Promise<void>;
+  injectHtml(tags: string): void;
 }
 
-interface ManicPluginServerContext {
-  app: Hono;
-  addRoute: (path: string, handler: Handler) => void;
-  addLinkHeader: (value: string) => void;
-  injectHtml: (tags: string) => void;
+interface ManicServerPluginContext {
+  config: ManicConfig;
+  pageRoutes: { path: string; filePath: string; dynamic: boolean }[];
+  apiRoutes: { mountPath: string; filePath: string }[];
+  prod: boolean;
+  cwd: string;
+  dist: string;
+  addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
+  addLinkHeader(value: string): void;
+  injectHtml(tags: string): void;
 }
 
 interface StaticFile {
@@ -112,7 +125,16 @@ interface StaticFile {
 
 ### Using build() Hook
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: {
+  name: string;
+  build?: (ctx: {
+    injectHtml: (tags: string) => void;
+    emitClientFile: (path: string, content: string | Uint8Array) => Promise<void>;
+  }) => void;
+}): any;
+
 createPlugin({
   name: 'my-build-plugin',
   
@@ -129,18 +151,18 @@ createPlugin({
 ### Build Context API
 
 ```ts
-interface ManicPluginBuildContext {
+interface ManicBuildPluginContext {
   // All discovered page routes
-  pageRoutes: string[];
+  pageRoutes: { path: string; filePath: string; dynamic: boolean }[];
   
   // All discovered API routes  
-  apiRoutes: string[];
+  apiRoutes: { mountPath: string; filePath: string }[];
   
   // Output directory
   dist: string;
   
   // Emit a file to dist/client/
-  emitClientFile(path: string, content: string): void;
+  emitClientFile(path: string, content: string | Uint8Array): Promise<void>;
   
   // Inject into <head>
   injectHtml(tags: string): void;
@@ -153,13 +175,16 @@ interface ManicPluginBuildContext {
 
 ### Using configureServer() Hook
 
-```ts
+```ts twoslash
+// @errors: 2322 2339
+declare function createPlugin(config: { name: string; configureServer?: (ctx: { addRoute: (path: string, handler: (c: any) => any) => void; addLinkHeader: (value: string) => void; injectHtml: (tags: string) => void }) => void }): any;
+
 createPlugin({
   name: 'my-server-plugin',
   
   configureServer(ctx) {
     // Add custom route
-    ctx.addRoute('/health', (c) => c.text('OK'));
+    ctx.addRoute('/health', (c: any) => c.text('OK'));
     
     // Add Link header for preloading
     ctx.addLinkHeader('</style.css>; rel=preload; as=style');
@@ -173,12 +198,9 @@ createPlugin({
 ### Server Context API
 
 ```ts
-interface ManicPluginServerContext {
+interface ManicServerPluginContext {
   // Hono app instance
-  app: Hono;
-  
-  // Add API route
-  addRoute(path: string, handler: Handler): void;
+  addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
   
   // Add Link header
   addLinkHeader(value: string): void;
@@ -194,7 +216,10 @@ interface ManicPluginServerContext {
 
 ### Using staticFiles
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; staticFiles?: { path: string; content: string | ((ctx: any) => string); contentType?: string }[] }): any;
+
 createPlugin({
   name: 'my-static-plugin',
   
@@ -218,7 +243,11 @@ createPlugin({
 
 ### Example 1: Analytics Plugin
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; build?: (ctx: { injectHtml: (tags: string) => void }) => void }): any;
+declare function defineConfig(config: { plugins: any[] }): any;
+
 export function analyticsPlugin(trackingId: string) {
   return createPlugin({
     name: 'analytics',
@@ -249,14 +278,17 @@ export default defineConfig({
 
 ### Example 2: Sitemap Generator
 
-```ts
+```ts twoslash
+// @errors: 2322 2339
+declare function createPlugin(config: { name: string; build?: (ctx: { pageRoutes: { path: string }[]; injectHtml: (tags: string) => void; emitClientFile: (path: string, content: string) => void }) => void }): any;
+
 export function sitemapPlugin() {
   return createPlugin({
     name: 'sitemap',
     
     build(ctx) {
       const urls = ctx.pageRoutes.map(route => {
-        const loc = `https://example.com${route}`;
+        const loc = `https://example.com${route.path}`;
         return `<url><loc>${loc}</loc></url>`;
       }).join('\n');
       
@@ -273,7 +305,10 @@ ${urls}
 
 ### Example 3: SEO Plugin
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; build?: (ctx: { injectHtml: (tags: string) => void }) => void }): any;
+
 export function seoPlugin(options: { title: string; description: string }) {
   return createPlugin({
     name: 'seo',
@@ -296,7 +331,10 @@ export function seoPlugin(options: { title: string; description: string }) {
 
 ### Pattern 1: Conditional Features
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; build?: (ctx: { injectHtml: (tags: string) => void }) => void }): any;
+
 createPlugin({
   name: 'conditional',
   
@@ -311,7 +349,10 @@ createPlugin({
 
 ### Pattern 2: Multiple Files
 
-```ts
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; staticFiles?: { path: string; content: (ctx: { pageRoutes: { path: string }[] }) => string }[] }): any;
+
 createPlugin({
   name: 'multi-file',
   
@@ -332,8 +373,11 @@ createPlugin({
 
 **Solution:**
 
-```ts
-// Add to plugins array
+```ts twoslash
+// @errors: 2322
+declare function defineConfig(config: { plugins: any[] }): any;
+declare function myPlugin(): { name: string };
+
 export default defineConfig({
   plugins: [myPlugin()],  // Must be in plugins array
 });
@@ -343,8 +387,11 @@ export default defineConfig({
 
 **Solution:**
 
-```ts
-// Use unique route paths
+```ts twoslash
+// @errors: 2322
+declare const ctx: { addRoute: (path: string, handler: unknown) => void };
+declare const handler: unknown;
+
 ctx.addRoute('/my-plugin/api', handler);
 ```
 
@@ -368,16 +415,6 @@ Avoid modifying the same file multiple times in a single build pass to prevent r
 Document plugin options clearly.
 
 </Callout>
----
-
-## Version History
-
-| Version | Changes |
-|---------|---------|
-| v0.12.0 | Added static files |
-| v0.11.0 | Added server hooks |
-| v0.10.0 | Initial plugin API |
-
 ---
 
 See also:

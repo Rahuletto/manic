@@ -10,6 +10,7 @@ The `navigate` function provides programmatic navigation between routes without 
 ## Function Signature
 
 ```ts twoslash
+// @errors: 2322
 import { navigate } from 'manicjs';
 
 // Navigate to a path
@@ -43,10 +44,6 @@ navigate('/posts/123', { replace: true });
       default: 'false',
       description: 'Replace history entry instead of pushing a new one',
     },
-    state: {
-      type: 'Record<string, unknown>',
-      description: 'State to pass to history state',
-    },
   }}
 />
 
@@ -62,6 +59,7 @@ function navigate(to: string, options?: NavigateOptions): void;
 ### Basic Navigation
 
 ```tsx twoslash
+// @errors: 2322
 import { navigate } from 'manicjs';
 
 // User login handler
@@ -80,6 +78,7 @@ async function handleLogin(email: string, password: string) {
 ### Replace History
 
 ```tsx twoslash
+// @errors: 2322
 import { navigate } from 'manicjs';
 
 // Redirect after action - don't let user go back
@@ -91,6 +90,7 @@ function handleLogout() {
 ### Scroll Control
 
 ```tsx twoslash
+// @errors: 2322
 import { navigate } from 'manicjs';
 
 // Use normal navigation; scroll behavior is controlled by the router config.
@@ -104,7 +104,6 @@ function handleFilterChange(value: string) {
 ```ts
 interface NavigateOptions {
   replace?: boolean;
-  state?: Record<string, unknown>;
 }
 
 declare function navigate(to: string, options?: NavigateOptions): void;

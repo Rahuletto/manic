@@ -26,6 +26,7 @@
       "manicjs/client": ["../packages/manic/src/config/client.ts"],
       "manicjs/transitions": ["../packages/manic/src/transitions/index.ts"]
     },
+    "types": ["bun"],
     "plugins": [
       {
         "name": "next"

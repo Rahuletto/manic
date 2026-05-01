@@ -11,16 +11,18 @@ Manic isn't just a frontend framework—it's a fullstack powerhouse natively int
 
 Any subdirectory in `app/api/` that contains an `index.ts` file becomes an API endpoint. Manic bundles these endpoints into **independent JavaScript chunks** during build time, ensuring optimal performance for serverless environments.
 
-```ts title="app/api/users/index.ts" twoslash
+```ts twoslash
+// @errors: 2322
+// app/api/users/index.ts
 import { Hono } from 'hono';
 
 const app = new Hono();
 
-app.get('/', (c: any) => {
+app.get('/', (c) => {
   return c.json({ users: ['Alice', 'Bob'] });
 });
 
-app.post('/', async (c: any) => {
+app.post('/', async (c) => {
   const body = await c.req.json();
   // ... create user logic
   return c.json({ success: true }, 201);
@@ -35,12 +37,14 @@ export default app;
 
 API routes support the same dynamic parameter syntax as page routes.
 
-```ts title="app/api/users/[id]/index.ts" twoslash
+```ts twoslash
+// @errors: 2322
+// app/api/users/[id]/index.ts
 import { Hono } from 'hono';
 
 const app = new Hono();
 
-app.get('/', (c: any) => {
+app.get('/', (c) => {
   const id = c.req.param('id');
   return c.json({ id });
 });
@@ -50,21 +54,23 @@ export default app;
 
 ---
 
-## Middleware Support
+## Request & Response
 
-Since Manic API routes are just Hono instances, you can use any official or custom Hono middleware.
+Hono's context object (`c`) provides a clean API for handling requests and responses:
 
-```ts title="app/api/protected/index.ts" twoslash
+```ts twoslash
+// @errors: 2322
 import { Hono } from 'hono';
-import { bearerAuth } from 'hono/bearer-auth';
 
 const app = new Hono();
 
-// Add middleware
-app.use('/*', bearerAuth({ token: 'manic-secret' }));
-
-app.get('/', (c: any) => {
-  return c.json({ secret: 'The build engine uses OXC.' });
+app.get('/user/:id', (c) => {
+  const id = c.req.param('id');
+  const name = c.req.query('name');
+  
+  return c.json({ id, name }, 200, {
+    'X-Custom-Header': 'value'
+  });
 });
 
 export default app;
@@ -72,53 +78,55 @@ export default app;
 
 ---
 
-## Advanced: Shared Types
+## Middleware
 
-One of the greatest advantages of using Hono with Manic is the ability to share type definitions between your API and your React components.
+Apply middleware to API routes using Hono's middleware system:
 
-```ts
-// 1. Export the Type from your API
-// app/api/data/index.ts
-const app = new Hono().get('/', (c) => c.json({ hello: 'world' }));
+```ts twoslash
+// @errors: 2322
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.use('*', async (c, next) => {
+  console.log('Request received');
+  await next();
+});
+
+app.get('/protected', (c) => {
+  return c.json({ message: 'This is protected' });
+});
+
+export default app;
+```
+
+---
+
+## Type-Safe API Clients
+
+Use Hono's client for type-safe API calls from the browser:
+
+```ts twoslash
+// @errors: 2322
+// app/api/users/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+app.get('/', (c) => c.json({ users: [] }));
 export type AppType = typeof app;
 
-// 2. Import it in your React Hook/Component
-// app/routes/index.tsx
-import type { AppType } from '../api/data';
-// (Use with hc for type-safe client)
+// client.ts
+import { hc } from 'hono/client';
+
+const client = hc<AppType>('/api') as any;
+const res = await client.users.$get();
+const data = await res.json();
 ```
 
-## Internal Architecture: The "API Chunker"
+---
 
-During `manic build`, the framework uses a dedicated bundling phase for API routes:
-1.  **Discovery**: It scans `app/api/` for `index.ts` files.
-2.  **Mounting**: It calculates the `mountPath` based on the folder nesting.
-3.  **Isolation**: Each route is built as a standalone entry point using `Bun.build`.
-4.  **Deployment**: When deployed (e.g., to Vercel), these chunks are mapped to serverless functions or edge workers.
+## See Also
 
-## API Bundling Flow
-
-```mermaid
-flowchart TD
-    A[app/api/] --> B[Scan for index.ts]
-    B --> C[Generate mount paths]
-    C --> D{For each route}
-    D -->|users| E[users/index.ts]
-    D -->|posts| F[posts/index.ts]
-    D -->|posts/[id]| G[posts/[id]/index.ts]
-    
-    E --> H[Bun.build entry]
-    F --> H
-    G --> H
-    
-    H --> I[dist/api/users.js]
-    H --> J[dist/api/posts.js]
-    H --> K[dist/api/posts/[id].js]
-    
-    I --> L[Vercel Functions]
-    J --> L
-    K --> L
-    
-    style A fill:#e9ecef
-    style L fill:#d3f9d8
-```
+- [Data Fetching](/docs/framework/server/data-fetching) - Patterns for client-side data fetching
+- [Configuration](/docs/api/config) - Server settings
+- [Plugins](/docs/framework/plugins) - Extend API functionality

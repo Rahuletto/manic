@@ -5,17 +5,18 @@ description: Real-world examples and patterns for building with Manic.
 
 # Examples
 
-Explore how to build common features with Manic.
+Practical patterns you can drop into a Manic application. Every snippet assumes a fresh project created with `bun create manic` and uses the official `manicjs` exports only.
 
-## Basic Counter
+---
 
-A simple React component with state management.
+## Counter (State)
 
-```tsx
+```tsx title="app/routes/counter.tsx"
 import { useState } from 'react';
 
 export default function Counter() {
   const [count, setCount] = useState(0);
+
   return (
     <button onClick={() => setCount(c => c + 1)}>
       Count is {count}
@@ -24,21 +25,28 @@ export default function Counter() {
 }
 ```
 
-## Data Fetching with API Routes
+---
 
-Fetching data from a local Manic API endpoint.
+## Data Fetching from an API Route
 
-**API:** `app/api/data/index.ts`
-```ts
-export default new Hono().get('/', (c) => c.json({ data: [1, 2, 3] }));
+Define the API endpoint:
+
+```ts title="app/api/data/index.ts"
+import { Hono } from 'hono';
+
+const app = new Hono();
+app.get('/', c => c.json({ data: [1, 2, 3] }));
+
+export default app;
 ```
 
-**Page:** `app/routes/data.tsx`
-```tsx
+Consume it from a page:
+
+```tsx title="app/routes/data.tsx"
 import { useEffect, useState } from 'react';
 
 export default function DataPage() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<number[]>([]);
 
   useEffect(() => {
     fetch('/api/data')
@@ -48,26 +56,153 @@ export default function DataPage() {
 
   return (
     <ul>
-      {items.map(i => <li key={i}>{i}</li>)}
+      {items.map(i => (
+        <li key={i}>{i}</li>
+      ))}
     </ul>
   );
 }
 ```
 
-## View Transitions between Pages
+---
 
-Creating smooth transitions between list and detail views.
+## Type-safe RPC with Hono
 
-**List:** `app/routes/items/index.tsx`
-```tsx
-<Link href="/items/1">
-  <img src="/thumb.jpg" style={{ viewTransitionName: 'item-1' }} />
-</a>
+Share the Hono app type between server and client for end-to-end type safety:
+
+```ts title="app/api/users/index.ts"
+import { Hono } from 'hono';
+
+const app = new Hono().get('/', c => c.json({ users: ['Ada', 'Linus'] }));
+
+export default app;
+export type AppType = typeof app;
 ```
 
-**Detail:** `app/routes/items/[id].tsx`
-```tsx
-<img src="/full.jpg" style={{ viewTransitionName: 'item-1' }} />
+```ts title="app/routes/~lib/client.ts"
+import { hc } from 'hono/client';
+import type { AppType } from '../../api/users';
+
+export const usersClient = hc<AppType>('/api/users');
 ```
 
-Manic handles the `document.startViewTransition` call automatically!
+```tsx title="app/routes/users.tsx"
+import { useEffect, useState } from 'react';
+import { usersClient } from './~lib/client';
+
+export default function UsersPage() {
+  const [users, setUsers] = useState<string[]>([]);
+
+  useEffect(() => {
+    usersClient.index
+      .$get()
+      .then(res => res.json())
+      .then(json => setUsers(json.users));
+  }, []);
+
+  return <ul>{users.map(u => <li key={u}>{u}</li>)}</ul>;
+}
+```
+
+---
+
+## View Transitions Between Pages
+
+Use the `<ViewTransitions>` factory to mark elements that should animate across navigations:
+
+```tsx title="app/routes/items/index.tsx"
+import { Link, ViewTransitions } from 'manicjs';
+
+export default function ItemList({ items }: { items: { id: string; thumb: string }[] }) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>
+          <Link to={`/items/${item.id}`}>
+            <ViewTransitions.img name={`item-${item.id}`} src={item.thumb} alt="" />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx title="app/routes/items/[id].tsx"
+import { useRouter, ViewTransitions } from 'manicjs';
+
+export default function ItemDetail() {
+  const { params } = useRouter();
+
+  return (
+    <ViewTransitions.img
+      name={`item-${params.id}`}
+      src={`/items/${params.id}/full.jpg`}
+      alt=""
+    />
+  );
+}
+```
+
+Manic invokes `document.startViewTransition()` automatically — no extra wiring required.
+
+---
+
+## Protected Page
+
+```tsx title="app/routes/admin.tsx"
+import { useEffect, useState } from 'react';
+import { useRouter } from 'manicjs';
+
+export default function AdminPage() {
+  const { navigate } = useRouter();
+  const [me, setMe] = useState<{ isAdmin: boolean } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/me')
+      .then(res => res.json())
+      .then(setMe);
+  }, []);
+
+  useEffect(() => {
+    if (me && !me.isAdmin) navigate('/', { replace: true });
+  }, [me, navigate]);
+
+  if (!me?.isAdmin) return null;
+  return <h1>Admin Dashboard</h1>;
+}
+```
+
+---
+
+## Theming with `useTheme`
+
+```tsx title="app/main.tsx"
+import { createRoot } from 'react-dom/client';
+import { Router, ThemeProvider } from 'manicjs';
+
+createRoot(document.getElementById('root')!).render(
+  <ThemeProvider>
+    <Router />
+  </ThemeProvider>,
+);
+```
+
+```tsx title="app/routes/~components/Toggle.tsx"
+import { ThemeToggle, useTheme } from 'manicjs';
+
+export function Toggle() {
+  const { resolvedTheme } = useTheme();
+  return (
+    <ThemeToggle aria-label={`Switch from ${resolvedTheme} mode`} />
+  );
+}
+```
+
+---
+
+## See Also
+
+- [Routing](/docs/framework/routing) — page conventions.
+- [Server & API](/docs/framework/server) — Hono endpoints.
+- [Plugins](/docs/framework/plugins) — Tailwind, MDX, MCP, sitemap.

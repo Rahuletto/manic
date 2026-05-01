@@ -80,7 +80,8 @@ Every `.tsx` file in `app/routes/` automatically becomes a route.
 
 Use `[param]` to capture a single URL segment:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/posts/[id].tsx
 import React from 'react';
 import { useRouter } from 'manicjs';
@@ -101,7 +102,8 @@ export default function PostPage() {
 
 Nest folders to capture multiple params:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/users/[userId]/posts/[postId].tsx
 import React from 'react';
 import { useRouter } from 'manicjs';
@@ -120,7 +122,8 @@ export default function UserPostPage() {
 
 Use `[...param]` to match any number of segments:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/docs/[...slug].tsx
 import React from 'react';
 import { useRouter } from 'manicjs';
@@ -180,19 +183,20 @@ Static routes always win. No need to order files — Manic determines precedence
 
 ### Client-Side Links
 
-Use the `<Link>` component for navigation:
+Use the `<Link>` component for navigation. It prevents full page reloads, prefetches the target chunk on hover/focus, and integrates with view transitions.
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { Link } from 'manicjs';
 
 export function Nav() {
   return (
-    <>
-      <a href="/">Home</a>
-      <a href="/about">About</a>
-      <a href="/posts/123">Post #123</a>
-    </>
+    <nav>
+      <Link to="/">Home</Link>
+      <Link to="/about">About</Link>
+      <Link to="/posts/123">Post #123</Link>
+    </nav>
   );
 }
 ```
@@ -209,12 +213,15 @@ See [Router API](/docs/api/router#link) for full prop reference.
 
 Use `useRouter()` for logic-based navigation:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useRouter } from 'manicjs';
 
 export function LoginButton() {
   const router = useRouter();
+  const email = 'user@example.com';
+  const password = 'secret';
 
   const handleLogin = async () => {
     const response = await fetch('/api/login', {
@@ -264,10 +271,13 @@ Files and folders prefixed with `~` are **excluded from routing**. Use this to c
 
 ### Examples
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // ✓ OK: Route
 // app/routes/posts/[id].tsx
-import { PostCard } from './~PostCard';
+function PostCard() {
+  return <div>Post Content</div>;
+}
 
 export default function PostPage() {
   return <PostCard />;
@@ -275,7 +285,7 @@ export default function PostPage() {
 
 // ✓ OK: Ignored component
 // app/routes/posts/~PostCard.tsx
-export function PostCard() {
+export function PostCardView() {
   return <div>Post Content</div>;
 }
 
@@ -290,9 +300,11 @@ export function PostCard() {
 
 Use `useQueryParams()` to read URL search params:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useQueryParams } from 'manicjs';
+declare const window: any;
 
 export function SearchPage() {
   const searchParams = useQueryParams();
@@ -308,7 +320,7 @@ export function SearchPage() {
     <>
       <input
         value={searchTerm || ''}
-        onChange={(e) => handleSearch(e.target.value)}
+        onChange={(e: any) => handleSearch(e.target.value)}
         placeholder="Search..."
       />
       {searchTerm && <p>Results for: {searchTerm}</p>}
@@ -340,7 +352,8 @@ Create shared layouts by using parent `index.tsx`:
   </Folder>
 </Files>
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/admin/index.tsx (Layout)
 import React from 'react';
 import { Link } from 'manicjs';
@@ -349,8 +362,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="admin">
       <nav>
-        <a href="/admin/users">Users</a>
-        <a href="/admin/settings">Settings</a>
+        <Link to="/admin/users">Users</Link>
+        <Link to="/admin/settings">Settings</Link>
       </nav>
       <main>{children}</main>
     </div>
@@ -369,7 +382,8 @@ This is a convention — layout support depends on your router implementation us
 
 ### Protected Routes
 
-```tsx
+```tsx twoslash
+// @errors: 2322 2307
 import React from 'react';
 import { useRouter } from 'manicjs';
 import { useAuth } from './~hooks/useAuth';
@@ -392,7 +406,8 @@ export default function AdminPage() {
 
 ### Redirect Logic
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/old-url.tsx
 import React from 'react';
 import { useRouter } from 'manicjs';
@@ -411,7 +426,8 @@ export default function OldPage() {
 
 ### Breadcrumbs
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useRouter } from 'manicjs';
 import { Link } from 'manicjs';
@@ -422,13 +438,13 @@ export function Breadcrumbs() {
 
   return (
     <nav>
-      <a href="/">Home</a>
+      <Link to="/">Home</Link>
       {segments.map((segment, i) => {
         const href = '/' + segments.slice(0, i + 1).join('/');
         return (
           <React.Fragment key={href}>
             <span>/</span>
-            <a href={href}>{segment}</a>
+            <Link to={href}>{segment}</Link>
           </React.Fragment>
         );
       })}

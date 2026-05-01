@@ -357,44 +357,90 @@ export async function POST({ request }: { request: Request }) {
 
 ## Advanced Patterns
 
-### Pattern 1: Use React Hook Form
+### Pattern 1: Debounced Field Validation
 
 ```tsx
-// If using react-hook-form
-import { useForm } from 'react-hook-form';
+// Real-time validation with debounce
+import React, { useState, useCallback, useRef } from 'react';
 
-export function MyForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+function useDebounce<T>(value: T, ms: number) {
+  const [debounced, setDebounced] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
-  const onSubmit = (data: any) => {
-    console.log(data);
-  };
+  React.useEffect(() => {
+    timeoutRef.current = setTimeout(() => setDebounced(value), ms);
+    return () => clearTimeout(timeoutRef.current);
+  }, [value, ms]);
+
+  return debounced;
+}
+
+export function RegisterForm() {
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const debouncedEmail = useDebounce(email, 500);
+
+  React.useEffect(() => {
+    if (!debouncedEmail) return;
+    
+    checkEmailAvailable(debouncedEmail).then(available => {
+      if (!available) setEmailError('Email already in use');
+      else setEmailError('');
+    });
+  }, [debouncedEmail]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register('email', { required: true })} />
-      {errors.email && <span>Required</span>}
-      <button type="submit">Submit</button>
+    <form>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      {emailError && <span className="error">{emailError}</span>}
     </form>
   );
 }
 ```
 
-### Pattern 2: Auto-Save Drafts
+### Pattern 2: Auto-Save Drafts with LocalStorage
 
 ```tsx
-// Save draft to localStorage
-function useAutoSave(form: object, key: string) {
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(form));
-  }, [form, key]);
+// Save form state to localStorage with recovery
+import React, { useState, useEffect } from 'react';
+
+function useDraft(key: string, initialValue: object) {
+  const [form, setForm] = useState(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      // Restore saved form
-    }
-  }, []);
+    const timer = setTimeout(() => {
+      localStorage.setItem(key, JSON.stringify(form));
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [form, key]);
+
+  return [form, setForm] as const;
+}
+
+export function ArticleForm() {
+  const [form, setForm] = useDraft('article-draft', { title: '', content: '' });
+
+  return (
+    <form>
+      <input 
+        value={form.title} 
+        onChange={(e) => setForm({ ...form, title: e.target.value })}
+      />
+      <textarea 
+        value={form.content} 
+        onChange={(e) => setForm({ ...form, content: e.target.value })}
+      />
+      <p className="text-xs text-gray-500">Draft auto-saved</p>
+    </form>
+  );
 }
 ```
 
@@ -469,16 +515,6 @@ Always validate user input server-side, even if client-side validation passes.
 **Display clear error messages** — tell users what went wrong and how to fix it.
 
 </Callout>
----
-
-## Version History
-
-| Version | Changes |
-|---------|---------|
-| v0.12.0 | Added form examples |
-| v0.11.0 | Initial form support |
-| v0.10.0 | Basic form handling |
-
 ---
 
 See also:

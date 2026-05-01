@@ -30,7 +30,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
  *
  * @example
  * // With custom remark/rehype plugins (via Bun.plugin directly)
- * import { mdxBunPlugin } from '@manicjs/mdx';
+ * import { mdxBunPlugin } from '@manicjs/mdx/bun-plugin';
  * Bun.plugin(mdxBunPlugin({ myOption: true }));
  */
 export function mdx(options: import('./bun-plugin.ts').MdxPluginOptions = {}): ManicPlugin {

@@ -15,7 +15,8 @@ bun add @manicjs/api-docs
 
 ## Usage
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { apiDocs } from '@manicjs/api-docs';
@@ -59,7 +60,11 @@ The plugin does **not** generate an OpenAPI spec. You must provide the spec your
 
 ## Custom Configuration
 
-```ts
+```ts twoslash
+// @errors: 2322
+import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
+
 export default defineConfig({
   plugins: [
     apiDocs({

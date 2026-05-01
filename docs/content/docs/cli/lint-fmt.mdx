@@ -48,3 +48,12 @@ manic fmt [options]
 Manic aims for zero-config, but we understand the need for customization.
 - **Linter**: Place an `.oxlintrc.json` in your project root to customize rules.
 - **Formatter**: Manic respects `.prettierrc` files for basic formatting options to ensure harmony with existing team workflows.
+
+```json
+// .oxlintrc.json
+{
+  "rules": {
+    "no-console": "off"
+  }
+}
+```

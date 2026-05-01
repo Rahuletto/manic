@@ -42,10 +42,11 @@ bun add @manicjs/[plugin-name]
 
 Add to your `manic.config.ts`:
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { defineConfig } from 'manicjs/config';
 import { tailwind } from '@manicjs/tailwind';
-import { mdx } from '@manicjs/mdx';
+declare function mdx(options?: Record<string, unknown>): unknown;
 
 export default defineConfig({
   plugins: [
@@ -109,12 +110,12 @@ See [Plugin Development](/docs/framework/advanced/plugin-development) for creati
 
 ## Version Compatibility
 
-| Plugin | Manic Version |
-|--------|---------------|
-| @manicjs/tailwind | 0.5.0+ |
-| @manicjs/unocss | 0.5.0+ |
-| @manicjs/mdx | 0.5.0+ |
-| @manicjs/seo | 0.5.0+ |
-| @manicjs/sitemap | 0.5.0+ |
-| @manicjs/mcp | 0.6.0+ |
-| @manicjs/api-docs | 0.6.0+ |
+| Plugin | Version |
+|--------|---------|
+| @manicjs/tailwind | 0.1.0+ |
+| @manicjs/unocss | 0.1.0+ |
+| @manicjs/mdx | 0.1.0+ |
+| @manicjs/seo | 0.5.1+ |
+| @manicjs/sitemap | 0.6.1+ |
+| @manicjs/mcp | 0.5.1+ |
+| @manicjs/api-docs | 0.6.1+ |

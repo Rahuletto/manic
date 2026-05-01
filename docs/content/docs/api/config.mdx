@@ -10,10 +10,10 @@ description: Full technical specification for manic.config.ts with TypeTable def
 Complete reference for `manic.config.ts` - covers all configuration options with full TypeScript type definitions.
 
 </Callout>
+
 The `manic.config.ts` file (or `.js`) is the source of truth for your application's build and runtime behavior. Use the `defineConfig` helper to ensure full type safety.
 
-```ts twoslash
-import React from 'react';
+```ts
 import { defineConfig } from 'manicjs/config';
 
 export default defineConfig({
@@ -58,10 +58,25 @@ export default defineConfig({
       default: "{}",
       description: "Production optimization settings.",
     },
+    sitemap: {
+      type: "SitemapConfig | false",
+      default: "undefined",
+      description: "Sitemap auto-generation configuration, or false to disable.",
+    },
+    oxc: {
+      type: "OxcConfig",
+      default: "{}",
+      description: "Custom OXC transform settings.",
+    },
     providers: {
       type: "ManicProvider[]",
       default: "[]",
       description: "Deployment adapters (Vercel, Cloudflare, etc.).",
+    },
+    plugins: {
+      type: "ManicPlugin[]",
+      default: "[]",
+      description: "Plugins for extending Manic.",
     },
   }}
 />
@@ -149,13 +164,184 @@ export default defineConfig({
 
 ## Sitemap Configuration
 
-Manic can automatically generate a `sitemap.xml` for your application.
+Manic can automatically generate a `sitemap.xml` for your application:
 
 ```ts
-sitemap: {
-  hostname: 'https://example.com',
-  exclude: ['/admin/**'],
-  changefreq: 'daily',
-  priority: 0.7
-}
+import { defineConfig } from 'manicjs/config';
+
+export default defineConfig({
+  sitemap: {
+    hostname: 'https://example.com',
+    exclude: ['/admin/**'],
+    changefreq: 'daily',
+    priority: 0.7,
+  },
+});
 ```
+
+### Sitemap Options
+
+<TypeTable
+  type={{
+    hostname: {
+      type: "string",
+      description: "The base URL for the sitemap (e.g., https://example.com).",
+    },
+    exclude: {
+      type: "string[]",
+      default: "[]",
+      description: "Glob patterns to exclude from the sitemap.",
+    },
+    changefreq: {
+      type: "'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'",
+      default: "'weekly'",
+      description: "How frequently the page changes.",
+    },
+    priority: {
+      type: "number (0.0 - 1.0)",
+      default: "0.5",
+      description: "The priority of the page relative to others.",
+    },
+  }}
+/>
+
+---
+
+## OXC Configuration
+
+Customize the OXC transformer for advanced optimization:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+
+export default defineConfig({
+  oxc: {
+    target: 'es2022',
+    minify: true,
+    mangle: true,
+  },
+});
+```
+
+---
+
+## Plugins & Providers
+
+### Using Plugins
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { tailwind } from '@manicjs/tailwind';
+import { mdx } from '@manicjs/mdx';
+
+export default defineConfig({
+  plugins: [
+    tailwind(),
+    mdx({
+      frontmatter: true,
+      gfm: true,
+    }),
+  ],
+});
+```
+
+### Using Providers
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { vercel } from '@manicjs/providers';
+import { cloudflare } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [
+    vercel({
+      regions: ['sfo1', 'iad1'],
+    }),
+    cloudflare(),
+  ],
+});
+```
+
+---
+
+## Environment Variables
+
+Access environment variables via the `env` option:
+
+```ts
+import { defineConfig } from 'manicjs/config';
+
+export default defineConfig({
+  // Public variables (exposed to browser)
+  env: {
+    MANIC_PUBLIC_API_URL: 'https://api.example.com',
+  },
+});
+```
+
+Access in code:
+
+```ts
+// Client-side
+import { env } from 'manicjs/env';
+console.log(env.MANIC_PUBLIC_API_URL);
+
+// Server-side
+const secret = process.env.DATABASE_URL;
+```
+
+---
+
+## Full Example
+
+```ts
+import { defineConfig } from 'manicjs/config';
+import { vercel } from '@manicjs/providers';
+import { tailwind } from '@manicjs/tailwind';
+
+export default defineConfig({
+  mode: 'fullstack',
+
+  app: {
+    name: 'My Manic App',
+  },
+
+  server: {
+    port: 3000,
+    hmr: true,
+  },
+
+  router: {
+    viewTransitions: true,
+    preserveScroll: false,
+    scrollBehavior: 'smooth',
+  },
+
+  build: {
+    outdir: '.manic',
+    minify: true,
+    splitting: true,
+    sourcemap: 'inline',
+  },
+
+  sitemap: {
+    hostname: 'https://example.com',
+    exclude: ['/admin/**'],
+    changefreq: 'weekly',
+    priority: 0.7,
+  },
+
+  oxc: {
+    target: 'es2022',
+  },
+
+  plugins: [tailwind()],
+
+  providers: [vercel()],
+});
+```
+
+See also:
+- [Plugins](/docs/framework/plugins) - Extending Manic
+- [Deployment](/docs/framework/deployment) - Provider configuration
+- [Environment Variables](/docs/framework/advanced/environment-variables) - Env management

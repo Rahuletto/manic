@@ -16,26 +16,40 @@ Primary component for client-side navigation. Automatically prefetches code chun
 ```tsx
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export default function Nav() {
   return (
-    <ManicLink to="/posts/123" prefetch={true}>
+    <Link to="/posts/123" prefetch={true}>
       View Post
-    </ManicLink>
+    </Link>
   );
 }
 ```
 
 #### Props
 
-#### Props
- 
 <TypeTable
   type={{
     to: {
       type: 'string',
       description: 'Destination URL path',
+    },
+    children: {
+      type: 'ReactNode',
+      description: 'Link content',
+    },
+    className: {
+      type: 'string',
+      description: 'CSS class name',
+    },
+    style: {
+      type: 'CSSProperties',
+      description: 'Inline styles',
+    },
+    viewTransitionName: {
+      type: 'string',
+      description: 'CSS view-transition-name for animating across navigations',
     },
     prefetch: {
       type: 'boolean',
@@ -47,34 +61,25 @@ export default function Nav() {
       default: 'false',
       description: 'Replace history entry instead of pushing',
     },
-    viewTransition: {
-      type: 'boolean',
-      default: 'true',
-      description: 'Use document.startViewTransition',
-    },
-    className: {
-      type: 'string',
-      description: 'CSS class name',
-    },
   }}
 />
 
 #### Example: Conditional Navigation
 
-```tsx
+```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function BlogLink({ slug, featured }: { slug: string; featured?: boolean }) {
   return (
-    <ManicLink
+    <Link
       to={`/blog/${slug}`}
       replace={featured}
       className={featured ? 'font-bold' : ''}
     >
       {slug}
-    </ManicLink>
+    </Link>
   );
 }
 ```
@@ -88,6 +93,7 @@ export function BlogLink({ slug, featured }: { slug: string; featured?: boolean 
 Access the router instance for programmatic navigation.
 
 ```tsx
+// @errors: 2322
 import React from 'react';
 import { useRouter } from 'manicjs';
 
@@ -105,8 +111,6 @@ export function LoginButton() {
 
 #### Router API
 
-#### Router API
- 
 <TypeTable
   type={{
     path: {
@@ -150,8 +154,9 @@ const postId = router.params.id;
 Access dynamic route parameters via `useRouter().params`:
 
 ```tsx
+// @errors: 2322
 import React from 'react';
-import { useRouter } from 'manicjs';
+import { useRouter, useQueryParams } from 'manicjs';
 
 export default function PostPage() {
   const { params } = useRouter();
@@ -163,7 +168,8 @@ export default function PostPage() {
 
 #### Usage
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import { useRouter } from 'manicjs';
 
 // Route: app/routes/blog/[slug].tsx
@@ -181,9 +187,12 @@ const { path } = params;  // path = "guides/setup/installation"
 
 Access and update URL search parameters:
 
-```tsx
+```tsx twoslash
+// @errors: 2322 2304
 import React from 'react';
 import { useQueryParams } from 'manicjs';
+declare const window: any;
+declare const replaceUrl: (_url: string) => void;
 
 export function SearchPage() {
   const searchParams = useQueryParams();
@@ -192,10 +201,10 @@ export function SearchPage() {
     <>
       <input
         value={searchParams.get('q') || ''}
-        onChange={(e) => {
+        onChange={(e: any) => {
           const params = new URLSearchParams(searchParams);
           params.set('q', e.target.value);
-          window.history.replaceState({}, '', `?${params.toString()}`);
+          replaceUrl(`?${params.toString()}`);
         }}
       />
       <p>Searching for: {searchParams.get('q')}</p>
@@ -221,7 +230,12 @@ class URLSearchParams {
 
 #### Examples
 
-```tsx
+```tsx twoslash
+// @errors: 2322
+import { useQueryParams } from 'manicjs';
+
+declare function replaceUrl(url: string): void;
+
 const searchParams = useQueryParams();
 
 // Read
@@ -238,7 +252,7 @@ if (searchParams.has('sort')) {
 const params = new URLSearchParams(searchParams);
 params.set('q', 'typescript');
 params.delete('page');
-window.history.replaceState({}, '', `?${params.toString()}`);
+replaceUrl(`?${params.toString()}`);
 ```
 
 ---
@@ -353,8 +367,9 @@ flowchart TB
 ### Protected Routes
 
 ```tsx
+// @errors: 2322
 import React from 'react';
-import { useRouter } from 'manicjs';
+import { useRouter, useQueryParams } from 'manicjs';
 import { useAuth } from './~hooks/useAuth';
 
 export default function AdminPage() {
@@ -362,20 +377,25 @@ export default function AdminPage() {
   const { user } = useAuth();
 
   React.useEffect(() => {
-    if (!user?.role.includes('admin')) {
-      router.navigate('/unauthorized', { replace: true });
+    if (!user?.isAdmin) {
+      router.navigate('/', { replace: true });
     }
   }, [user, router]);
 
+  if (!user?.isAdmin) return null;  // Prevent flash
+  
   return <div>Admin Panel</div>;
 }
 ```
 
 ### Search with Query Params
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import React from 'react';
 import { useRouter, useQueryParams } from 'manicjs';
+
+declare function replaceUrl(url: string): void;
 
 export default function SearchResults() {
   const query = useQueryParams();
@@ -386,18 +406,12 @@ export default function SearchResults() {
     const params = new URLSearchParams(query);
     params.set('q', term);
     params.set('page', '1');
-    window.history.replaceState({}, '', `?${params.toString()}`);
-  };
-
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(query);
-    params.set('page', String(page));
-    window.history.replaceState({}, '', `?${params.toString()}`);
+    replaceUrl(`?${params.toString()}`);
   };
 
   return (
     <div>
-      <input value={searchTerm} onChange={(e) => handleSearch(e.target.value)} />
+      <input value={searchTerm} onChange={(e: any) => handleSearch(e.target.value)} />
       {/* Results for {searchTerm} */}
     </div>
   );
@@ -406,7 +420,8 @@ export default function SearchResults() {
 
 ### Nested Dynamic Routes
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // Route: app/routes/posts/[id]/comments/[commentId].tsx
 import React from 'react';
 import { useRouter } from 'manicjs';
@@ -430,21 +445,23 @@ export default function CommentPage() {
 Manic automatically wraps navigation in `document.startViewTransition()` for smooth page transitions.
 
 ```tsx twoslash
+// @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export default function Navigation() {
   return (
-    <ManicLink to="/about">
+    <Link to="/about">
       About
-    </ManicLink>
+    </Link>
   );
 }
 ```
 
 **Disable transitions globally:**
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { setViewTransitions } from 'manicjs';
 
 setViewTransitions(false);

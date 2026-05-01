@@ -43,7 +43,7 @@ type ToolDef<S extends ZodObject<ZodRawShape>> = {
  * defineTool('getUser', {
  *   description: 'Get a user by ID',
  *   input: z.object({ id: z.string() }),
- *   handler: async ({ id }) => ({ id, name: 'John' }),
+ *   execute: async ({ id }) => ({ id, name: 'John' }),
  * })
  */
 export function defineTool<S extends ZodObject<ZodRawShape>>(

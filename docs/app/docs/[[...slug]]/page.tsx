@@ -46,11 +46,6 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
             a: createRelativeLink(source, page),
           })}
         />
-        {page.data.lastModified && (
-          <p className="mt-8 text-xs text-fd-muted-foreground border-t pt-4">
-            Last updated: {new Date(page.data.lastModified).toLocaleDateString()}
-          </p>
-        )}
       </DocsBody>
     </DocsPage>
   );

@@ -17,7 +17,8 @@ bun add @manicjs/seo
 
 ### 1. Configure Global Defaults
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { seo } from '@manicjs/seo';
@@ -35,7 +36,8 @@ export default defineConfig({
 
 ### 2. Override Per Page
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/about.tsx
 import { Metadata } from '@manicjs/seo/metadata';
 
@@ -198,7 +200,8 @@ The `<Metadata>` component overrides the global defaults for that page. When the
 
 ## Full Example
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { seo } from '@manicjs/seo';
@@ -277,7 +280,8 @@ Content-Signal: ai-train=no, search=yes
 
 The `<Metadata>` component lets you override global SEO defaults on individual pages. It renders nothing visible — it manages `<head>` tags via side effects.
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import { Metadata } from '@manicjs/seo/metadata';
 ```
 
@@ -340,7 +344,8 @@ import { Metadata } from '@manicjs/seo/metadata';
 
 #### Static Metadata
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/about.tsx
 import { Metadata } from '@manicjs/seo/metadata';
 
@@ -362,12 +367,13 @@ export default function About() {
 
 Use variables and state to set metadata dynamically:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/blog/[slug].tsx
 import { Metadata } from '@manicjs/seo/metadata';
 import { useRouter } from 'manicjs';
 
-const posts = {
+const posts: Record<string, { title: string; excerpt: string; image: string }> = {
   'hello-world': { title: 'Hello World', excerpt: 'My first post', image: '/images/hello.png' },
   'react-tips': { title: 'React Tips', excerpt: 'Useful React patterns', image: '/images/react.png' },
 };
@@ -397,15 +403,18 @@ export default function BlogPost() {
 
 #### With Fetched Data
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import { Metadata } from '@manicjs/seo/metadata';
 import { useState, useEffect } from 'react';
 
 export default function Product() {
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<{ name: string; description: string; image: string } | null>(null);
 
   useEffect(() => {
-    fetch('/api/product/1').then(r => r.json()).then(setProduct);
+    fetch('/api/product/1')
+      .then(r => r.json())
+      .then((data) => setProduct(data as { name: string; description: string; image: string }));
   }, []);
 
   return (
@@ -436,7 +445,8 @@ export default function Product() {
 
 Works with `@manicjs/sitemap` for complete SEO:
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { defineConfig } from 'manicjs/config';
 import { seo } from '@manicjs/seo';
 import { sitemap } from '@manicjs/sitemap';

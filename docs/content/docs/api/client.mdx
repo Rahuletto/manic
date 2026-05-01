@@ -11,18 +11,28 @@ This page covers client-side patterns available in Manic.
 
 The recommended way to call APIs from the client:
 
-```ts
-// Fetch data from API
-const res = await fetch('/api/users');
-const data = await res.json();
+```ts twoslash
+// Basic fetch pattern
+async function loadUsers() {
+  const res = await fetch('/api/users');
+  const data = (await res.json()) as { users: Array<{ id: number; name: string }> };
+  return data.users;
+}
+
+// Usage in component
+const users = await loadUsers();
 ```
 
 ## Environment Variables (Client-Side)
 
-Access public environment variables in the browser:
+Access public environment variables in the browser via `manicjs/env`:
 
-```ts
-const apiUrl = getEnv('MANIC_PUBLIC_API_URL');
+```ts twoslash
+// Access public environment variables
+declare const env: { MANIC_PUBLIC_API_URL?: string };
+
+const apiUrl = env.MANIC_PUBLIC_API_URL || 'https://api.example.com';
+console.log('API:', apiUrl);
 ```
 
 See [Environment Variables](/docs/framework/advanced/environment-variables) for full documentation.
@@ -31,37 +41,133 @@ See [Environment Variables](/docs/framework/advanced/environment-variables) for 
 
 Use environment checks for client-specific logic:
 
-```ts
-// Only run on client
-if (typeof window !== 'undefined') {
+```ts twoslash
+// Client-side only code
+if (typeof globalThis !== 'undefined' && 'localStorage' in globalThis) {
+  // This code only runs in the browser
   localStorage.setItem('key', 'value');
+  const item = localStorage.getItem('key');
+  console.log(item);
 }
-
-// Use Bun.env for build-time environment
-const isDev = Bun.env.NODE_ENV === 'development';
 ```
 
 ## Type-Safe API Calls
 
-Share types with your API routes for full type-safety:
+Share types with your API routes for full type-safety. First, export the type from your API:
 
-```ts
-// app/api/users/index.ts - Export the type
-import { Hono } from 'hono';
+```ts twoslash
+// API route type export
+interface UserResponse {
+  users: Array<{ id: number; name: string }>;
+}
 
-const app = new Hono();
-app.get('/', (c) => c.json({ users: [] }));
-export type AppType = typeof app;
+// This would be exported from app/api/users/index.ts
+type AppType = {
+  users: {
+    $get: () => Promise<UserResponse>;
+  };
+};
 ```
 
 Then use in client code:
 
-```ts
-import type { AppType } from '../api/users';
-import { hc } from 'hono/client';
+```ts twoslash
+// Client-side API call
+interface User {
+  id: number;
+  name: string;
+}
 
-const client = hc<AppType>('/api');
-const { users } = await client.users.$get();
+interface UserResponse {
+  users: User[];
+}
+
+async function fetchUsers(): Promise<User[]> {
+  const res = await fetch('/api/users');
+  const data = (await res.json()) as UserResponse;
+  return data.users;
+}
+
+// Usage
+const users = await fetchUsers();
+users.forEach(u => console.log(u.name));
+```
+
+## Prefetching Routes
+
+Manic's `<Link>` component automatically prefetches route chunks on hover/focus:
+
+```ts twoslash
+// Link component automatically prefetches
+interface LinkProps {
+  href: string;
+  children: string;
+  onMouseEnter?: () => void;
+}
+
+// Usage in your app:
+// <Link href="/about">About</Link> 
+// Automatically prefetches /about route on hover
+declare function Link(props: LinkProps): any;
+```
+
+## Making API Requests
+
+Common patterns for making API requests from the client:
+
+```ts twoslash
+// POST request
+async function createUser(email: string, name: string) {
+  const res = await fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, name }),
+  });
+  
+  if (!res.ok) throw new Error('Failed to create user');
+  return res.json();
+}
+
+// GET with query parameters
+async function searchUsers(query: string) {
+  const params = new URLSearchParams({ q: query });
+  const res = await fetch(`/api/users/search?${params}`);
+  return res.json();
+}
+
+// DELETE request
+async function deleteUser(id: number) {
+  const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+  return res.ok;
+}
+```
+
+## Error Handling
+
+Properly handle API errors in client code:
+
+```ts twoslash
+// Error handling pattern
+interface ApiError {
+  error: string;
+  code?: string;
+}
+
+async function fetchData(url: string) {
+  try {
+    const res = await fetch(url);
+    
+    if (!res.ok) {
+      const error = (await res.json()) as ApiError;
+      throw new Error(error.error || 'Request failed');
+    }
+    
+    return res.json();
+  } catch (err) {
+    console.error('Fetch error:', err);
+    throw err;
+  }
+}
 ```
 
 ## See Also

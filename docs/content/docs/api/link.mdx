@@ -16,7 +16,7 @@ type LinkProps = {
   to: string;
   prefetch?: boolean;
   replace?: boolean;
-  viewTransition?: boolean;
+  viewTransitionName?: string;
   className?: string;
   children?: React.ReactNode;
 };
@@ -30,6 +30,22 @@ type LinkProps = {
       type: 'string',
       description: 'Destination URL path (required)',
     },
+    children: {
+      type: 'ReactNode',
+      description: 'Link content',
+    },
+    className: {
+      type: 'string',
+      description: 'CSS class name',
+    },
+    style: {
+      type: 'CSSProperties',
+      description: 'Inline styles',
+    },
+    viewTransitionName: {
+      type: 'string',
+      description: 'CSS view-transition-name for animating across navigations',
+    },
     prefetch: {
       type: 'boolean',
       default: 'true',
@@ -39,19 +55,6 @@ type LinkProps = {
       type: 'boolean',
       default: 'false',
       description: 'Replace history entry instead of pushing',
-    },
-    viewTransition: {
-      type: 'boolean',
-      default: 'true',
-      description: 'Use document.startViewTransition API',
-    },
-    className: {
-      type: 'string',
-      description: 'CSS class name',
-    },
-    children: {
-      type: 'ReactNode',
-      description: 'Link content',
     },
   }}
 />
@@ -63,14 +66,14 @@ type LinkProps = {
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function Nav() {
   return (
     <nav>
-      <ManicLink to="/">Home</ManicLink>
-      <ManicLink to="/about">About</ManicLink>
-      <ManicLink to="/posts">Blog</ManicLink>
+      <Link to="/">Home</Link>
+      <Link to="/about">About</Link>
+      <Link to="/posts">Blog</Link>
     </nav>
   );
 }
@@ -81,14 +84,14 @@ export function Nav() {
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function PostList({ posts }: { posts: Array<{ slug: string; title: string }> }) {
   return (
     <ul>
       {posts.map(post => (
         <li key={post.slug}>
-          <ManicLink to={`/posts/${post.slug}`}>{post.title}</ManicLink>
+          <Link to={`/posts/${post.slug}`}>{post.title}</Link>
         </li>
       ))}
     </ul>
@@ -101,17 +104,17 @@ export function PostList({ posts }: { posts: Array<{ slug: string; title: string
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function BlogLink({ slug, isFeatured }: { slug: string; isFeatured?: boolean }) {
   return (
-    <ManicLink
+    <Link
       to={`/blog/${slug}`}
       replace={isFeatured}
       className={isFeatured ? 'font-bold text-lg' : ''}
     >
       {slug}
-    </ManicLink>
+    </Link>
   );
 }
 ```
@@ -121,16 +124,16 @@ export function BlogLink({ slug, isFeatured }: { slug: string; isFeatured?: bool
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function LargeList() {
   // Disable prefetch for large lists to avoid memory pressure
   return (
     <div>
       {Array.from({ length: 1000 }).map((_, i) => (
-        <ManicLink key={i} to={`/item/${i}`} prefetch={false}>
+        <Link key={i} to={`/item/${i}`} prefetch={false}>
           Item {i}
-        </ManicLink>
+        </Link>
       ))}
     </div>
   );
@@ -142,13 +145,13 @@ export function LargeList() {
 ```tsx twoslash
 // @errors: 2322
 import React from 'react';
-import { Link as ManicLink } from 'manicjs';
+import { Link } from 'manicjs';
 
 export function InstantNav() {
   return (
-    <ManicLink to="/page" viewTransition={false}>
+    <Link to="/page" viewTransitionName="fade">
       Go Instant
-    </ManicLink>
+    </Link>
   );
 }
 ```
@@ -160,7 +163,7 @@ interface LinkProps {
   to: string;
   prefetch?: boolean;
   replace?: boolean;
-  viewTransition?: boolean;
+  viewTransitionName?: string;
   className?: string;
   children?: ReactNode;
 }

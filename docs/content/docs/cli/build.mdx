@@ -48,13 +48,26 @@ manic build [options]
 
 ### Options
 - `--out-dir`: Customize where the artifacts are stored (default: `.manic`).
-- `--mode`: Current environment (`production` by default).
-- `--minify`: Toggle minification (default: `true`).
 
-## Best Practices
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
 
-<Callout type="info">
+export default defineConfig({
+  build: {
+    outdir: '.manic',
+    minify: true,
+    splitting: true,
+    sourcemap: 'inline',
+  },
+});
+```
 
-Always run `manic build` locally before deploying to catch any linting or bundling errors early in the cycle. Manic includes a mandatory `oxlint` pass as the first step of the build!
+---
 
-</Callout>
+## See Also
+
+- [Configuration](/docs/api/config) - Build settings
+- [CLI Dev](/docs/cli/dev) - Development server
+- [CLI Lint-Fmt](/docs/cli/lint-fmt) - Code quality

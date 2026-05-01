@@ -17,7 +17,8 @@ bun add @manicjs/mcp
 
 ## Quick Start
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { mcp } from '@manicjs/mcp';
@@ -67,11 +68,19 @@ That's it — the plugin registers a fully functional MCP server at `/mcp` with 
 
 Use `defineTool` with a Zod schema for type-safe tool definitions. The Zod schema is automatically converted to JSON Schema for the MCP protocol, and arguments are validated at call time.
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { mcp, defineTool } from '@manicjs/mcp';
-import { z } from 'zod';
+declare function mcp(options?: Record<string, unknown>): unknown;
+declare function defineTool(name: string, config: Record<string, unknown>): unknown;
+const z = {
+  string: () => ({ describe: (_s: string) => ({}) }),
+  number: () => ({ optional: () => ({ describe: (_s: string) => ({}) }) }),
+  object: (_shape: Record<string, unknown>) => ({} as any),
+};
+declare function fetchUser(id: string): Promise<unknown>;
+declare function searchProducts(query: string, limit: number): Promise<unknown>;
 
 export default defineConfig({
   plugins: [
@@ -82,7 +91,7 @@ export default defineConfig({
           input: z.object({
             id: z.string().describe('The user ID'),
           }),
-          execute: async ({ id }) => {
+          execute: async ({ id }: { id: string }) => {
             const user = await fetchUser(id);
             return user;
           },
@@ -94,7 +103,7 @@ export default defineConfig({
             query: z.string().describe('Search query'),
             limit: z.number().optional().describe('Max results'),
           }),
-          execute: async ({ query, limit }) => {
+          execute: async ({ query, limit }: { query: string; limit?: number }) => {
             return searchProducts(query, limit ?? 10);
           },
         }),
@@ -108,10 +117,12 @@ export default defineConfig({
 
 For cases where you don't want a Zod dependency, you can pass raw `McpTool` objects with a JSON Schema `inputSchema`:
 
-```ts
+```ts twoslash
+// @errors: 2322
 import { defineConfig } from 'manicjs/config';
 import { mcp } from '@manicjs/mcp';
 import type { McpTool } from '@manicjs/mcp';
+declare function sendNotification(userId: string, message: string): Promise<void>;
 
 const myTool: McpTool = {
   name: 'send_notification',
@@ -209,28 +220,29 @@ Each browser-side tool delegates execution to the MCP server endpoint via `fetch
 
 ---
 
-## AI Integration Flow
+<Callout type="warn">
 
-```mermaid
-flowchart TB
-    AI[AI Agent] -->|JSON-RPC POST| MCP[MCP Endpoint /mcp]
-    Browser[Browser AI] -->|WebMCP| Script[/webmcp.js]
-    Script -->|fetch| MCP
-    MCP -->|tools/call| Tools[Built-in + Custom Tools]
-    Tools -->|Response| MCP
-    MCP -->|JSON-RPC| AI
-    Discovery[/.well-known/mcp.json] -.->|Auto-discovery| AI
-```
+**No built-in authentication** — The MCP endpoint has no authentication by default. If you need to secure it, handle authentication at the infrastructure level (e.g., Vercel Edge Functions, Cloudflare Access, or a reverse proxy with auth).
+
+</Callout>
 
 ---
 
 ## Full Example
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
-import { mcp, defineTool } from '@manicjs/mcp';
-import { z } from 'zod';
+declare function mcp(options?: Record<string, unknown>): unknown;
+declare function defineTool(name: string, config: Record<string, unknown>): unknown;
+const z = {
+  string: () => ({ describe: (_s: string) => ({}) }),
+  number: () => ({ optional: () => ({ describe: (_s: string) => ({}) }) }),
+  object: (_shape: Record<string, unknown>) => ({} as any),
+};
+declare function searchPosts(keyword: string, limit: number): Promise<unknown[]>;
+declare function getPostBySlug(slug: string): Promise<unknown>;
 
 export default defineConfig({
   plugins: [
@@ -245,7 +257,7 @@ export default defineConfig({
             keyword: z.string().describe('Search keyword'),
             limit: z.number().optional().describe('Max results (default 10)'),
           }),
-          execute: async ({ keyword, limit }) => {
+          execute: async ({ keyword, limit }: { keyword: string; limit?: number }) => {
             const posts = await searchPosts(keyword, limit ?? 10);
             return { posts };
           },
@@ -256,7 +268,7 @@ export default defineConfig({
           input: z.object({
             slug: z.string().describe('Post URL slug'),
           }),
-          execute: async ({ slug }) => {
+          execute: async ({ slug }: { slug: string }) => {
             return getPostBySlug(slug);
           },
         }),

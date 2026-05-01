@@ -11,10 +11,14 @@ Manic provides built-in theme support for dark/light mode with system preference
 
 ### Wrap Your App
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/main.tsx
 import { ThemeProvider } from 'manicjs';
-import { App } from './App';
+
+function App() {
+  return <div>App</div>;
+}
 
 export default function Root() {
   return (
@@ -27,7 +31,8 @@ export default function Root() {
 
 ### Use in Component
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // app/routes/index.tsx
 import { useTheme, ThemeToggle } from 'manicjs';
 
@@ -86,23 +91,31 @@ const {
 
 A pre-built toggle button component:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import { ThemeToggle } from 'manicjs';
+import { MdDarkMode, MdLightMode } from 'react-icons/md';
 
-// Default
-<ThemeToggle />
+<>
+  {/* Default */}
+  <ThemeToggle />
 
-// With custom styling
-<ThemeToggle 
-  className="my-toggle"
-  style={{ borderRadius: '8px' }}
-/>
+  {/* With custom styling */}
+  <ThemeToggle
+    className="my-toggle"
+    style={{ borderRadius: '8px' }}
+  />
 
-// With custom icons
-<ThemeToggle>
-  <span slot="light">☀️</span>
-  <span slot="dark">🌙</span>
-</ThemeToggle>
+  {/* With custom icons (function children) */}
+  <ThemeToggle>
+    {(theme) =>
+      theme === 'dark' ? (
+        <MdDarkMode aria-hidden />
+      ) : (
+        <MdLightMode aria-hidden />
+      )}
+  </ThemeToggle>
+</>
 ```
 
 ### Props
@@ -118,8 +131,8 @@ import { ThemeToggle } from 'manicjs';
       description: 'Inline styles',
     },
     children: {
-      type: 'ReactNode',
-      description: 'Custom toggle content with slots',
+      type: 'ReactNode | ((theme: "light" | "dark") => ReactNode)',
+      description: 'Custom toggle content',
     },
   }}
 />
@@ -150,8 +163,11 @@ export default {
 }
 ```
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 // In components
+const isDark = false;
+
 <div className={isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}>
   Content
 </div>
@@ -159,14 +175,18 @@ export default {
 
 ## Programmatic Control
 
-```tsx
+```tsx twoslash
+// @errors: 2322
+import { useTheme } from 'manicjs';
+type Theme = 'light' | 'dark' | 'system';
+
 function ThemeSwitch() {
   const { theme, setTheme } = useTheme();
   
   return (
     <select 
       value={theme}
-      onChange={(e) => setTheme(e.target.value as Theme)}
+      onChange={(e: any) => setTheme(e.target.value as Theme)}
     >
       <option value="light">Light</option>
       <option value="dark">Dark</option>

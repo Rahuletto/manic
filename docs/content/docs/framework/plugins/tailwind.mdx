@@ -17,7 +17,8 @@ bun add @manicjs/tailwind
 
 ### 1. Configure
 
-```ts
+```ts twoslash
+// @errors: 2322
 // manic.config.ts
 import { defineConfig } from 'manicjs/config';
 import { tailwind } from '@manicjs/tailwind';
@@ -72,7 +73,8 @@ Use Tailwind's selector-based dark mode with a `@custom-variant`:
 
 Then set the `dark` class on your root element:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
 import { useTheme } from 'manicjs';
 
 export default function App() {
@@ -90,7 +92,10 @@ export default function App() {
 
 The plugin works with Manic's theme system:
 
-```tsx
+```tsx twoslash
+// @errors: 2322
+import { useTheme } from 'manicjs';
+
 function MyComponent() {
   const { isDark } = useTheme();
   

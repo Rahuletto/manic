@@ -43,11 +43,10 @@ export interface McpConfig {
  *   version: '1.0.0',
  *   path: '/mcp',
  *   tools: [
- *     defineTool({
- *       name: 'getUser',
+ *     defineTool('getUser', {
  *       description: 'Get user by ID',
- *       inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
- *       handler: async ({ id }) => ({ id, name: 'John' }),
+ *       input: { type: 'object', properties: { id: { type: 'string' } } },
+ *       execute: async ({ id }) => ({ id, name: 'John' }),
  *     }),
  *   ],
  * })
