@@ -1,20 +1,24 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import mermaid from 'mermaid';
 
 /**
  * Robust Mermaid diagram renderer for Fumadocs.
  * Uses mermaid.render to generate SVGs and inject them into the DOM.
+ *
+ * Each render uses a fresh SVG element id — React Strict Mode runs effects twice,
+ * and reusing one id causes mermaid.render to collide (blank or broken output).
  */
 export default function Mermaid({ chart }: { chart: string }) {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
-  const id = useRef(`mermaid-${Math.random().toString(36).substr(2, 9)}`);
 
   useEffect(() => {
+    let cancelled = false;
+
     // Detect dark mode from the document
     const isDark = document.documentElement.classList.contains('dark');
-    
+
     mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
@@ -28,13 +32,16 @@ export default function Mermaid({ chart }: { chart: string }) {
     });
 
     const renderChart = async () => {
+      const renderId = `mermaid-${crypto.randomUUID()}`;
       try {
-        const { svg } = await mermaid.render(id.current, chart);
-        setSvg(svg);
-        setError(false);
+        const { svg: nextSvg } = await mermaid.render(renderId, chart);
+        if (!cancelled) {
+          setSvg(nextSvg);
+          setError(false);
+        }
       } catch (err) {
         console.error('Mermaid render error:', err);
-        setError(true);
+        if (!cancelled) setError(true);
       }
     };
 
@@ -51,7 +58,10 @@ export default function Mermaid({ chart }: { chart: string }) {
     });
 
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
   }, [chart]);
 
   if (error) {

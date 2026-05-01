@@ -31,15 +31,14 @@ Manic is purpose-built for maximum performance. These benchmarks compare Manic a
 Time from running `dev` command to server ready.
 
 ```mermaid
-graph LR
-    A[Command] --> B{Framework}
-    B -->|Manic| C[26ms]
-    B -->|Astro| D[164ms]
-    B -->|Vite| E[386ms]
-    B -->|React Router| F[400ms]
-    B -->|Next.js| G[1098ms]
-    
-    C -->|Fastest| H[Ready]
+flowchart TB
+    A[Run dev command] --> B{Framework}
+    B -->|Next.js 16| G["Server ready · 1098ms"]
+    B -->|React Router 7| F["Server ready · ~400ms"]
+    B -->|Vite 7| E["Server ready · 386ms"]
+    B -->|Astro 5| D["Server ready · 164ms"]
+    B -->|Manic| C["Server ready · 26ms"]
+    C --> H[Fastest cold start in this bench]
 ```
 
 | Framework | Startup Time | Relative to Manic |
@@ -52,26 +51,61 @@ graph LR
 
 ### Why Manic is Faster
 
+Documented **development** responsibilities for **Vite 7.x** and **Next.js 16.x** below follow the wording on the cited pages. Diagrams show a **conceptual order** where docs imply sequencing (for example Vite’s first-run pre-bundle **before** loading the site locally); they are **not** meant as byte-accurate timelines—internals can overlap or repeat work.
+
 ```mermaid
 flowchart TB
-    subgraph Vite["Vite/Next.js"]
-        A[JavaScript Entry] --> B[ESBuild Dev]
-        B --> C[Watcher]
+    subgraph vite7 ["Vite 7.x dev documented flow"]
+        direction TB
+        V1[Vite starts dev server]
+        V2[Crawl sources discover dependency imports]
+        V3["esbuild pre-bundles dependencies to ESM dev-only cached in node_modules/.vite"]
+        V4["Serve those deps plus application source as native ESM transform sources on demand"]
+        V5[Plugin pipeline HMR updates]
+        V1 --> V2 --> V3 --> V4 --> V5
     end
-    
-    subgraph Manic["Manic"]
-        D[Bun Native Entry] --> E[OXC Transform]
-        E --> F[Bun Serve]
+
+    subgraph next16 ["Next.js 16.x Turbopack documented responsibilities"]
+        direction TB
+        N1[next dev Turbopack default bundler]
+        N2["Incremental Rust bundler unified graph for client server and other outputs"]
+        N3["Bundles in development lazy compilation for modules requested by the dev server"]
+        N4["JavaScript TypeScript JSX handled with SWC under the hood"]
+        N5[Filesystem watchers incremental caching Fast Refresh]
+        N6["Optional webpack loaders turbopack.rules subset loader-runner"]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6
     end
-    
-    style A fill:#ff6b6b
-    style D fill:#51cf66
+
+    subgraph manic_dev ["Manic dev pipeline"]
+        direction TB
+        M1[Bun process entry]
+        M2[Route discovery write manifest]
+        M3[Bun.serve HTTP]
+        M4[OXC transform on demand plus file watcher]
+        M1 --> M2 --> M3 --> M4
+    end
+
+    classDef refStack fill:#fef3c7,color:#1f2937
+    classDef manicStack fill:#d1fae5,color:#065f46
+    class V1,V2,V3,V4,V5,N1,N2,N3,N4,N5,N6 refStack
+    class M1,M2,M3,M4 manicStack
 ```
 
+**Sources (fact-check):**
+
+- **Vite (pin to 7.x for this page)** — The frameworks table benchmarks **Vite 7.x**. Dependency pre-bundling for Vite **7** is documented as **`esbuild`** and **development-only**: [Dependency pre-bundling (Vite 7)](https://v7.vite.dev/guide/dep-pre-bundling.html). The same page notes that **after** the server has started, newly discovered dependency imports can trigger another pre-bundle pass. **Current** docs for the latest Vite line describe dependency optimization with **Rolldown** instead ([Dependency pre-bundling](https://vitejs.dev/guide/dep-pre-bundling.html)); do **not** mix those claims when verifying versions. Split dev model (pre-bundle deps vs native ESM for sources): [Why Vite](https://vitejs.dev/guide/why.html).
+- **Next.js + Turbopack** — Default bundler, unified graph, bundling **in dev**, lazy compilation driven by dev-server requests, incremental parallelism: [Turbopack API reference — Why Turbopack?](https://nextjs.org/docs/app/api-reference/turbopack#why-turbopack). **SWC** for JS/TS: same page language-features table ([JavaScript & TypeScript — Uses SWC under the hood](https://nextjs.org/docs/app/api-reference/turbopack#language-features)). **Webpack loaders** via **`turbopack.rules`** and **`loader-runner`**: [`next.config` — `turbopack`](https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack).
+- **Webpack fallback** — **`next dev --webpack`** / **`next build --webpack`** when you need webpack ([Turbopack API reference — Supported platforms](https://nextjs.org/docs/app/api-reference/turbopack#supported-platforms)).
+
 Manic starts faster because:
-1. **Bun's native serve** - No JavaScript entry overhead
-2. **OXC transforms** - Rust-based, 10-100x faster than Babel/esbuild
-3. **Minimal runtime** - No webpack/Vite/Turbopack to initialize
+
+1. **Bun's native serve** — The dev server is `Bun.serve`, not a Node script bootstrapping a bundler daemon.
+2. **OXC end-to-end** — JSX/TS stripping, lint, format, and minify share one Rust parser and AST (`oxc-transform`, `oxlint`, `oxc-minify`). There is no chain of separate tools round-tripping text between processes.
+3. **Minimal runtime** — No webpack, Vite, or Turbopack process to initialize before your app runs.
+
+**Why Turbopack can still carry webpack-era cost.** Next’s Turbopack documents a **`turbopack.rules`** surface for **webpack loaders** executed through a **subset** of the webpack loader API ([`next.config` `turbopack`](https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack)). Real apps often depend on loaders, aliases, or fallback to **`next dev --webpack`**, all of which keep the overall dev path heavier than a Bun-and-OXC SPA that never emulates webpack.
+
+**Why Bun + OXC stays fast.** Manic keeps the critical path narrow: **`Bun`** owns HTTP and **`Bun.build`** owns graphs and hashing; **`oxc-transform`** plugs in as the JSX/TS compiler. Production minification runs through **`oxc-minify`** in parallel over outputs. Fewer processes, fewer serialized handoffs, and no emulation layer for webpack loaders—so cold dev startup and builds skew lighter than stacks juggling Node entrypoints plus a compatibility-oriented bundler.
 
 ---
 
@@ -98,6 +132,30 @@ pie title Build Time Breakdown
     "Server Bundle" : 100
     "OXC Minify" : 200
     "Process Overhead" : 1280
+```
+
+**Production parallelism (Manic).** Bundling runs mostly **in order**: oxlint → route manifest → **`Bun.build` client** → **each API route** (`Bun.build` per entry, sequentially in the CLI) → **`Bun.build` server**. Then **`Promise.all`** runs **`oxc-minify`** over **`dist/client`**, **`dist/api`** (if present), and **`server.js`** **at the same time** — and inside each folder, `.js` files are minified concurrently (`packages/manic/src/cli/commands/build.ts`).
+
+```mermaid
+flowchart TB
+    subgraph manic_prod ["Manic production build order plus parallel minify"]
+        direction TB
+        L0[oxlint]
+        L0 --> L1[Write routes manifest]
+        L1 --> L2[Bun.build client]
+        L2 --> L3[Bun.build API routes sequentially]
+        L3 --> L4[Bun.build server]
+        L4 --> L5 & L6 & L7
+        L5[oxc-minify client output]
+        L6[oxc-minify api output]
+        L7[oxc-minify server bundle]
+        L5 --> L8[Provider hooks optional]
+        L6 --> L8
+        L7 --> L8
+    end
+
+    classDef prodManic fill:#dbeafe,color:#1e3a5f
+    class L0,L1,L2,L3,L4,L5,L6,L7,L8 prodManic
 ```
 
 The actual bundling is ~300ms. The rest is process startup overhead that scales poorly with more code in other frameworks.
