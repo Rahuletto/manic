@@ -7,4 +7,6 @@ export const gitConfig = {
   user: 'rahuletto',
   repo: 'manic',
   branch: 'main',
+  protocol: 'https',
+  hostname: 'github.com',
 };

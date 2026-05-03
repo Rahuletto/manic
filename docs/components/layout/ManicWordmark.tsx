@@ -1,6 +1,21 @@
 import React from 'react';
 
-export function ManicWordmark(props: React.SVGProps<SVGSVGElement>) {
+import { cn } from '@/lib/cn';
+
+/** Framework marketing / docs default accent — not overridden by `data-root` section themes. */
+export const MANIC_BRAND_ACCENT = '#f15156';
+
+type ManicWordmarkProps = React.SVGProps<SVGSVGElement> & {
+  /**
+   * Paint lightning + swoosh with solid brand coral.
+   * Use on the docs home so the logo never inherits API/CLI accent from a previous visit.
+   */
+  brandAccent?: boolean;
+};
+
+export function ManicWordmark({ className, brandAccent = false, ...props }: ManicWordmarkProps) {
+  const markClass = brandAccent ? undefined : 'text-primary';
+
   return (
     <svg 
       width="160" 
@@ -8,21 +23,21 @@ export function ManicWordmark(props: React.SVGProps<SVGSVGElement>) {
       viewBox="0 0 582 122" 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
-      className="text-fd-foreground"
+      className={cn('text-fd-foreground', brandAccent && 'manic-wordmark-brand', className)}
       {...props}
     >
-      {/* Lightning Logo - Uses the dynamic primary accent color */}
+      {/* Lightning + swoosh — theme primary, or locked #f15156 when brandAccent */}
       <path 
         fillRule="evenodd" 
         clipRule="evenodd" 
         d="M82.6048 45.8129C75.2107 51.4264 74.0916 52.4404 67.7142 57.3346C68.0151 57.3392 69.397 56.6255 70.7788 55.912C72.1601 55.1986 73.5413 54.4854 73.842 54.49L74.5 54.5C76.0825 54.5242 77.6771 54.5486 79.2616 54.5737L109.97 59.4285L46.959 102.056C44.4614 103.562 41.9901 105.075 39.5615 106.601C39.5615 106.601 64.6347 71.4599 69.5149 64.5046C63.0644 70.233 62.4194 70.233 59.1941 70.0108C55.5398 70.0508 51.8833 70.0898 48.2246 70.1277L6.9045 70.233L18.7655 59.2393C27.6723 50.0752 36.801 40.9779 45.9298 31.8805C51.1668 26.6615 56.4046 21.4416 61.5997 16.21C63.3243 14.4733 65.0441 12.7351 66.758 10.9952L110.859 24.2651C108.738 25.8825 106.623 27.5017 104.513 29.1224C97.9231 34.1834 90.2494 40.0092 82.6048 45.8129Z" 
-        fill="currentColor"
-        className="text-primary"
+        fill={brandAccent ? MANIC_BRAND_ACCENT : 'currentColor'}
+        className={markClass}
       />
       <path 
         d="M381.5 59.0435C446.522 51.3263 502.134 44.0672 567.157 36.3556C570.702 35.9352 571.452 35.8472 571.28 35.8685C571.913 35.7929 572.795 35.6875 574 35.5435C576.344 47.4373 578.689 59.3316 581.033 71.2254C570.389 72.1595 584.642 70.1336 574 71.0764C486.059 78.8674 424.239 83.767 336.261 91.3685L267.67 98.0435L321.766 67.1272C327.71 63.8328 343.55 57.3326 349.5 54.0435C346.965 54.1867 334.536 57.5356 332 57.6735C276.835 60.6737 221.451 62.4742 166.17 64.8412C155.442 65.3006 144.718 65.781 134 66.2961C144.537 64.784 155.068 63.2373 165.594 61.6694C238.916 50.7488 312.05 38.7899 385.789 30.1635C388.606 29.8339 391.423 29.5051 394.241 29.1769L453.625 23.0435L406.962 50.7773C405.021 51.9733 403.078 53.1677 401.135 54.3621L400.149 54.9684C399.477 55.3818 382.172 58.63 381.5 59.0435Z" 
-        fill="currentColor"
-        className="text-primary"
+        fill={brandAccent ? MANIC_BRAND_ACCENT : 'currentColor'}
+        className={markClass}
       />
       
       {/* MANIC Text - Adapts to foreground color (light/dark) */}

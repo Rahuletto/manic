@@ -6,6 +6,9 @@ const withMDX = createMDX();
 const config = {
   serverExternalPackages: ['@takumi-rs/image-response', 'typescript', 'twoslash'],
   reactStrictMode: true,
+  images: {
+    qualities: [75, 80, 100],
+  },
   async redirects() {
     return [
       {

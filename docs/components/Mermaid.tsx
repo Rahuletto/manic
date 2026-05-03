@@ -2,13 +2,6 @@
 import { useEffect, useState } from 'react';
 import mermaid from 'mermaid';
 
-/**
- * Robust Mermaid diagram renderer for Fumadocs.
- * Uses mermaid.render to generate SVGs and inject them into the DOM.
- *
- * Each render uses a fresh SVG element id — React Strict Mode runs effects twice,
- * and reusing one id causes mermaid.render to collide (blank or broken output).
- */
 export default function Mermaid({ chart }: { chart: string }) {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
@@ -16,17 +9,16 @@ export default function Mermaid({ chart }: { chart: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    // Detect dark mode from the document
     const isDark = document.documentElement.classList.contains('dark');
 
     mermaid.initialize({
       startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
+      theme: isDark ? 'dark' : 'forest',
       securityLevel: 'loose',
       fontFamily: 'inherit',
       fontSize: 14,
       flowchart: {
-        curve: 'stepAfter',
+        curve: 'step',
         padding: 20,
       },
     });
@@ -47,12 +39,18 @@ export default function Mermaid({ chart }: { chart: string }) {
 
     renderChart();
 
-    // Re-render when theme changes (MutationObserver on html class)
     const observer = new MutationObserver(() => {
       const currentDark = document.documentElement.classList.contains('dark');
       mermaid.initialize({
         startOnLoad: false,
-        theme: currentDark ? 'dark' : 'default',
+        theme: currentDark ? 'dark' : 'forest',
+        securityLevel: 'loose',
+        fontFamily: 'inherit',
+        fontSize: 14,
+        flowchart: {
+          curve: 'step',
+          padding: 20,
+        },
       });
       renderChart();
     });
@@ -81,9 +79,8 @@ export default function Mermaid({ chart }: { chart: string }) {
   }
 
   return (
-    <div 
-      className="mermaid-container flex justify-center py-6 bg-fd-card rounded-2xl border my-4 overflow-auto"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="mermaid-container my-4 overflow-x-auto rounded-2xl border border-fd-border bg-fd-card p-4">
+      <div dangerouslySetInnerHTML={{ __html: svg }} />
+    </div>
   );
 }
