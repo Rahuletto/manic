@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/api-docs",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "Scalar API docs plugin for Manic framework",
   "keywords": [
     "api",
@@ -37,5 +37,10 @@
   },
   "peerDependencies": {
     "manicjs": "^0.7.4"
+  },
+  "devDependencies": {
+    "@shikijs/transformers": "^4.0.2",
+    "@types/mdx": "^2.0.13",
+    "fumadocs-docgen": "^3.0.10"
   }
 }

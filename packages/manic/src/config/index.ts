@@ -80,6 +80,15 @@ export interface ManicBuildPluginContext extends ManicPluginContext {
 /** Plugin interface for extending Manic */
 export interface ManicPlugin {
   name: string;
+  /**
+   * Absolute path to a Bun plugin script to preload during dev and build.
+   */
+  preload?: string;
+  /**
+   * TOML snippet to append to bunfig.toml during dev (e.g. [serve.static] entries).
+   * The dev command collects these and writes them automatically.
+   */
+  bunfig?: string;
   configureServer?(ctx: ManicServerPluginContext): void | Promise<void>;
   build?(ctx: ManicBuildPluginContext): void | Promise<void>;
 }
@@ -166,6 +175,61 @@ const DEFAULT_CONFIG: ManicConfig = {
 /** Define a typed Manic configuration — use in manic.config.ts */
 export function defineConfig(config: ManicConfig): ManicConfig {
   return config;
+}
+
+/**
+ * Helper for authoring plugins. Accepts the same shape as ManicPlugin but
+ * provides a `staticFiles` shorthand — an array of { path, content } entries
+ * that are automatically served as routes in dev and emitted as client files
+ * in production, eliminating the repetitive dev/prod parity boilerplate.
+ */
+export function createPlugin(options: {
+  name: string;
+  /** Absolute path to a Bun plugin script — auto-injected as --preload in dev, Bun.plugin() in build */
+  preload?: string;
+  /** TOML snippet for bunfig.toml — manic dev merges all [serve.static] entries automatically */
+  bunfig?: string;
+  /** Static files to serve in dev and emit in prod automatically */
+  staticFiles?: Array<{
+    path: string;
+    content:
+      | string
+      | ((ctx: ManicPluginContext) => string | Promise<string>);
+    contentType?: string;
+  }>;
+  configureServer?(ctx: ManicServerPluginContext): void | Promise<void>;
+  build?(ctx: ManicBuildPluginContext): void | Promise<void>;
+}): ManicPlugin {
+  return {
+    name: options.name,
+    preload: options.preload,
+    bunfig: options.bunfig,
+
+    async configureServer(ctx) {
+      for (const file of options.staticFiles ?? []) {
+        const ct = file.contentType ?? 'text/plain; charset=utf-8';
+        ctx.addRoute(file.path, async () => {
+          const body =
+            typeof file.content === 'function'
+              ? await file.content(ctx)
+              : file.content;
+          return new Response(body, { headers: { 'content-type': ct } });
+        });
+      }
+      await options.configureServer?.(ctx);
+    },
+
+    async build(ctx) {
+      for (const file of options.staticFiles ?? []) {
+        const body =
+          typeof file.content === 'function'
+            ? await file.content(ctx)
+            : file.content;
+        await ctx.emitClientFile(file.path.replace(/^\//, ''), body);
+      }
+      await options.build?.(ctx);
+    },
+  };
 }
 
 let cachedConfig: ManicConfig | null = null;

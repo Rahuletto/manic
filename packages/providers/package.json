@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/providers",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "description": "Deployment providers for Manic framework - Vercel, Cloudflare, Netlify",
   "keywords": [
     "adapter",
@@ -52,7 +52,10 @@
     "colorette": "^2.0.20"
   },
   "devDependencies": {
+    "@shikijs/transformers": "^4.0.2",
     "@types/bun": "latest",
+    "@types/mdx": "^2.0.13",
+    "fumadocs-docgen": "^3.0.10",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {

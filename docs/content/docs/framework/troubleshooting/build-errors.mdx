@@ -1,0 +1,217 @@
+---
+title: Build Errors
+description: Debugging linting, TypeScript, bundling, and compilation errors in Manic.
+---
+
+# Build Errors
+
+<Callout type="info" title="TL;DR">
+
+Solutions for common build errors including linting failures, TypeScript errors, and bundling issues.
+
+</Callout>
+## Linting Errors
+
+### oxlint Errors
+
+#### Error: "Import not resolved"
+
+**Problem:** Module cannot be found.
+
+**Solution:**
+
+```bash
+# Install missing dependencies
+bun add <package-name>
+
+# Or check import path
+// Check: import { x } from 'manicjs' vs 'manicjs/router'
+```
+
+#### Error: "Unused variable"
+
+**Solution:**
+
+```ts
+// Either use the variable
+const value = usedVariable;
+
+// Or add underscore prefix to indicate intentional non-use
+const _unused = something;
+```
+
+---
+
+## TypeScript Errors
+
+### Error: "Cannot find module"
+
+**Solution:**
+
+```bash
+# Add types
+bun add -d @types/<package>
+
+# Or create type declaration
+// app/types.d.ts
+declare module 'some-package';
+```
+
+### Error: "Property does not exist"
+
+**Solution:**
+
+```ts
+// Extend the type
+declare module 'manicjs' {
+  interfaceRouteParams {
+    id: string;
+  }
+}
+```
+
+### Error: "Type instantiation is excessively deep"
+
+**Solution:**
+
+```ts
+// Simplify complex types
+// Or use any with comment
+// @ts-expect-error - complex type
+const value: any = complexValue;
+```
+
+---
+
+## Bundling Errors
+
+### Error: "Build failed"
+
+**Solution:**
+
+```bash
+# Check full error message
+bun build 2>&1
+
+# Clear cache and rebuild
+rm -rf .manic
+bun build
+```
+
+### Error: "Chunk too large"
+
+**Solution:**
+
+```ts
+// Enable code splitting
+// Use dynamic imports
+const Heavy = import('./HeavyComponent');
+```
+
+### Error: "Dynamic import not supported"
+
+**Solution:**
+
+```ts
+// Ensure target supports dynamic import
+// manic.config.ts
+export default defineConfig({
+  build: {
+    target: 'es2022',
+  },
+});
+```
+
+---
+
+## Compilation Errors
+
+### Error: "Unexpected token"
+
+**Check:**
+
+1. File extension (should be .tsx for JSX)
+2. React import
+3. Valid JSX syntax
+
+### Error: "Expected"
+
+```
+Unexpected token
+  --> app/routes/index.tsx:5:3
+```
+
+**Solution:**
+
+```tsx
+// Check for missing or extra braces
+// ✓ Correct
+return (
+  <div>Hello</div>
+);
+
+// ✗ Incorrect - missing >
+return (
+  <div>Hello</div>
+);
+```
+
+---
+
+## Common Error Messages
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Module not found` | Missing dependency | `bun add <pkg>` |
+| `Type error` | Type mismatch | Check types |
+| `Parse error` | Invalid syntax | Check file |
+| `Build failed` | Multiple causes | Check detailed error |
+| `Circular dependency` | Import cycle | Break cycle |
+
+---
+
+## Debug Commands
+
+### Run with verbose output
+
+```bash
+bun build --verbose 2>&1 | head -50
+```
+
+### Check TypeScript
+
+```bash
+bunx tsc --noEmit
+```
+
+### Run Linter
+
+```bash
+bunx oxlint .
+```
+
+---
+
+## Best Practices
+
+<Callout type="info">
+
+Check the full error message - it usually points to the exact location.
+
+</Callout>
+<Callout type="warn">
+ 
+Restart the dev server after installing new dependencies.
+ 
+</Callout>
+
+<Callout type="info">
+
+Use `--verbose` for detailed build output.
+
+</Callout>
+---
+
+See also:
+- [Troubleshooting Overview](/docs/framework/troubleshooting/index)
+- [Deployment Errors](/docs/framework/troubleshooting/deployment-errors)

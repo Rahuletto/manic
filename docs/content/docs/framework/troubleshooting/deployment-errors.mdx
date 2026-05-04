@@ -1,0 +1,222 @@
+---
+title: Deployment Errors
+description: Debugging platform-specific deployment and runtime errors in Manic.
+---
+
+# Deployment Errors
+
+<Callout type="info" title="TL;DR">
+
+Solutions for common deployment errors on Vercel, Cloudflare, Netlify, and other platforms.
+
+</Callout>
+## Vercel Errors
+
+### Error: "Function cancelled"
+
+**Problem:** Function took too long to respond.
+
+**Solution:**
+
+- Check for infinite loops
+- Add timeout handling
+- Use streaming for long responses
+
+### Error: "MAX_DURATION_EXCEEDED"
+
+**Solution:**
+
+```ts
+// Add maxDuration to route
+// If supported in your config
+export const config = {
+  maxDuration: 10, // seconds
+};
+```
+
+### Error: "Build failed"
+
+**Check:**
+
+1. Ensure `bun build` works locally
+2. Check package.json scripts
+3. Verify node_modules in output
+
+```json
+// package.json
+{
+  "scripts": {
+    "build": "bun build",
+    "start": "bun start"
+  }
+}
+```
+
+---
+
+## Cloudflare Errors
+
+### Error: "Worker exceeded GC limit"
+
+**Solution:**
+
+- Reduce bundle size
+- Delete unused variables
+- Use streaming
+
+### Error: "Durable Object error"
+
+**Check:**
+
+- Durable Objects may not be supported
+- Use standard Workers instead
+
+### Error: "cf-content-types-generator"
+
+**Solution:**
+
+```toml
+# wrangler.toml
+compatibility_date = "2024-01-01"
+```
+
+---
+
+## Netlify Errors
+
+### Error: "Build command not found"
+
+**Solution:**
+
+```toml
+# netlify.toml
+[build]
+  command = "bun build"
+  publish = "dist"
+```
+
+### Error: "Function not found"
+
+**Solution:**
+
+```toml
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+---
+
+## Common Platform Errors
+
+### Error: "Process not defined"
+
+**Problem:** Node.js APIs not available.
+
+**Solution:**
+
+- Use web-standard APIs
+- Check environment variables differently
+
+```ts
+// ✗ Avoid direct access in shared code
+// process.env.PORT
+
+// ✓ Use getEnv helper (recommended)
+import { getEnv } from 'manicjs/env';
+getEnv('MANIC_PUBLIC_PORT');
+```
+
+### Error: "Module not found"
+
+**Check:**
+
+1. Package is in dependencies (not devDependencies)
+2. Package has browser build
+3. Check bundle for the import
+
+---
+
+## Debugging Deployment
+
+### Check Build Output
+
+```bash
+# Locally simulate build
+bun build
+
+# Check dist/ directory
+ls -la dist/
+```
+
+### Test Production Build Locally
+
+```bash
+manic start
+curl http://localhost:6070
+```
+
+### Environment Variables
+
+**Set in platform dashboard:**
+- Avoid committing `.env`
+- Use platform's env var UI
+
+---
+
+## Platform Checklist
+
+### Vercel
+- [ ] bun in dependencies
+- [ ] Build script in package.json
+- [ ] Start script configured
+- [ ] Environment variables set
+
+### Cloudflare
+- [ ] wrangler.toml configured
+- [ ] Bun target in config
+- [ ] Workers compatible code
+
+### Netlify
+- [ ] netlify.toml configured
+- [ ] bun build command
+- [ ] publish directory correct
+
+---
+
+## Getting Help
+
+If you encounter an error not listed:
+
+1. Check platform docs
+2. Search GitHub issues
+3. Create reproduction
+
+---
+
+## Best Practices
+
+<Callout type="info">
+
+Test production build locally before deploying.
+
+</Callout>
+
+<Callout type="warn">
+ 
+Don't use Node.js APIs that aren't available on your platform.
+ 
+</Callout>
+
+<Callout type="info">
+
+Use environment variables for platform-specific configuration.
+
+</Callout>
+---
+
+See also:
+- [Troubleshooting Overview](/docs/framework/troubleshooting/index)
+- [Build Errors](/docs/framework/troubleshooting/build-errors)
+- [Deployments Guide](/docs/framework/deployment)

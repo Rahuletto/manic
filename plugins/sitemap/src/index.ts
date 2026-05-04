@@ -1,10 +1,10 @@
-import type {
-  ManicPlugin,
-  ManicServerPluginContext,
-  ManicBuildPluginContext,
-} from 'manicjs/config';
+import { createPlugin } from 'manicjs/config';
 import { generateSitemapXml } from './generate';
 
+/**
+ * Sitemap generation configuration
+ * @interface SitemapConfig
+ */
 export interface SitemapConfig {
   /** Base URL of the site, e.g. "https://example.com" */
   hostname: string;
@@ -23,24 +23,34 @@ export interface SitemapConfig {
   exclude?: string[];
 }
 
-export function sitemap(config: SitemapConfig): ManicPlugin {
-  return {
+/**
+ * Creates a sitemap plugin that auto-generates sitemap.xml from routes.
+ *
+ * Scans page routes and generates an XML sitemap compatible with
+ * search engines. Excludes dynamic routes automatically.
+ *
+ * @param config - Sitemap configuration
+ * @returns ManicPlugin that generates sitemap.xml
+ *
+ * @example
+ * import { sitemap } from '@manicjs/sitemap';
+ *
+ * sitemap({
+ *   hostname: 'https://example.com',
+ *   changefreq: 'daily',
+ *   priority: 0.8,
+ *   exclude: ['/admin'],
+ * })
+ */
+export function sitemap(config: SitemapConfig) {
+  return createPlugin({
     name: 'sitemap',
-
-    configureServer(ctx: ManicServerPluginContext) {
-      const xml = generateSitemapXml(ctx.pageRoutes, config);
-      ctx.addRoute(
-        '/sitemap.xml',
-        () =>
-          new Response(xml, { headers: { 'content-type': 'application/xml' } })
-      );
-    },
-
-    async build(ctx: ManicBuildPluginContext) {
-      await ctx.emitClientFile(
-        'sitemap.xml',
-        generateSitemapXml(ctx.pageRoutes, config)
-      );
-    },
-  };
+    staticFiles: [
+      {
+        path: '/sitemap.xml',
+        content: ctx => generateSitemapXml(ctx.pageRoutes, config),
+        contentType: 'application/xml',
+      },
+    ],
+  });
 }

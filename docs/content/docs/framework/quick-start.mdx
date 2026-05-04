@@ -1,0 +1,117 @@
+---
+title: Quick Start
+description: Build your first high-performance React application with Manic.
+---
+
+# Quick Start
+
+Manic is a fullstack React framework optimized for the Bun runtime. To ensure the best development experience, **Bun must be installed** on your system.
+
+## Automatic Installation
+
+The fastest way to scaffold a new Manic project is using the `create manic` utility.
+
+```bash
+bun create manic ./my-app
+cd my-app
+bun dev
+```
+
+This command will:
+1.  Initialize a new project with the **Starter Template**.
+2.  Install all necessary dependencies.
+3.  Set up the mandatory `~manic.ts` and `manic.config.ts` files.
+
+---
+
+## Manual Installation
+
+If you prefer to set up your project manually, follow these steps.
+
+### 1. Initialize your project
+
+Create a directory and initialize a new Bun project.
+
+```bash
+mkdir my-app && cd my-app
+bun init
+```
+
+### 2. Install Dependencies
+
+Add `manicjs` and its peer dependencies.
+
+```bash
+bun add manicjs react react-dom
+bun add -d @types/react @types/react-dom
+```
+
+### 3. Setup Entry Points
+
+Create the mandatory server entry point `~manic.ts` in the root.
+
+```ts twoslash
+// @errors: 2322
+// ~manic.ts
+import { createManicServer } from 'manicjs/server';
+
+const app = await createManicServer({ html: '<!doctype html><html><body><div id="root"></div></body></html>' });
+
+export default {
+  port: process.env.PORT || 6070,
+  fetch: app.fetch,
+};
+```
+
+### 4. Create your first page
+
+Create the `app/routes` directory and add an `index.tsx` file.
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/index.tsx
+export default function Page() {
+  return <h1>Hello from Manic!</h1>;
+}
+```
+
+### 5. Launch the Dev Server
+
+Run the development command to start the high-speed OXC watcher.
+
+```bash
+bunx manic dev
+```
+
+---
+
+## How it Works
+
+When you run `manic dev`, several things happen under the hood to ensure performance:
+
+1.  **Discovery**: Manic scans your `app/` directory and creates a virtual route manifest.
+2.  **Plugin Initialization**: Any plugins in `manic.config.ts` are loaded and their `preload` scripts are injected.
+3.  **Transformation**: The OXC transformer begins on-demand transpilation of your TSX/TS files into ES2022 JavaScript.
+4.  **Hono Instance**: A Hono server is launched, wrapping the Manic routing engine and serving both your React app and API routes.
+
+## Next Steps
+
+Now that you have your first page running, explore the following topics to build a complete application:
+
+<Cards>
+  <Card
+    title="Routing"
+    description="Learn about dynamic routes, nested layouts, and scoring."
+    href="/docs/framework/routing"
+  />
+  <Card
+    title="API Routes"
+    description="Build high-performance backends with the built-in Hono integration."
+    href="/docs/framework/server"
+  />
+  <Card
+    title="Configuration"
+    description="Customize your build pipeline and deployment settings."
+    href="/docs/api/config"
+  />
+</Cards>

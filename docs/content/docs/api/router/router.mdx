@@ -1,0 +1,75 @@
+---
+title: Router
+description: Root SPA router component — mounts lazy routes from the generated manifest or explicit loaders.
+---
+
+# `<Router />`
+
+The **`Router`** component is the client root for Manic file-based routing. It reads lazy loaders from **`window.__MANIC_ROUTES__`** (injected when your **`main`** entry imports **`./app/~routes.generated`**) or accepts an explicit **`routes`** map for testing.
+
+```tsx
+// app/main.tsx — typical wiring (~routes.generated exists after discovery/build only)
+import { createRoot } from 'react-dom/client';
+import { Router } from 'manicjs';
+import { routes, notFoundPage, errorPage } from './~routes.generated';
+
+window.__MANIC_ROUTES__ = routes;
+window.__MANIC_ERROR_PAGES__ = {};
+if (notFoundPage) window.__MANIC_ERROR_PAGES__.notFound = notFoundPage;
+if (errorPage) window.__MANIC_ERROR_PAGES__.error = errorPage;
+
+createRoot(document.getElementById('root')!).render(<Router />);
+```
+
+You may pass **`routes`** explicitly instead of using **`window.__MANIC_ROUTES__`** (useful in tests):
+
+```tsx
+<Router routes={routes} />
+```
+
+---
+
+## Props
+
+Source: [`packages/manic/src/router/lib/Router.tsx`](https://github.com/Rahuletto/manic/blob/main/packages/manic/src/router/lib/Router.tsx)
+
+<TypeTable
+  type={{
+    routes: {
+      type: 'Record<string, () => Promise<{ default: React.ComponentType }>> | undefined',
+      description:
+        'Optional route map. When omitted, uses window.__MANIC_ROUTES__ populated from ~routes.generated.ts in main.tsx.',
+    },
+  }}
+/>
+
+**Not-found** and **route error** UI come from **`window.__MANIC_ERROR_PAGES__`** (`.notFound` and `.error` lazy loaders), normally assigned alongside **`__MANIC_ROUTES__`** in **`app/main.tsx`**.
+
+---
+
+## Behavior (framework context)
+
+| Concern | Detail |
+| :--- | :--- |
+| **Matching** | Uses internal **`RouteRegistry`** — same precedence as discovery (static beats dynamic beats catch‑all). |
+| **Navigation** | **`navigate`** / **`<Link>`** update history and swap the lazy component; optional View Transitions when enabled. |
+| **Prefetch** | **`preloadRoute`** / **`Link`** hover prefetch warm the same loaders. |
+| **Errors** | Route render failures surface **`ErrorOverlay`** in development patterns; **`ServerError`** shell exists for fatal client paths — pair with **`~500.tsx`** for branded pages ([Errors overview](/docs/api/errors)). |
+
+---
+
+## Imports
+
+```ts
+import { Router } from 'manicjs';
+// or
+import { Router } from 'manicjs/router';
+```
+
+---
+
+## See also
+
+- [Router overview](/docs/api/router) — scoring, hooks, navigation flow
+- [Link](/docs/api/router/link)
+- [useRouter](/docs/api/router/use-router)

@@ -1,0 +1,135 @@
+---
+title: Package exports
+description: Every manicjs entry point and how it maps to subpath imports.
+---
+
+# Package exports
+
+The [`manicjs`](https://www.npmjs.com/package/manicjs) package exposes multiple **subpath exports** (`package.json` `"exports"`). Prefer importing from the smallest surface you need (`manicjs/router`, `manicjs/config`, …). The root entry (`manicjs`) bundles the pieces most apps use in one place.
+
+---
+
+## Entry points
+
+| Import path | Role | Detailed docs |
+| :--- | :--- | :--- |
+| `manicjs` | Router + UI shells + theme + transitions + typed config surface + RPC client | This page + [Router](/docs/api/router), [Theme](/docs/api/theme), [Transitions](/docs/api/transitions), [Errors](/docs/api/errors), [Client](/docs/api/client) |
+| `manicjs/router` | Full router surface including extras **not** on the root barrel | [Router](/docs/api/router), [preloadRoute](/docs/api/router/preload-route) |
+| `manicjs/config` | Config authoring, plugin helper, cached config (`getConfig`) | [Config](/docs/api/config), [Plugins](/docs/api/config/plugins) |
+| `manicjs/server` | Production/dev Bun server (`createManicServer`) | [Server](/docs/api/server) |
+| `manicjs/theme` | Theme context + toggle (+ `initTheme`) | [Theme](/docs/api/theme) |
+| `manicjs/transitions` | `ViewTransitions.*` elements + `navigate` / `setViewTransitions` re-exports | [Transitions](/docs/api/transitions) |
+| `manicjs/env` | `getEnv`, `getPublicEnv` | [Environment](/docs/api/env) |
+| `manicjs/client` | Alias of config client — RPC helper only | [Client](/docs/api/client), [RPC](/docs/api/client/rpc) |
+| `manicjs/plugins` | Low-level loaders (`apiLoaderPlugin`, `fileImporterPlugin`) | [Plugin loaders](/docs/api/plugin-loaders) |
+
+The **`manic` CLI** is shipped as the package binary (`package.json` `"bin"`); it is not a runtime import.
+
+---
+
+## `manicjs` (root)
+
+These symbols are re-exported from `packages/manic/index.ts` — convenient for app code (`main.tsx`, route modules).
+
+| Export | Notes |
+| :--- | :--- |
+| `Router`, `Link`, `navigate`, `useRouter`, `useQueryParams` | Client SPA routing ([Router](/docs/api/router)) |
+| `NotFound`, `ErrorOverlay`, `ServerError` | Default error UI ([Errors](/docs/api/errors)) |
+| `defineConfig`, `loadConfig` | Same implementations as `manicjs/config`; types `ManicConfig`, `ManicPlugin`, contexts, `PageRoute`, `ApiRoute` ([Config](/docs/api/config)) |
+| `ThemeProvider`, `useTheme`, `ThemeToggle` | ([Theme](/docs/api/theme)) |
+| `ViewTransitions`, `setViewTransitions` | ([Transitions](/docs/api/transitions)) |
+| `createClient` | Hono RPC client — identical to `manicjs/client` ([RPC](/docs/api/client/rpc)) |
+
+**Not** re-exported from the root (import from `manicjs/router` or `manicjs/config` instead):
+
+- `preloadRoute`, `RouterContext`, `setViewTransitions` (also on `manicjs/router`), type-only `RouteDef`, `RouterContextValue`
+- `createPlugin`, `getConfig`, `ManicProvider`, `BuildContext`, `SitemapConfig`, and the rest of the config module API
+
+---
+
+## `manicjs/router`
+
+| Export | Notes |
+| :--- | :--- |
+| `Router`, `Link`, `navigate`, `useRouter`, `useQueryParams` | Same as root |
+| `preloadRoute` | Manual route chunk preload ([preloadRoute](/docs/api/router/preload-route)) |
+| `setViewTransitions` | Same as `manicjs` / `manicjs/transitions` |
+| `RouterContext` | React context backing `useRouter` |
+| `RouteDef`, `RouterContextValue` | Types |
+
+---
+
+## `manicjs/config`
+
+| Export | Notes |
+| :--- | :--- |
+| `defineConfig`, `loadConfig`, `getConfig` | Config load + cache ([Config](/docs/api/config)) |
+| `createPlugin` | Plugin authoring with `staticFiles` shorthand ([Plugins](/docs/api/config/plugins)) |
+| `ManicConfig`, `ManicPlugin`, `ManicPluginContext`, `ManicServerPluginContext`, `ManicBuildPluginContext` | Types |
+| `ManicProvider`, `BuildContext` | Deployment provider authoring |
+| `PageRoute`, `ApiRoute`, `SitemapConfig` | Discovery / plugin types |
+
+---
+
+## `manicjs/server`
+
+| Export | Notes |
+| :--- | :--- |
+| `createManicServer` | Bun `Bun.serve` wrapper used from `~manic.ts` ([Server](/docs/api/server)) |
+
+---
+
+## `manicjs/theme`
+
+| Export | Notes |
+| :--- | :--- |
+| `ThemeProvider`, `useTheme`, `ThemeToggle` | Runtime theme UI |
+| `initTheme` | Early boot helper (apply persisted/system theme before paint) |
+
+---
+
+## `manicjs/transitions`
+
+| Export | Notes |
+| :--- | :--- |
+| `ViewTransitions` | Element factory (`ViewTransitions.div`, …) |
+| `navigate`, `setViewTransitions` | Re-exported from the router implementation |
+
+---
+
+## `manicjs/env`
+
+| Export | Notes |
+| :--- | :--- |
+| `getEnv`, `getPublicEnv` | Build-time public vars + server secrets ([Environment](/docs/api/env)) |
+
+---
+
+## `manicjs/client`
+
+| Export | Notes |
+| :--- | :--- |
+| `createClient` | Same as root — points at `src/config/client.ts` ([RPC](/docs/api/client/rpc)) |
+
+---
+
+## `manicjs/plugins`
+
+See [Plugin loaders](/docs/api/plugin-loaders): `apiLoaderPlugin`, `fileImporterPlugin`.
+
+---
+
+## Choosing an import style
+
+```tsx
+// Typical app components — shortest path
+import { Link, useRouter, ViewTransitions } from 'manicjs';
+
+// When you need preloadRoute or RouterContext
+import { preloadRoute, RouterContext } from 'manicjs/router';
+
+// manic.config.ts — always config entry
+import { defineConfig, createPlugin } from 'manicjs/config';
+```
+
+If something is exported from `manicjs` **and** a subpath, either import works; bundlers dedupe to one module instance.

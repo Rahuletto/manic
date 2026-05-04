@@ -2,6 +2,10 @@
 
 Manic is a high-performance, production-grade React framework built from the ground up on Bun and Hono. It features a custom, ultra-fast bundler and builder system leveraging OXC for transformation and minification. We prioritize reliability, speed, and zero-config DX, intentionally replacing existing solutions like Vite, Webpack, or Turbopack with our own optimized stack.
 
+**Documentation:** [manic-docs.vercel.app](https://manic-docs.vercel.app/)
+
+**LLM / agent context (plain text):** [llms.txt](https://manic-docs.vercel.app/llms.txt) (index of doc URLs) · [llms-full.txt](https://manic-docs.vercel.app/llms-full.txt) (full docs in one file)
+
 ---
 
 ## 📂 Repository Structure
@@ -87,6 +91,36 @@ graph LR
 ---
 
 ## 🔌 Plugin & Provider Architecture
+
+### `ManicPlugin` Interface
+
+```ts
+interface ManicPlugin {
+  name: string;
+  /** Absolute path to a Bun plugin script — auto-injected as --preload in dev, Bun.plugin() in build */
+  preload?: string;
+  /** TOML snippet for bunfig.toml — manic dev merges all [serve.static] entries automatically */
+  bunfig?: string;
+  configureServer?(ctx: ManicServerPluginContext): void | Promise<void>;
+  build?(ctx: ManicBuildPluginContext): void | Promise<void>;
+}
+```
+
+### First-Party Plugins
+
+| Package | Purpose |
+| :--- | :--- |
+| `@manicjs/tailwind` | Tailwind CSS v4 via `bun-plugin-tailwind` |
+| `@manicjs/unocss` | UnoCSS via `bun-plugin-unocss` |
+| `@manicjs/mdx` | MDX with GFM, frontmatter, TOC extraction |
+| `@manicjs/seo` | Meta tags, Open Graph, canonical URLs |
+| `@manicjs/sitemap` | Auto-generates `sitemap.xml` |
+| `@manicjs/mcp` | Model Context Protocol endpoint |
+| `@manicjs/api-docs` | Scalar API reference UI |
+
+### How `bunfig.toml` Works
+
+`manic dev` auto-generates `bunfig.toml` by collecting `bunfig` snippets from all plugins and merging `[serve.static]` entries into one section. Apps never touch `bunfig.toml` — it's gitignored.
 
 ### Build-Time Plugins (`ManicPlugin`)
 

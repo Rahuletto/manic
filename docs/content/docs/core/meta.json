@@ -1,0 +1,27 @@
+{
+  "root": true,
+  "title": "Core internals",
+  "description": "Deep dives into build, discovery, and runtime.",
+  "icon": "Cuboid",
+  "pages": [
+    "index",
+    "understanding-speed",
+    "performance-model",
+    "production-client-bundle",
+    "hmr-fast-refresh",
+    "lazy-chunks-cache",
+    "fullstack-api-runtime",
+    "source-layout",
+    "architecture",
+    "build-pipeline",
+    "bundler-transform",
+    "discovery-engine",
+    "oxc-toolchain",
+    "dev-internals",
+    "router-runtime",
+    "plugin-hooks",
+    "providers-contract",
+    "server-runtime",
+    "caveats"
+  ]
+}

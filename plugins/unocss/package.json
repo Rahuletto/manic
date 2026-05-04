@@ -1,0 +1,14 @@
+{
+  "name": "@manicjs/unocss",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "bun-plugin-unocss": "^0.1.3"
+  }
+}

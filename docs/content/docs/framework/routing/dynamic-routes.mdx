@@ -1,0 +1,166 @@
+---
+title: Dynamic Routes
+description: Dynamic route segments, catch-all routes, optional segments, and advanced routing patterns in Manic.
+---
+
+# Dynamic Routes
+
+<Callout type="info" title="TL;DR">
+
+Dynamic routes use `[param]` syntax to capture URL segments at runtime. Manic supports single segments `[id]`, nested segments `[userId]/[postId]`, and catch-all segments `[...slug]`.
+
+</Callout>
+## What It Is
+
+Dynamic routes allow your application to handle **variable URL segments** without creating individual files for each possible value:
+
+| Pattern | Syntax | Matches | Captures |
+|---------|--------|--------|---------|
+| **Single** | `[id]` | `/posts/123` | `{ id: "123" }` |
+| **Multiple** | `[userId]/[postId]` | `/users/1/posts/99` | `{ userId: "1", postId: "99" }` |
+| **Catch-all** | `[...slug]` | `/docs/a/b/c` | `{ slug: "a/b/c" }` |
+
+---
+
+## Prerequisites
+
+- [Routing Guide](/docs/framework/routing) - Basic routing concepts
+- [API Routes](/docs/framework/server) - For REST endpoints
+
+---
+
+## Quick Start
+
+### Create a Dynamic Route
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/posts/[id].tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+
+export default function PostPage() {
+  const { params } = useRouter();
+
+  return (
+    <div>
+      <h1>Post #{params.id}</h1>
+      <p>Reading post data for ID: {params.id}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## Single Dynamic Segment
+
+Use `[param]` to capture a single URL segment:
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/users/[id].tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+
+export default function UserPage() {
+  const { params } = useRouter();
+  
+  return <div>User ID: {params.id}</div>;
+}
+```
+
+**Matches:**
+- `/users/123` → `{ id: "123" }`
+- `/users/hello-world` → `{ id: "hello-world" }`
+- ❌ `/users/123/comments` (too many segments)
+
+---
+
+## Multiple Dynamic Segments
+
+Nest folders to capture multiple params:
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/users/[userId]/posts/[postId].tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+
+export default function UserPostPage() {
+  const { params } = useRouter();
+  
+  return <div>User {params.userId}, Post {params.postId}</div>;
+}
+```
+
+**Matches:**
+- `/users/42/posts/99` → `{ userId: "42", postId: "99" }`
+
+---
+
+## Catch-All Routes
+
+Use `[...param]` to match any number of segments:
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/docs/[...slug].tsx
+import React from 'react';
+import { useRouter } from 'manicjs';
+
+export default function DocsPage() {
+  const { params } = useRouter();  // slug = "guides/installation"
+  
+  return <div>Doc: {params.slug}</div>;
+}
+```
+
+**Matches:**
+- `/docs/guides` → `{ slug: "guides" }`
+- `/docs/guides/installation` → `{ slug: "guides/installation" }`
+- `/docs/api/v2/endpoints/users` → `{ slug: "api/v2/endpoints/users" }`
+
+---
+
+## Combining Catch-All with a Folder Index
+
+To match both `/docs` and `/docs/anything/below`, pair a folder `index.tsx` with a sibling catch-all file:
+
+<Files>
+  <Folder name="app/routes/docs" defaultOpen>
+    <File name="index.tsx" />
+    <File name="[...slug].tsx" />
+  </Folder>
+</Files>
+
+The static `index.tsx` wins for `/docs` (score 200) and `[...slug].tsx` handles every deeper URL (score 101).
+
+---
+
+## API Routes
+
+Dynamic routes work the same way in `app/api/`:
+
+```tsx twoslash
+// @errors: 2322
+// app/api/users/[id]/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  const id = c.req.param('id');
+  return c.json({ id });
+});
+
+export default app;
+```
+
+---
+
+## See Also
+
+- [Routing Guide](/docs/framework/routing) - Basic routing concepts
+- [API Routes](/docs/framework/server) - Backend endpoints
+- [Router API](/docs/api/router) - Complete router documentation

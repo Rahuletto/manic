@@ -1,0 +1,11 @@
+{
+  "title": "Config & plugins",
+  "description": "manic.config.ts helpers, types, and plugin authoring.",
+  "pages": [
+    "index",
+    "define-config",
+    "load-config",
+    "get-config",
+    "plugins"
+  ]
+}

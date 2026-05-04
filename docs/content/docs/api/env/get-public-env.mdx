@@ -1,0 +1,45 @@
+---
+title: getPublicEnv
+description: Return every MANIC_PUBLIC_* variable as a plain object — browser or Bun.
+---
+
+# `getPublicEnv()`
+
+```ts
+import { getPublicEnv } from 'manicjs/env';
+```
+
+---
+
+## Signature
+
+```ts
+function getPublicEnv(): Record<string, string>;
+```
+
+---
+
+## Behavior
+
+| Runtime | Source |
+| :--- | :--- |
+| **Browser** | **`window.__MANIC_ENV__`** — whatever the build inlined |
+| **Bun / Node** | **`process.env`** filtered to keys starting with **`MANIC_PUBLIC_`** |
+
+---
+
+## Usage
+
+```ts
+const publicEnv = getPublicEnv();
+console.log(publicEnv.MANIC_PUBLIC_API_URL);
+```
+
+Pair with **[framework env guide](/docs/framework/advanced/environment-variables)** for injection semantics.
+
+---
+
+## See also
+
+- [getEnv](/docs/api/env/get-env)
+- [Environment overview](/docs/api/env)

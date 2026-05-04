@@ -1,0 +1,56 @@
+---
+title: Plugin hooks internals
+description: configureServer vs build staticFiles preload Bun.plugin ordering versus manic build stages.
+---
+
+# Plugin hooks internals
+
+Plugins implement **`ManicPlugin`** (`packages/manic/src/config/index.ts`) — optional **`preload`**, **`bunfig`**, **`configureServer`**, **`build`**.
+
+---
+
+## Hook timeline
+
+```mermaid
+flowchart LR
+  subgraph dev["manic dev"]
+    BF[bunfig merge]
+    SP[spawn Bun]
+    CS[configureServer]
+    BF --> SP --> CS
+  end
+  subgraph prod["manic build"]
+    BP[Bun.plugin preload]
+    CB[client bundle]
+    PB[plugin.build]
+    AB[API bundle]
+    BP --> CB --> PB --> AB
+  end
+```
+
+| Hook | Runs when | Typical use |
+| :--- | :--- | :--- |
+| **`preload`** | Before **`Bun.build`** graphs · **`--preload`** in dev | Register **`BunPlugin`** (Tailwind, MDX, …) |
+| **`bunfig`** | **`manic dev` startup** | Merge **`serve.static`** plugins |
+| **`configureServer`** | **`createManicServer`** startup | **`addRoute`**, **`injectHtml`**, **`addLinkHeader`** |
+| **`build`** | After client bundle + baseline HTML | **`emitClientFile`**, **`injectHtml`** |
+
+---
+
+## **`createPlugin`** shorthand
+
+**`staticFiles`** expands into **`configureServer`** **`addRoute`** + **`build`** **`emitClientFile`** — the canonical dev/prod parity pattern ([Plugins](/docs/framework/plugins)).
+
+---
+
+## Sharp edges
+
+- **`plugin.build`** receives **`apiRoutes: []`** — APIs bundle **after** plugin hooks ([Caveats](/docs/core/caveats)).
+- **`configureServer`** routes do **not** exist in production unless mirrored via **`emitClientFile`** or providers.
+
+---
+
+## See also
+
+- [Plugin architecture](/docs/framework/plugins)
+- [Server runtime](/docs/core/server-runtime)

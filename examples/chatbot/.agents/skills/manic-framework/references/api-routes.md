@@ -1,11 +1,13 @@
 # API Routes
 
-API routes in Manic are built with Hono.
+<Callout type="note">
+API routes in Manic are built with Hono and automatically mounted under `/api/`.
+</Callout>
 
 ## Basic API
 
 ```tsx
-// app/api/hello/index.ts
+// app/api/hello/index.ts → /api/hello
 import { Hono } from 'hono';
 
 const route = new Hono();
@@ -17,10 +19,14 @@ route.get('/', c => {
 export default route;
 ```
 
+<Callout type="important">
+API routes must be in `app/api/*/index.ts` format.
+</Callout>
+
 ## Dynamic API
 
 ```tsx
-// app/api/users/[id]/index.ts
+// app/api/users/[id]/index.ts → /api/users/:id
 import { Hono } from 'hono';
 
 const route = new Hono();
@@ -32,6 +38,10 @@ route.get('/', c => {
 
 export default route;
 ```
+
+<Callout type="tip">
+Dynamic parameters work the same as in page routes.
+</Callout>
 
 ## OpenAPI Support
 
@@ -67,3 +77,7 @@ route.get(
 
 export default route;
 ```
+
+<Callout type="tip">
+OpenAPI spec is auto-generated at `/openapi.json`.
+</Callout>

@@ -1,0 +1,8 @@
+{
+  "title": "Routing & Transitions",
+  "pages": [
+    "index",
+    "dynamic-routes",
+    "view-transitions"
+  ]
+}

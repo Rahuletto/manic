@@ -1,0 +1,472 @@
+---
+title: SEO
+description: Global meta tags, Open Graph, Twitter Cards, robots.txt, and per-page metadata.
+---
+
+# SEO
+
+Global SEO defaults (meta tags, Open Graph, Twitter Cards, robots.txt) plus a `<Metadata>` component for per-page overrides.
+
+## Installation
+
+```bash
+bun add @manicjs/seo
+```
+
+## Quick Start
+
+### 1. Configure Global Defaults
+
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+
+export default defineConfig({
+  plugins: [
+    seo({
+      hostname: 'https://example.com',
+      title: 'My App',
+      description: 'Build amazing apps with Manic',
+    }),
+  ],
+});
+```
+
+### 2. Override Per Page
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/about.tsx
+import { Metadata } from '@manicjs/seo/metadata';
+
+export default function About() {
+  return (
+    <>
+      <Metadata
+        title="About Us"
+        description="Learn more about our company"
+        ogImage="/images/about-og.png"
+      />
+      <h1>About Us</h1>
+    </>
+  );
+}
+```
+
+The `<Metadata>` component overrides the global defaults for that page. When the user navigates away, the previous values are restored automatically.
+
+---
+
+## Global Options
+
+<TypeTable
+  type={{
+    hostname: {
+      type: 'string',
+      required: true,
+      description: 'Base URL of the site (e.g. "https://example.com")',
+    },
+    title: {
+      type: 'string',
+      description: 'Default page title',
+    },
+    description: {
+      type: 'string',
+      description: 'Default meta description',
+    },
+    author: {
+      type: 'string',
+      description: 'Author name',
+    },
+    twitter: {
+      type: 'TwitterConfig',
+      description: 'Twitter Card settings',
+    },
+    openGraph: {
+      type: 'OpenGraphConfig',
+      description: 'Open Graph settings',
+    },
+    rules: {
+      type: 'RobotRule[]',
+      description: 'Crawler rules for robots.txt (defaults to allow all)',
+    },
+    sitemaps: {
+      type: 'string[]',
+      description: 'Additional sitemap URLs for robots.txt',
+    },
+    autoSitemap: {
+      type: 'boolean',
+      default: 'true',
+      description: 'Auto-add /sitemap.xml to robots.txt when @manicjs/sitemap is used',
+    },
+    linkHeaders: {
+      type: 'LinkHeader[]',
+      description: 'Extra RFC 8288 Link headers added to all HTML responses',
+    },
+    contentSignals: {
+      type: 'ContentSignals',
+      description: 'Content-Signal directives appended to robots.txt',
+    },
+  }}
+/>
+
+### TwitterConfig
+
+<TypeTable
+  type={{
+    card: {
+      type: "'summary' | 'summary_large_image' | 'app' | 'player'",
+      description: 'Card type',
+    },
+    site: {
+      type: 'string',
+      description: '@username for the site',
+    },
+    creator: {
+      type: 'string',
+      description: '@username of content creator',
+    },
+  }}
+/>
+
+### OpenGraphConfig
+
+<TypeTable
+  type={{
+    type: {
+      type: 'string',
+      description: 'OG type (e.g. "website", "article")',
+    },
+    locale: {
+      type: 'string',
+      description: 'Locale (e.g. "en_US")',
+    },
+    image: {
+      type: 'string',
+      description: 'Default OG image URL',
+    },
+    siteName: {
+      type: 'string',
+      description: 'Site name for OG',
+    },
+  }}
+/>
+
+### RobotRule
+
+<TypeTable
+  type={{
+    userAgent: {
+      type: 'string',
+      description: 'User agent pattern (e.g. "*", "GoogleBot")',
+    },
+    allow: {
+      type: 'string[]',
+      description: 'Allowed paths',
+    },
+    disallow: {
+      type: 'string[]',
+      description: 'Disallowed paths',
+    },
+    crawlDelay: {
+      type: 'number',
+      description: 'Crawl delay in seconds',
+    },
+  }}
+/>
+
+### ContentSignals
+
+<TypeTable
+  type={{
+    'ai-train': {
+      type: "'yes' | 'no'",
+      description: 'Allow AI training on content',
+    },
+    search: {
+      type: "'yes' | 'no'",
+      description: 'Allow search engine indexing',
+    },
+    'ai-input': {
+      type: "'yes' | 'no'",
+      description: 'Allow AI input from content',
+    },
+  }}
+/>
+
+---
+
+## Full Example
+
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+
+export default defineConfig({
+  plugins: [
+    seo({
+      hostname: 'https://example.com',
+      title: 'My App',
+      description: 'Build amazing apps with Manic',
+      author: 'John Doe',
+      twitter: {
+        card: 'summary_large_image',
+        site: '@myapp',
+        creator: '@johndoe',
+      },
+      openGraph: {
+        type: 'website',
+        locale: 'en_US',
+        image: 'https://example.com/og.png',
+        siteName: 'My App',
+      },
+      rules: [
+        { userAgent: '*', allow: ['/'], disallow: ['/admin'] },
+      ],
+      contentSignals: {
+        'ai-train': 'no',
+        search: 'yes',
+      },
+    }),
+  ],
+});
+```
+
+## Generated Output
+
+The plugin generates:
+
+### Meta Tags (injected into `<head>`)
+
+```html
+<meta name="title" content="My App">
+<meta name="description" content="Build amazing apps with Manic">
+<meta name="author" content="John Doe">
+
+<!-- Open Graph -->
+<meta property="og:title" content="My App">
+<meta property="og:description" content="Build amazing apps with Manic">
+<meta property="og:url" content="https://example.com">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://example.com/og.png">
+<meta property="og:site_name" content="My App">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@myapp">
+<meta name="twitter:title" content="My App">
+<meta name="twitter:description" content="Build amazing apps with Manic">
+```
+
+### robots.txt
+
+```
+User-agent: *
+Allow: /
+Disallow: /admin
+
+Sitemap: https://example.com/sitemap.xml
+
+Content-Signal: ai-train=no, search=yes
+```
+
+---
+
+## Per-Page Metadata
+
+The `<Metadata>` component lets you override global SEO defaults on individual pages. It renders nothing visible — it manages `<head>` tags via side effects.
+
+```tsx twoslash
+// @errors: 2322
+import { Metadata } from '@manicjs/seo/metadata';
+```
+
+### Props
+
+<TypeTable
+  type={{
+    title: {
+      type: 'string',
+      description: 'Page title — sets <title>, og:title, and twitter:title',
+    },
+    description: {
+      type: 'string',
+      description: 'Sets name="description", og:description, twitter:description',
+    },
+    author: {
+      type: 'string',
+      description: 'Sets name="author"',
+    },
+    canonical: {
+      type: 'string',
+      description: 'Canonical URL — creates <link rel="canonical">',
+    },
+    ogImage: {
+      type: 'string',
+      description: 'OG image URL — sets og:image and twitter:image',
+    },
+    ogType: {
+      type: 'string',
+      description: 'OG type override',
+    },
+    ogUrl: {
+      type: 'string',
+      description: 'OG URL override',
+    },
+    ogLocale: {
+      type: 'string',
+      description: 'OG locale override',
+    },
+    ogSiteName: {
+      type: 'string',
+      description: 'OG site name override',
+    },
+    twitterCard: {
+      type: "'summary' | 'summary_large_image' | 'app' | 'player'",
+      description: 'Twitter card type override',
+    },
+    twitterSite: {
+      type: 'string',
+      description: 'Twitter site handle override',
+    },
+    twitterCreator: {
+      type: 'string',
+      description: 'Twitter creator handle override',
+    },
+  }}
+/>
+
+### Usage Examples
+
+#### Static Metadata
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/about.tsx
+import { Metadata } from '@manicjs/seo/metadata';
+
+export default function About() {
+  return (
+    <>
+      <Metadata
+        title="About Us"
+        description="Learn more about our company"
+        canonical="https://example.com/about"
+      />
+      <h1>About Us</h1>
+    </>
+  );
+}
+```
+
+#### Dynamic Metadata
+
+Use variables and state to set metadata dynamically:
+
+```tsx twoslash
+// @errors: 2322
+// app/routes/blog/[slug].tsx
+import { Metadata } from '@manicjs/seo/metadata';
+import { useRouter } from 'manicjs';
+
+const posts: Record<string, { title: string; excerpt: string; image: string }> = {
+  'hello-world': { title: 'Hello World', excerpt: 'My first post', image: '/images/hello.png' },
+  'react-tips': { title: 'React Tips', excerpt: 'Useful React patterns', image: '/images/react.png' },
+};
+
+export default function BlogPost() {
+  const { params } = useRouter();
+  const post = posts[params.slug];
+
+  if (!post) return <div>Post not found</div>;
+
+  return (
+    <>
+      <Metadata
+        title={post.title}
+        description={post.excerpt}
+        ogImage={post.image}
+        ogType="article"
+      />
+      <article>
+        <h1>{post.title}</h1>
+        <p>{post.excerpt}</p>
+      </article>
+    </>
+  );
+}
+```
+
+#### With Fetched Data
+
+```tsx twoslash
+// @errors: 2322
+import { Metadata } from '@manicjs/seo/metadata';
+import { useState, useEffect } from 'react';
+
+export default function Product() {
+  const [product, setProduct] = useState<{ name: string; description: string; image: string } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/product/1')
+      .then(r => r.json())
+      .then((data) => setProduct(data as { name: string; description: string; image: string }));
+  }, []);
+
+  return (
+    <>
+      {product && (
+        <Metadata
+          title={product.name}
+          description={product.description}
+          ogImage={product.image}
+        />
+      )}
+      <div>{product?.name ?? 'Loading...'}</div>
+    </>
+  );
+}
+```
+
+### How It Works
+
+1. On mount, `<Metadata>` updates existing `<meta>` / `<link>` tags or creates new ones in `<head>`
+2. It saves the previous values of any tags it modifies
+3. On unmount (when navigating away), it restores the original values — so global SEO defaults come back automatically
+4. Tags created by `<Metadata>` that didn't exist before are removed on cleanup
+
+---
+
+## Integration with Sitemap
+
+Works with `@manicjs/sitemap` for complete SEO:
+
+```ts twoslash
+// @errors: 2322
+import { defineConfig } from 'manicjs/config';
+import { seo } from '@manicjs/seo';
+import { sitemap } from '@manicjs/sitemap';
+
+export default defineConfig({
+  plugins: [
+    seo({
+      hostname: 'https://example.com',
+      title: 'My App',
+    }),
+    sitemap({
+      hostname: 'https://example.com',
+    }),
+  ],
+});
+```
+
+When `autoSitemap` is `true` (the default), the SEO plugin automatically adds `/sitemap.xml` to `robots.txt` and emits a `Link` header for sitemap discovery.
+
+## See Also
+
+- [Sitemap](/docs/framework/plugins/sitemap) - Auto-generate sitemap.xml
+- [Theme API](/docs/api/theme) - Dark mode integration

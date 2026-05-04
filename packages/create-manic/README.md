@@ -1,7 +1,7 @@
 # create-manic
 
 Scaffold a new Manic app.
-Visit [Manic](https://github.com/rahuletto/manic) for more information.
+Visit [Manic](https://github.com/rahuletto/manic) for more information. Documentation lives at [manic-docs.vercel.app](https://manic-docs.vercel.app/).
 
 ## Requirements
 

@@ -1,13 +1,21 @@
 import type { ZodObject, ZodRawShape, infer as ZodInfer } from 'zod';
 
+/**
+ * MCP tool definition
+ * @interface McpTool
+ */
 export interface McpTool {
+  /** Tool name (unique identifier) */
   name: string;
+  /** Human-readable tool description */
   description: string;
+  /** JSON Schema for tool input */
   inputSchema: {
     type: 'object';
     properties?: Record<string, unknown>;
     required?: string[];
   };
+  /** Execute function with parsed arguments */
   execute(args: Record<string, unknown>): Promise<unknown> | unknown;
 }
 
@@ -18,8 +26,25 @@ type ToolDef<S extends ZodObject<ZodRawShape>> = {
 };
 
 /**
- * Define a typed MCP tool. The Zod schema is converted to JSON Schema automatically
- * and args are validated + typed at call time.
+ * Defines a typed MCP tool with Zod schema validation.
+ *
+ * The Zod schema is automatically converted to JSON Schema for MCP.
+ * Args are validated and typed at call time.
+ *
+ * @template S - Zod schema type
+ * @param name - Unique tool name
+ * @param def - Tool definition with description, input schema, and handler
+ * @returns McpTool for use with mcp()
+ *
+ * @example
+ * import { defineTool } from '@manicjs/mcp';
+ * import { z } from 'zod';
+ *
+ * defineTool('getUser', {
+ *   description: 'Get a user by ID',
+ *   input: z.object({ id: z.string() }),
+ *   execute: async ({ id }) => ({ id, name: 'John' }),
+ * })
  */
 export function defineTool<S extends ZodObject<ZodRawShape>>(
   name: string,

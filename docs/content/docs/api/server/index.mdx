@@ -1,0 +1,58 @@
+---
+title: Server
+description: createManicServer Bun entry and how plugins attach routes metadata and APIs.
+---
+
+# Server API (`manicjs/server`)
+
+The server package exposes **`createManicServer`** — everything else (Hono APIs, Markdown negotiation, MCP hints) hangs off that function.
+
+---
+
+## Primary export
+
+<Cards>
+  <Card title="createManicServer" description="Bun.serve bootstrap HTML config modes plugins" href="/docs/api/server/create-manic-server" />
+</Cards>
+
+```ts
+import { createManicServer } from 'manicjs/server';
+```
+
+---
+
+## Plugin hooks (`configureServer`)
+
+Plugins extend the Bun router using **`ManicServerPluginContext`**:
+
+<TypeTable
+  type={{
+    addRoute: {
+      type: '(path: string, handler: (req: Request) => Response | Promise<Response>) => void',
+      description: 'Attach raw Request handlers.',
+    },
+    addLinkHeader: {
+      type: '(value: string) => void',
+      description: 'Append RFC 8288 Link headers on HTML responses.',
+    },
+    injectHtml: {
+      type: '(tags: string) => void',
+      description: 'Insert HTML snippets before closing head.',
+    },
+  }}
+/>
+
+Author plugins with **`createPlugin`** ([guide](/docs/api/config/plugins)).
+
+---
+
+## Related components
+
+Fatal client shells such as **`ServerError`** live under **`manicjs`** ([API](/docs/api/errors/server-error)).
+
+---
+
+## See also
+
+- [Core · Server runtime](/docs/core/server-runtime)
+- [Plugin loaders](/docs/api/plugin-loaders)

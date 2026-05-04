@@ -1,0 +1,51 @@
+---
+title: getEnv
+description: Read one environment variable — MANIC_PUBLIC_* only in the browser; full process.env on server/Bun.
+---
+
+# `getEnv(key)`
+
+```ts
+import { getEnv } from 'manicjs/env';
+```
+
+---
+
+## Signature
+
+```ts
+function getEnv(key: string): string | undefined;
+```
+
+---
+
+## Browser behavior
+
+- Only keys prefixed with **`MANIC_PUBLIC_`** return a value (from **`window.__MANIC_ENV__`** injected at build time).
+- Other keys log a console warning and return **`undefined`**.
+
+---
+
+## Server behavior
+
+When **`window`** is undefined, **`getEnv`** reads **`process.env[key]`** — no prefix restriction.
+
+---
+
+## Parameters
+
+<TypeTable
+  type={{
+    key: {
+      type: 'string',
+      description: 'Environment variable name.',
+    },
+  }}
+/>
+
+---
+
+## See also
+
+- [getPublicEnv](/docs/api/env/get-public-env)
+- [Environment overview](/docs/api/env)

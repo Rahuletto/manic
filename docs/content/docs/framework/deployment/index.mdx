@@ -1,0 +1,94 @@
+---
+title: Deployments
+description: How to deploy your Manic application to various platforms.
+---
+
+# Deployments
+
+Manic is designed to be provider-agnostic. Its build system generates a universal output that can be deployed to any platform.
+
+## Official Providers
+
+Manic maintains official providers for popular hosting platforms:
+
+### Vercel
+
+Standard Serverless and Edge Function support.
+
+```ts
+import { vercel } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [vercel()],
+});
+```
+
+### Cloudflare Pages/Workers
+
+Deploy to the global edge network using Cloudflare's high-performance infrastructure.
+
+```ts
+import { cloudflare } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [cloudflare()],
+});
+```
+
+### Netlify
+
+Full support for Netlify Functions and Blobs.
+
+```ts
+import { netlify } from '@manicjs/providers';
+
+export default defineConfig({
+  providers: [netlify()],
+});
+```
+
+## Self-Hosting
+
+For self-hosting on your own server, simply build and run:
+
+```bash
+# Build the application
+manic build
+
+# Start the server
+manic start
+```
+
+This launches the production Bun server from **`.manic/server.js`**. Configure the port with **`PORT`**, **`server.port`** in `manic.config.ts`, or **`manic start --port`** (default **6070**).
+
+### Docker
+
+```dockerfile
+FROM oven/bun:1
+
+WORKDIR /app
+COPY . .
+RUN bun install
+RUN bun run build
+
+EXPOSE 6070
+ENV PORT=6070
+CMD ["bun", ".manic/server.js"]
+```
+
+## How Providers Work
+
+1. **Build Phase**: Manic builds the application into the output directory.
+2. **Transform Phase**: The Provider packages the output for the target platform.
+3. **Static Assets**: All providers automatically handle serving static files.
+
+## No Provider Required
+
+If you're deploying to a platform not listed above, you don't need a provider. Just run:
+
+```bash
+manic build
+manic start
+```
+
+The built output can be deployed anywhere that can run a Bun/Hono server.

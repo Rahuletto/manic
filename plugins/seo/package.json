@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/seo",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "SEO plugin for Manic framework — robots.txt generation",
   "keywords": [
     "manic",
@@ -24,12 +24,22 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./metadata": {
+      "types": "./src/metadata.tsx",
+      "import": "./src/metadata.tsx"
     }
   },
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
-    "manicjs": "^0.7.4"
+    "manicjs": "^0.7.4",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@shikijs/transformers": "^4.0.2",
+    "@types/mdx": "^2.0.13",
+    "fumadocs-docgen": "^3.0.10"
   }
 }

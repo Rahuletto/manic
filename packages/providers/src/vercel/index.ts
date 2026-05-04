@@ -3,13 +3,48 @@ import { green, dim, yellow, bold } from 'colorette';
 import type { ManicProvider, BuildContext } from '../types';
 import { agentMiddleware } from '../middleware';
 
+/**
+ * Configuration options for Vercel deployment
+ * @interface VercelOptions
+ */
 export interface VercelOptions {
+  /** Server runtime to use (default: 'bun') */
   runtime?: 'bun' | 'edge' | 'nodejs20.x' | 'nodejs22.x';
+  /** Vercel regions to deploy to */
   regions?: string[];
+  /** Memory in MB for the function */
   memory?: number;
+  /** Maximum function execution time in seconds */
   maxDuration?: number;
 }
 
+/**
+ * Creates a Vercel deployment provider.
+ *
+ * Generates the Vercel output directory structure with:
+ * - Static files in .vercel/output/static
+ * - Serverless function in .vercel/output/functions/api.func
+ * - Vercel configuration
+ *
+ * @param options - Vercel deployment options
+ * @returns ManicProvider for Vercel deployment
+ *
+ * @example
+ * import { vercel } from '@manicjs/providers';
+ *
+ * export default defineConfig({
+ *   providers: [vercel()],
+ * });
+ *
+ * @example
+ * // With custom runtime and regions
+ * vercel({
+ *   runtime: 'bun',
+ *   regions: ['iad1', 'sfo1'],
+ *   memory: 1024,
+ *   maxDuration: 30,
+ * })
+ */
 export function vercel(options: VercelOptions = {}): ManicProvider {
   const runtime = options.runtime ?? 'bun';
 

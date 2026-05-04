@@ -17,7 +17,7 @@
     "@manicjs/providers": "workspace:*",
     "@manicjs/seo": "workspace:*",
     "@manicjs/sitemap": "workspace:*",
-    "bun-plugin-tailwind": "^0.1.2",
+    "@manicjs/tailwind": "workspace:*",
     "hono": "^4.12.14",
     "manicjs": "workspace:*",
     "react": "^19.2.5",

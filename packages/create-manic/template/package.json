@@ -14,7 +14,8 @@
   "dependencies": {
     "@manicjs/api-docs": "latest",
     "@manicjs/mcp": "latest",
-    "bun-plugin-tailwind": "^0.1.2",
+    "@manicjs/seo": "latest",
+    "@manicjs/tailwind": "latest",
     "hono": "^4.12.14",
     "manicjs": "latest",
     "react": "^19.2.5",

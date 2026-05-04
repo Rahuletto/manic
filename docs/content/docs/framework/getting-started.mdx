@@ -1,0 +1,263 @@
+---
+title: Getting Started
+description: Install Manic, scaffold a new app, and ship your first page in under a minute.
+---
+
+# Getting Started
+
+Manic is a **zero-config React SPA framework** designed exclusively for [Bun](https://bun.sh). It pairs an OXC-powered build engine with a Hono server runtime, so you write code and Manic handles the bundler, dev server, router, and production output.
+
+This guide walks you from a clean machine to a running Manic application.
+
+---
+
+## Prerequisites
+
+| Tool | Minimum | Notes |
+| :--- | :------ | :---- |
+| **Bun** | `1.0.0+` | The framework uses `Bun.serve`, `Bun.build`, `Bun.Glob`, and `Bun.spawn` — Node.js is not supported. |
+| **Node-compatible OS** | macOS, Linux, or WSL | Native Windows is supported through Bun's installer. |
+| **Editor** | VS Code, Cursor, Zed | TypeScript is enabled out of the box. |
+
+Install Bun if you do not already have it:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+---
+
+## Scaffold a New Project
+
+The fastest way to bootstrap a Manic app is with the official `create-manic` template.
+
+<Tabs items={['bun', 'npm', 'yarn', 'pnpm']}>
+  <Tab value="bun">
+    ```bash
+    bun create manic my-app
+    cd my-app
+    bun install
+    bun dev
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-manic my-app
+    cd my-app
+    npm install
+    npm run dev
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn create manic my-app
+    cd my-app
+    yarn dev
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create manic my-app
+    cd my-app
+    pnpm dev
+    ```
+  </Tab>
+</Tabs>
+
+The dev server starts on [http://localhost:6070](http://localhost:6070) by default.
+
+---
+
+## What You Just Generated
+
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="app" defaultOpen>
+      <Folder name="routes">
+        <File name="index.tsx" />
+      </Folder>
+      <Folder name="api" />
+      <File name="index.html" />
+      <File name="main.tsx" />
+    </Folder>
+    <File name="manic.config.ts" />
+    <File name="~manic.ts" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
+
+- `app/routes/` — every `.tsx` becomes a page.
+- `app/api/` — every folder with an `index.ts` becomes a Hono route.
+- `app/index.html` — the HTML shell the build engine fills in.
+- `app/main.tsx` — the React entry point mounted on `#root`.
+- `manic.config.ts` — plugins, providers, build and router options.
+- `~manic.ts` — the Bun server entry. **Do not delete.**
+
+A more thorough breakdown is available in [Project Structure](/docs/framework/project-structure).
+
+---
+
+## Add Your First Route
+
+Manic's router maps any `.tsx` file under `app/routes/` to a URL. Files prefixed with `~` are excluded from routing — use the prefix for components and helpers you want to colocate.
+
+```tsx title="app/routes/about.tsx"
+import { Link } from 'manicjs';
+
+export default function AboutPage() {
+  return (
+    <main>
+      <h1>About</h1>
+      <p>This file became /about with no configuration.</p>
+      <Link to="/">← Back home</Link>
+    </main>
+  );
+}
+```
+
+Visit [http://localhost:6070/about](http://localhost:6070/about). React Fast Refresh, view transitions, and code-splitting are already wired up.
+
+---
+
+## Add Your First API Route
+
+Every directory in `app/api/` that exports a Hono app becomes an endpoint. Manic bundles each route into its own chunk so cold starts on serverless platforms stay fast.
+
+```ts title="app/api/hello/index.ts"
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', c => c.json({ message: 'Hello from Manic' }));
+
+export default app;
+```
+
+The endpoint is now available at `GET /api/hello`. Read [API Routes](/docs/framework/server) for middleware, parameters, and type-safe RPC clients.
+
+---
+
+## Manual Installation
+
+If you prefer to wire things up yourself instead of using the template:
+
+```bash
+mkdir my-app && cd my-app
+bun init -y
+bun add manicjs react react-dom
+bun add -d @types/react @types/react-dom
+```
+
+Create the **mandatory** server entry at the project root:
+
+```ts title="~manic.ts"
+import { createManicServer } from 'manicjs/server';
+
+const app = await createManicServer();
+
+export default {
+  port: Number(Bun.env.PORT) || 6070,
+  fetch: app.fetch,
+};
+```
+
+Add a config file so plugins and providers can be wired up later:
+
+```ts title="manic.config.ts"
+import { defineConfig } from 'manicjs/config';
+
+export default defineConfig({
+  app: { name: 'My App' },
+});
+```
+
+Add a starter page:
+
+```tsx title="app/routes/index.tsx"
+export default function Page() {
+  return <h1>Hello from Manic!</h1>;
+}
+```
+
+Add an HTML shell that the build engine will fill in:
+
+```html title="app/index.html"
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
+```
+
+And a React entry point:
+
+```tsx title="app/main.tsx"
+import { createRoot } from 'react-dom/client';
+import { Router } from 'manicjs';
+
+createRoot(document.getElementById('root')!).render(<Router />);
+```
+
+Start the dev server:
+
+```bash
+bunx manic dev
+```
+
+---
+
+## Build for Production
+
+When you are ready to ship, produce an optimized bundle:
+
+```bash
+bunx manic build
+bunx manic start
+```
+
+`manic build` runs `oxlint`, regenerates `app/~routes.generated.ts`, bundles the client, the API routes, and the server, and finally hands the artifacts to your configured [provider](/docs/framework/deployment).
+
+---
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="Project Structure"
+    description="Understand every file the framework expects."
+    href="/docs/framework/project-structure"
+  />
+  <Card
+    title="Routing Guide"
+    description="File-system routing, dynamic segments, view transitions."
+    href="/docs/framework/routing"
+  />
+  <Card
+    title="API Routes"
+    description="Build typed Hono endpoints under app/api."
+    href="/docs/framework/server"
+  />
+  <Card
+    title="Plugins"
+    description="Drop in Tailwind, MDX, SEO, sitemap, MCP, and more."
+    href="/docs/framework/plugins"
+  />
+  <Card
+    title="Deployment"
+    description="Vercel, Cloudflare, Netlify, or self-host on Bun."
+    href="/docs/framework/deployment"
+  />
+  <Card
+    title="CLI Reference"
+    description="Every command the manic binary exposes."
+    href="/docs/cli"
+  />
+</Cards>

@@ -1,0 +1,55 @@
+---
+title: Dev server internals
+description: manic dev — bunfig merge, Bun.spawn --watch config reload env injection.
+---
+
+# Dev server internals
+
+**`manic dev`** (`packages/manic/src/cli/commands/dev.ts`) never bundles your app inside the CLI process. It **`loadConfig()`**, writes **`bunfig.toml`** from plugin snippets, then **`Bun.spawn`** s:
+
+```txt
+bun --watch [--preload …] ~manic.ts
+```
+
+---
+
+## Bunfig merge
+
+| Input | Behavior |
+| :--- | :--- |
+| **`plugins[].bunfig`** | Parsed for **`[serve.static]`** `plugins = [...]` — entries **merged** into one array |
+| Other TOML snippets | Appended verbatim after the merged static block |
+| Empty aside from header | File not written |
+
+---
+
+## Child environment
+
+| Variable | Meaning |
+| :--- | :--- |
+| **`PORT`** | CLI **`--port`** → else **`config.server.port`** → **6070** |
+| **`HOST`** | **`0.0.0.0`** if **`--network`**, else **`localhost`** |
+| **`NETWORK`** | **`true` / `false` string |
+
+---
+
+## Config hot reload
+
+If **`manic.config.ts`** / **`.js`** exists, **`fs.watch`** debounces **100 ms**, kills the child, **`import()`** s the config module with a **`?t=`** cache bust, and respawns — plugins + bunfig stay aligned without restarting **`manic dev`** manually.
+
+---
+
+## Contrasts with production
+
+| Concern | Dev | Production **`manic build`** |
+| :--- | :--- | :--- |
+| Transform | On demand via **`oxcPlugin(true)`** + HMR shim | **`Bun.build`** graphs + **`oxc-minify`** |
+| Routes manifest | **`watchRoutes`** may **`touch`** **`~manic.ts`** on structural changes | **`writeRoutesManifest`** without touch |
+| API loading | **`app/api`** sources via **`apiLoaderPlugin`** | Bundled **`.js`** per **`index.ts`** |
+
+---
+
+## See also
+
+- [CLI · manic dev](/docs/cli/dev)
+- [Bundler transform](/docs/core/bundler-transform)

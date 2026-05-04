@@ -1,20 +1,46 @@
 #!/usr/bin/env bun
+/**
+ * @file Manic Project Scaffolder
+ * @description Interactive CLI tool for creating new Manic projects.
+ * Prompts for project configuration and generates a complete project structure.
+ *
+ * @example
+ * # Create a new project
+ * bun create manic my-app
+ *
+ * @example
+ * # Or use bunx
+ * bunx create-manic my-app
+ */
 import { mkdir, cp, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, join } from 'path';
 import * as readline from 'readline';
 
+/** @internal */
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
+/** @internal */
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
+/** @internal */
 const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
+/** @internal */
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
+/** @internal */
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 
+/** @internal */
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
+/**
+ * Prompts for a text answer
+ * @param question - Question to ask
+ * @param defaultValue - Default value if no answer provided
+ * @returns User's answer or default
+ * @internal
+ */
 function ask(question: string, defaultValue?: string): Promise<string> {
   const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
   return new Promise(resolve => {
@@ -111,23 +137,34 @@ ${dim('--- --- --- --- ---')}
   if (isFrontend) {
     delete pkg.dependencies['hono'];
     delete pkg.dependencies['@manicjs/api-docs'];
+    pkg.dependencies['@manicjs/sitemap'] = 'latest';
   } else if (!includeDocs) {
     delete pkg.dependencies['@manicjs/api-docs'];
   }
 
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
 
-  const configContent = `import { defineConfig } from "manicjs/config";${
-    includeDocs ? '\nimport { apiDocs } from "@manicjs/api-docs";' : ''
+  const imports: string[] = ['import { defineConfig } from "manicjs/config";'];
+  const plugins: string[] = [];
+
+  if (isFrontend) {
+    imports.push('import { mcp } from "@manicjs/mcp";');
+    imports.push('import { seo } from "@manicjs/seo";');
+    imports.push('import { sitemap } from "@manicjs/sitemap";');
+    plugins.push('mcp()', 'seo()', 'sitemap()');
+  } else {
+    if (includeDocs) imports.push('import { apiDocs } from "@manicjs/api-docs";');
+    imports.push('import { mcp } from "@manicjs/mcp";');
+    imports.push('import { seo } from "@manicjs/seo";');
+    if (includeDocs) plugins.push('apiDocs()');
+    plugins.push('mcp()', 'seo()');
   }
 
-export default defineConfig({${
-    isFrontend
-      ? `
-  mode: "frontend",
-`
-      : ''
-  }
+  const pluginsBlock = `\n  plugins: [${plugins.join(', ')}],`;
+
+  const configContent = `${imports.join('\n')}
+
+export default defineConfig({${isFrontend ? '\n  mode: "frontend",\n' : ''}
   app: {
     name: "${appName}",
   },
@@ -138,7 +175,8 @@ export default defineConfig({${
 
   router: {
     viewTransitions: ${viewTransitions},
-  },${includeDocs ? '\n  plugins: [apiDocs()],\n' : ''}});
+  },${pluginsBlock}
+});
 `;
 
   await Bun.write(join(projectPath, 'manic.config.ts'), configContent);

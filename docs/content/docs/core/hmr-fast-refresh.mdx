@@ -1,0 +1,70 @@
+---
+title: HMR & Fast Refresh
+description: Dev-only oxc-transform jsx refresh flag Router componentCache clearing import.meta.hot shim.
+---
+
+# HMR & Fast Refresh
+
+Development transforms run through **`oxcPlugin(isDev)`** (`packages/manic/src/cli/plugins/oxc.ts`). When **`isDev`** is **`true`**:
+
+| Setting | Behavior |
+| :--- | :--- |
+| **`jsx.development`** | **`true`** — React dev warnings + richer stacks |
+| **`jsx.refresh`** | **`true`** unless **`config.oxc.refresh === false`** — enables Fast Refresh pipeline |
+| **`sourcemap`** | Emitted for transformed modules |
+
+Production **`Bun.build`** calls **`oxcPlugin()`** with **`isDev` falsy** → **`target: es2022`**, no refresh metadata.
+
+---
+
+## Fast Refresh shim
+
+After **`transformSync`**, **`oxc.ts`** appends an **`import.meta.hot.accept`** stub for **`.tsx` / `.jsx`** files:
+
+```ts
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    window.__react_refresh_library__?.performRefresh?.();
+  });
+}
+```
+
+That wires Bun’s module graph updates into React’s refresh runtime while **`Router`** clears route caches.
+
+---
+
+## Router cache invalidation
+
+**`packages/manic/src/router/lib/Router.tsx`** keeps a **`componentCache`** (`Map<string, ComponentType>`). On HMR:
+
+```ts
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    componentCache.clear();
+  });
+}
+```
+
+Without clearing, navigations could keep stale lazy components after a hot swap.
+
+---
+
+## Config knob
+
+Disable refresh-driven behavior globally via **`manic.config.ts`**:
+
+```ts
+export default defineConfig({
+  oxc: { refresh: false },
+});
+```
+
+Disabling **`server.hmr`** in config affects **`Bun.serve`** development options from **`createManicServer`** — pair with CLI **[manic dev](/docs/cli/dev)** docs.
+
+---
+
+## See also
+
+- [Bundler transform](/docs/core/bundler-transform)
+- [Dev internals](/docs/core/dev-internals)
+- [Production client bundle](/docs/core/production-client-bundle)

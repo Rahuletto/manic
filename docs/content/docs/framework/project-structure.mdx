@@ -1,0 +1,229 @@
+---
+title: Project Structure
+description: Every file and directory the Manic framework expects, with conventions and escape hatches.
+---
+
+# Project Structure
+
+Manic is built around a small set of conventions. As long as your files live in the right places, the framework discovers, bundles, and serves them with no further configuration.
+
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="app" defaultOpen>
+      <Folder name="api">
+        <Folder name="hello">
+          <File name="index.ts" />
+        </Folder>
+      </Folder>
+      <Folder name="routes" defaultOpen>
+        <File name="index.tsx" />
+        <File name="about.tsx" />
+        <Folder name="posts">
+          <File name="index.tsx" />
+          <File name="[id].tsx" />
+        </Folder>
+        <File name="~404.tsx" />
+        <File name="~500.tsx" />
+        <Folder name="~components">
+          <File name="Card.tsx" />
+        </Folder>
+      </Folder>
+      <File name="~routes.generated.ts" />
+      <File name="global.css" />
+      <File name="index.html" />
+      <File name="main.tsx" />
+    </Folder>
+    <Folder name="public" />
+    <File name="manic.config.ts" />
+    <File name="~manic.ts" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+    <File name=".env" />
+    <File name=".oxlintrc.json" />
+  </Folder>
+</Files>
+
+| Path | Role |
+| :--- | :--- |
+| `app/api/hello/index.ts` | Hono app mounted at `/api/hello` |
+| `app/routes/index.tsx` | `/` |
+| `app/routes/about.tsx` | `/about` |
+| `app/routes/posts/index.tsx` | `/posts` |
+| `app/routes/posts/[id].tsx` | `/posts/:id` |
+| `app/routes/~404.tsx`, `~500.tsx` | Custom not-found / error UI |
+| `app/routes/~components/` | Colocated UI — `~` excludes from URLs |
+| `app/~routes.generated.ts` | Auto-generated manifest — do not edit |
+| `public/` | Static files at site root |
+| `manic.config.ts` | Plugins, providers, router & build |
+| `~manic.ts` | Bun server entry |
+| `.env` | Loaded automatically (use `.env.local` for secrets) |
+| `.oxlintrc.json` | Optional oxlint config |
+
+---
+
+## Mandatory Files
+
+| File | Purpose | Notes |
+| :--- | :--- | :--- |
+| [`~manic.ts`](#manicts) | Bun server entry. Exports `{ port, fetch }`. | Cannot be renamed. |
+| [`app/index.html`](#appindexhtml) | HTML shell that the build engine fills in. | Must include a `#root` element and import `main.tsx`. |
+| [`app/main.tsx`](#appmaintsx) | React entry — mounts the `<Router>` on `#root`. | Imported from `index.html`. |
+| [`manic.config.ts`](#manicconfigts) | Configures plugins, providers, build, and router. | Optional but strongly recommended. |
+
+### `~manic.ts`
+
+The single Bun-compatible server entry. The build pipeline rewrites the import of `./app/index.html` into a static reference, so the same file works in dev and production:
+
+```ts title="~manic.ts"
+import { createManicServer } from 'manicjs/server';
+
+const app = await createManicServer();
+
+export default {
+  port: Number(Bun.env.PORT) || 6070,
+  fetch: app.fetch,
+};
+```
+
+`createManicServer` returns a Hono instance with API routes, static handling, and dev-time middleware already attached.
+
+### `app/index.html`
+
+Plain HTML. Must reference `./main.tsx` and contain a mount node — typically `<div id="root"></div>`. Manic injects per-route prefetch hints, env variables, and View Transition support automatically.
+
+### `app/main.tsx`
+
+```tsx title="app/main.tsx"
+import { createRoot } from 'react-dom/client';
+import { Router } from 'manicjs';
+
+createRoot(document.getElementById('root')!).render(<Router />);
+```
+
+The `<Router>` component reads the auto-generated route table from `window.__MANIC_ROUTES__`, which Manic populates during the boot script.
+
+### `manic.config.ts`
+
+```ts title="manic.config.ts"
+import { defineConfig } from 'manicjs/config';
+import { tailwind } from '@manicjs/tailwind';
+import { vercel } from '@manicjs/providers';
+
+export default defineConfig({
+  app: { name: 'My App' },
+  plugins: [tailwind()],
+  providers: [vercel()],
+  router: { viewTransitions: true },
+});
+```
+
+See the [Configuration Reference](/docs/api/config) for the full schema.
+
+---
+
+## Conventions
+
+### `app/routes/`
+
+Every `.tsx` (or `.jsx`) file becomes a public route. The default export must be a React component.
+
+| Filename | URL |
+| :--- | :--- |
+| `index.tsx` | `/` |
+| `about.tsx` | `/about` |
+| `blog/index.tsx` | `/blog` |
+| `blog/[slug].tsx` | `/blog/:slug` |
+| `docs/[...path].tsx` | `/docs/:...path` |
+
+### `app/api/`
+
+Each leaf folder containing an `index.ts` becomes an API endpoint. The file must default-export a Hono app:
+
+```ts title="app/api/users/[id]/index.ts"
+import { Hono } from 'hono';
+
+const app = new Hono();
+app.get('/', c => c.json({ id: c.req.param('id') }));
+
+export default app;
+```
+
+Endpoints are mounted at `/api/<folder/path>`.
+
+### The `~` Prefix
+
+Files and folders that begin with `~` are **invisible to the router**. Use them for:
+
+- Layout, shared UI (`~components/`)
+- Hooks and utilities (`~hooks/`, `~lib/`)
+- Tests next to the source (`~MyPage.test.tsx`)
+- Custom error pages (`~404.tsx`, `~500.tsx`)
+- Anything else you do not want to expose as a URL
+
+```text
+✓ app/routes/about.tsx           → /about
+✓ app/routes/~Header.tsx         → ignored
+✓ app/routes/posts/[id].tsx      → /posts/:id
+✓ app/routes/posts/~PostCard.tsx → ignored
+```
+
+### Auto-Generated Files
+
+| File | Generator | Editable? |
+| :--- | :--- | :--- |
+| `app/~routes.generated.ts` | Discovery engine | ❌ regenerated on every build |
+| `bunfig.toml` | `manic dev` | ❌ ignored by git, regenerated each run |
+| `.manic/` | `manic build` | ❌ build artifact directory |
+
+Add the following to `.gitignore`:
+
+```text title=".gitignore"
+node_modules
+.manic/
+bunfig.toml
+app/~routes.generated.ts
+.env.local
+```
+
+---
+
+## Optional Directories
+
+| Directory | Purpose |
+| :--- | :--- |
+| `public/` | Files served verbatim at the URL root (`public/favicon.ico` → `/favicon.ico`). |
+| `packages/` | Workspace packages when using a monorepo. |
+| `scripts/` | Project scripts you call manually with `bun run`. |
+| `tests/` | Unit/integration tests if you prefer not to colocate. |
+
+---
+
+## Output Layout (`manic build`)
+
+After `bunx manic build` completes, you will find:
+
+<Files>
+  <Folder name=".manic" defaultOpen>
+    <Folder name="client">
+      <File name="index.html" />
+      <File name="[name].js" />
+      <File name="[name].css" />
+    </Folder>
+    <Folder name="api">
+      <File name="users.js" />
+      <File name="posts.js" />
+    </Folder>
+    <File name="server.js" />
+  </Folder>
+</Files>
+
+Providers consume this directory and emit platform-specific outputs (`.vercel/output`, `dist/_worker.js`, etc.). See the [Build Pipeline](/docs/core/build-pipeline) for the full sequence.
+
+---
+
+## See Also
+
+- [Getting Started](/docs/framework/getting-started) — bootstrap a new project.
+- [Routing Guide](/docs/framework/routing) — file conventions in depth.
+- [API Routes](/docs/framework/server) — building Hono endpoints.
+- [Configuration](/docs/api/config) — every option exposed by `manic.config.ts`.
