@@ -2,6 +2,7 @@
   "name": "manic-monorepo",
   "devDependencies": {
     "@types/bun": "latest",
+    "next": "16.2.3",
     "oxc-minify": "^0.125.0",
     "oxlint": "^1.60.0",
     "typescript": "^5"

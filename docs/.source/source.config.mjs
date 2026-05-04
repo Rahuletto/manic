@@ -16,7 +16,10 @@ import { remarkNpm, remarkMdxMermaid } from "fumadocs-core/mdx-plugins";
 var docs = defineDocs({
   dir: "content/docs",
   docs: {
-    schema: pageSchema
+    schema: pageSchema,
+    postprocess: {
+      includeProcessedMarkdown: true
+    }
   },
   meta: {
     schema: metaSchema

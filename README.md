@@ -25,6 +25,10 @@ bun install
 bun dev
 ```
 
+## Documentation
+
+Full guides and API reference: [manic-docs.vercel.app](https://manic-docs.vercel.app/)
+
 ## Packages
 
 | Package                                                                | Description                                       |

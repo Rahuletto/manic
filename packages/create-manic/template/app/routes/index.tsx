@@ -93,13 +93,15 @@ export default function Home() {
         >
           How fast? →
         </Link>
-        <Link
-          to="/build"
+        <a
+          href="https://manic-docs.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
           className="btn-secondary flex items-center justify-center"
           style={LINKBUTTON_STYLE}
         >
           Documentation
-        </Link>
+        </a>
       </div>
     </main>
   );

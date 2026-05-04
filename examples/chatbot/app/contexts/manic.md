@@ -44,6 +44,7 @@
 | **License**      | GPL-3.0                                                        |
 | **Author**       | Rahuletto                                                      |
 | **Repository**   | https://github.com/Rahuletto/manic                             |
+| **Documentation** | https://manic-docs.vercel.app/                              |
 
 ## Runtime Requirements
 

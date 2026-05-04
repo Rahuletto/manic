@@ -15,7 +15,9 @@ description: >
 
 Manic is a **React SPA framework** (client-side rendering only — no SSR, no hydration, no RSC) that runs exclusively on Bun. The server serves the HTML shell and API routes via Hono. All rendering is client-side via `createRoot`.
 
-**npm package:** `manicjs` · **version:** `0.12.0` · **license:** GPL-3.0
+**npm package:** `manicjs` · **version:** `0.12.0` · **license:** GPL-3.0 · **docs:** https://manic-docs.vercel.app/
+
+**LLM context (plain text):** https://manic-docs.vercel.app/llms.txt (index) · https://manic-docs.vercel.app/llms-full.txt (full bundle)
 
 ---
 
@@ -23,6 +25,8 @@ Manic is a **React SPA framework** (client-side rendering only — no SSR, no hy
 
 | What you need                                 | Where to look                     |
 | --------------------------------------------- | --------------------------------- |
+| Published documentation (guides, API)       | https://manic-docs.vercel.app/    |
+| LLM index / full doc bundle for agents       | [llms.txt](https://manic-docs.vercel.app/llms.txt) / [llms-full.txt](https://manic-docs.vercel.app/llms-full.txt) |
 | Project structure, files, conventions         | [references/project-structure.md] |
 | Routing (file-based, URL patterns, hooks)     | [references/routing.md]           |
 | API routes (Hono, OpenAPI, client RPC)        | [references/api-routes.md]        |

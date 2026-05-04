@@ -2,6 +2,10 @@
 
 > **Manic** (`manicjs`) is a file-based, client-side React SPA framework built exclusively on **Bun**. It uses **Hono** as the HTTP server, supports **Tailwind CSS v4** natively, and has **no SSR** — all rendering happens in the browser.
 
+**Documentation:** [manic-docs.vercel.app](https://manic-docs.vercel.app/)
+
+**LLM / agent context (plain text):** [llms.txt](https://manic-docs.vercel.app/llms.txt) (index of doc URLs) · [llms-full.txt](https://manic-docs.vercel.app/llms-full.txt) (full docs in one file)
+
 ## Project Structure
 
 ```

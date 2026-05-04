@@ -40,12 +40,12 @@ export function Footer() {
 
   const socialLinks = [
     {
-      icon: FiGithub,
+      icon: FaGithub,
       label: 'GitHub',
       href: `${gitConfig.protocol}://${gitConfig.hostname}/${gitConfig.user}/${gitConfig.repo}`,
     },
     {
-      icon: FiTwitter,
+      icon: FaXTwitter,
       label: 'X',
       href: 'https://twitter.com/rahuletto',
     },
