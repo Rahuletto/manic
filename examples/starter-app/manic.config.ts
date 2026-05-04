@@ -1,14 +1,15 @@
-import { defineConfig } from "manicjs/config";
-import { cloudflare, vercel, netlify } from "@manicjs/providers";
+import { defineConfig } from 'manicjs/config';
+import { apiDocs } from '@manicjs/api-docs';
+import { tailwind } from '@manicjs/tailwind';
 
 export default defineConfig({
   app: {
-    name: "Manic",
+    name: 'Manic',
   },
 
   server: {
     port: 6070,
   },
 
-  providers: [vercel(), cloudflare(), netlify()],
+  plugins: [tailwind(), apiDocs()],
 });

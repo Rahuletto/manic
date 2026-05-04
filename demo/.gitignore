@@ -10,3 +10,5 @@ node_modules
 netlify
 dist
 wrangler
+.wrangler
+bunfig.toml

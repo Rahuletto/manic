@@ -1,0 +1,45 @@
+name: Bug Report
+description: Report a bug in Manic
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please search existing issues before filing a new one.
+
+  - type: input
+    id: version
+    attributes:
+      label: Manic version
+      placeholder: e.g. 0.3.1
+    validations:
+      required: true
+
+  - type: input
+    id: bun-version
+    attributes:
+      label: Bun version
+      placeholder: e.g. 1.2.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal steps or repo to reproduce the issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / errors
+      render: shell

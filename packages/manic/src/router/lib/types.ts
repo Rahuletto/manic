@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType } from 'react';
 
 /** Route definition with path pattern, component, and optional lazy loader */
 export interface RouteDef {
@@ -15,7 +15,7 @@ export interface RouterContextValue {
   /** Current URL pathname */
   path: string;
   /** Navigate programmatically to a new path */
-  navigate: (to: string) => void;
+  navigate: (to: string, options?: { replace?: boolean }) => void;
   /** Dynamic route parameters (e.g. { id: "123" }) */
   params: Record<string, string>;
 }

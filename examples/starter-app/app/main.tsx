@@ -1,12 +1,15 @@
-import { createRoot } from "react-dom/client";
-import { Router } from "manicjs";
-import { ThemeProvider } from "manicjs/theme";
-import { routes } from "./~routes.generated";
-import "./global.css";
+import { createRoot } from 'react-dom/client';
+import { Router } from 'manicjs/router';
+import { ThemeProvider } from 'manicjs/theme';
+import { routes, notFoundPage, errorPage } from './~routes.generated';
+import './global.css';
 
 window.__MANIC_ROUTES__ = routes;
+window.__MANIC_ERROR_PAGES__ = {};
+if (notFoundPage) window.__MANIC_ERROR_PAGES__.notFound = notFoundPage;
+if (errorPage) window.__MANIC_ERROR_PAGES__.error = errorPage;
 
-const root = createRoot(document.getElementById("root")!);
+const root = createRoot(document.getElementById('root')!);
 root.render(
   <ThemeProvider>
     <Router />

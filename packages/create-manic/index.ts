@@ -1,25 +1,51 @@
 #!/usr/bin/env bun
-import { mkdir, cp, rm } from "fs/promises";
-import { existsSync } from "fs";
-import { resolve, join } from "path";
-import * as readline from "readline";
+/**
+ * @file Manic Project Scaffolder
+ * @description Interactive CLI tool for creating new Manic projects.
+ * Prompts for project configuration and generates a complete project structure.
+ *
+ * @example
+ * # Create a new project
+ * bun create manic my-app
+ *
+ * @example
+ * # Or use bunx
+ * bunx create-manic my-app
+ */
+import { mkdir, cp, rm } from 'fs/promises';
+import { existsSync } from 'fs';
+import { resolve, join } from 'path';
+import * as readline from 'readline';
 
+/** @internal */
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
+/** @internal */
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
+/** @internal */
 const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
+/** @internal */
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
+/** @internal */
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 
+/** @internal */
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
+/**
+ * Prompts for a text answer
+ * @param question - Question to ask
+ * @param defaultValue - Default value if no answer provided
+ * @returns User's answer or default
+ * @internal
+ */
 function ask(question: string, defaultValue?: string): Promise<string> {
-  const suffix = defaultValue ? dim(` (${defaultValue})`) : "";
-  return new Promise((resolve) => {
-    rl.question(`  ${question}${suffix}: `, (answer) => {
-      resolve(answer.trim() || defaultValue || "");
+  const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
+  return new Promise(resolve => {
+    rl.question(`  ${question}${suffix}: `, answer => {
+      resolve(answer.trim() || defaultValue || '');
     });
   });
 }
@@ -28,12 +54,12 @@ function askYesNo(
   question: string,
   defaultYes: boolean = true
 ): Promise<boolean> {
-  const hint = defaultYes ? "Y/n" : "y/N";
-  return new Promise((resolve) => {
-    rl.question(`  ${question} ${dim(`(${hint})`)}: `, (answer) => {
+  const hint = defaultYes ? 'Y/n' : 'y/N';
+  return new Promise(resolve => {
+    rl.question(`  ${question} ${dim(`(${hint})`)}: `, answer => {
       const a = answer.trim().toLowerCase();
-      if (a === "") resolve(defaultYes);
-      else resolve(a === "y" || a === "yes");
+      if (a === '') resolve(defaultYes);
+      else resolve(a === 'y' || a === 'yes');
     });
   });
 }
@@ -44,10 +70,10 @@ function askChoice(
   defaultChoice: string
 ): Promise<string> {
   const choiceStr = choices
-    .map((c) => (c === defaultChoice ? bold(c) : c))
-    .join(" / ");
-  return new Promise((resolve) => {
-    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, (answer) => {
+    .map(c => (c === defaultChoice ? bold(c) : c))
+    .join(' / ');
+  return new Promise(resolve => {
+    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, answer => {
       const a = answer.trim().toLowerCase();
       if (choices.includes(a)) resolve(a);
       else resolve(defaultChoice);
@@ -60,71 +86,85 @@ async function main() {
   let projectName = args[0];
 
   console.log(`
-${red(bold("■ MANIC"))}
-${dim("--- --- --- --- ---")}
+${red(bold('■ MANIC'))}
+${dim('--- --- --- --- ---')}
 `);
 
   if (!projectName) {
-    projectName = await ask("Project name", "my-manic-app");
+    projectName = await ask('Project name', 'my-manic-app');
   }
 
   const projectPath = resolve(process.cwd(), projectName);
 
   if (existsSync(projectPath)) {
     console.log(
-      `\n${red("Error:")} Directory ${cyan(projectName)} already exists.`
+      `\n${red('Error:')} Directory ${cyan(projectName)} already exists.`
     );
     rl.close();
     process.exit(1);
   }
 
-  const appName = await ask("App name", projectName);
+  const appName = await ask('App name', projectName);
   const mode = await askChoice(
-    "Project mode",
-    ["fullstack", "frontend"],
-    "fullstack"
+    'Project mode',
+    ['fullstack', 'frontend'],
+    'fullstack'
   );
-  const port = await ask("Port", "6070");
-  const isFrontend = mode === "frontend";
-  const swagger = isFrontend
+  const port = await ask('Port', '6070');
+  const isFrontend = mode === 'frontend';
+  const includeDocs = isFrontend
     ? false
-    : await askYesNo("Include Swagger API docs?", true);
-  const viewTransitions = await askYesNo("Enable View Transitions?", true);
+    : await askYesNo('Include API documentation (Scalar)?', true);
+  const viewTransitions = await askYesNo('Enable View Transitions?', true);
 
-  console.log(`\n${dim("Creating project...")}\n`);
+  console.log(`\n${dim('Creating project...')}\n`);
 
-  const templatePath = join(import.meta.dir, "template");
+  const templatePath = join(import.meta.dir, 'template');
   await mkdir(projectPath, { recursive: true });
   await cp(templatePath, projectPath, { recursive: true });
 
   if (isFrontend) {
-    const apiDir = join(projectPath, "app", "api");
+    const apiDir = join(projectPath, 'app', 'api');
     if (existsSync(apiDir)) {
       await rm(apiDir, { recursive: true, force: true });
     }
   }
 
-  const pkgPath = join(projectPath, "package.json");
+  const pkgPath = join(projectPath, 'package.json');
   const pkg = await Bun.file(pkgPath).json();
   pkg.name = projectName;
 
   if (isFrontend) {
-    delete pkg.dependencies["elysia"];
-    delete pkg.dependencies["@elysiajs/static"];
-    delete pkg.dependencies["@elysiajs/swagger"];
+    delete pkg.dependencies['hono'];
+    delete pkg.dependencies['@manicjs/api-docs'];
+    pkg.dependencies['@manicjs/sitemap'] = 'latest';
+  } else if (!includeDocs) {
+    delete pkg.dependencies['@manicjs/api-docs'];
   }
 
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
 
-  const configContent = `import { defineConfig } from "manicjs/config";
+  const imports: string[] = ['import { defineConfig } from "manicjs/config";'];
+  const plugins: string[] = [];
 
-export default defineConfig({${
-    isFrontend
-      ? `
-  mode: "frontend",
-`
-      : ""
+  if (isFrontend) {
+    imports.push('import { mcp } from "@manicjs/mcp";');
+    imports.push('import { seo } from "@manicjs/seo";');
+    imports.push('import { sitemap } from "@manicjs/sitemap";');
+    plugins.push('mcp()', 'seo()', 'sitemap()');
+  } else {
+    if (includeDocs) imports.push('import { apiDocs } from "@manicjs/api-docs";');
+    imports.push('import { mcp } from "@manicjs/mcp";');
+    imports.push('import { seo } from "@manicjs/seo";');
+    if (includeDocs) plugins.push('apiDocs()');
+    plugins.push('mcp()', 'seo()');
   }
+
+  const pluginsBlock = `\n  plugins: [${plugins.join(', ')}],`;
+
+  const configContent = `${imports.join('\n')}
+
+export default defineConfig({${isFrontend ? '\n  mode: "frontend",\n' : ''}
   app: {
     name: "${appName}",
   },
@@ -135,33 +175,25 @@ export default defineConfig({${
 
   router: {
     viewTransitions: ${viewTransitions},
-  },
-
-  swagger: ${
-    swagger
-      ? `{
-    path: "/docs",
-  }`
-      : "false"
-  },
+  },${pluginsBlock}
 });
 `;
 
-  await Bun.write(join(projectPath, "manic.config.ts"), configContent);
+  await Bun.write(join(projectPath, 'manic.config.ts'), configContent);
 
-  console.log(`${green("Success!")} Created ${cyan(projectName)}`);
+  console.log(`${green('Success!')} Created ${cyan(projectName)}`);
   console.log(`
-${dim("Next steps:")}
+${dim('Next steps:')}
 
   ${cyan(`cd ${projectName}`)}
-  ${cyan("bun install")}
-  ${cyan("bun dev")}
+  ${cyan('bun install')}
+  ${cyan('bun dev')}
 `);
 
   rl.close();
 }
 
-main().catch((e) => {
+main().catch(e => {
   console.error(e);
   process.exit(1);
 });

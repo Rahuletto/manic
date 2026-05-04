@@ -1,0 +1,27 @@
+---
+title: Source layout
+description: packages/manic/src directory map — where CLI, build, router, and server code lives.
+---
+
+# Source layout (`packages/manic/src`)
+
+Quick contributor map from repo root **`packages/manic/src/`**:
+
+| Directory | Role |
+| :--- | :--- |
+| **`cli/`** | **`manic`** commands · **`commands/build.ts`** production orchestration · **`plugins/oxc.ts`** Bun transform adapter |
+| **`config/`** | **`defineConfig`**, **`loadConfig`**, **`createPlugin`**, defaults merge |
+| **`router/`** | Client **`Router`**, **`Link`**, **`navigate`**, **`matcher.ts`** registry · **`Router.tsx`** navigation + VT gate |
+| **`server/`** | **`createManicServer`** · **`lib/discovery.ts`** manifests · **`lib/markdown.ts`** negotiation |
+| **`plugins/`** | **`apiLoaderPlugin`**, **`fileImporterPlugin`** |
+| **`theme/`**, **`transitions/`**, **`components/`** | Built-in UI shells |
+| **`env/`** | Build/runtime env helpers |
+
+Published **`exports`** map those folders to **`manicjs/*`** subpaths ([Package exports](/docs/api/package)).
+
+---
+
+## See also
+
+- [Architecture](/docs/core/architecture)
+- [Build pipeline](/docs/core/build-pipeline)

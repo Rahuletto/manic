@@ -1,0 +1,30 @@
+{
+  "root": true,
+  "title": "Framework",
+  "icon": "Zap",
+  "description": "Build production apps with Manic.",
+  "categories": [
+    "Getting Started",
+    "Routing & Navigation",
+    "Server & API",
+    "Forms & Data",
+    "Plugins",
+    "Deployment",
+    "Advanced & Optimization",
+    "Troubleshooting"
+  ],
+  "pages": [
+    "index",
+    "getting-started",
+    "quick-start",
+    "project-structure",
+    "benchmarks",
+    "routing",
+    "server",
+    "forms",
+    "plugins",
+    "deployment",
+    "advanced",
+    "troubleshooting"
+  ]
+}

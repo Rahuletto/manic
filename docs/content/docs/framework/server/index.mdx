@@ -1,0 +1,132 @@
+---
+title: API Routes
+description: Build high-performance backends with Manic's integrated Hono engine.
+---
+
+# API Routes
+
+Manic isn't just a frontend framework—it's a fullstack powerhouse natively integrated with **Hono**. This allows you to build lightning-fast, type-safe API endpoints directly within your project.
+
+## Creating an Endpoints
+
+Any subdirectory in `app/api/` that contains an `index.ts` file becomes an API endpoint. Manic bundles these endpoints into **independent JavaScript chunks** during build time, ensuring optimal performance for serverless environments.
+
+```ts twoslash
+// @errors: 2322
+// app/api/users/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  return c.json({ users: ['Alice', 'Bob'] });
+});
+
+app.post('/', async (c) => {
+  const body = await c.req.json();
+  // ... create user logic
+  return c.json({ success: true }, 201);
+});
+
+export default app;
+```
+
+---
+
+## Route Parameters
+
+API routes support the same dynamic parameter syntax as page routes.
+
+```ts twoslash
+// @errors: 2322
+// app/api/users/[id]/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  const id = c.req.param('id');
+  return c.json({ id });
+});
+
+export default app;
+```
+
+---
+
+## Request & Response
+
+Hono's context object (`c`) provides a clean API for handling requests and responses:
+
+```ts twoslash
+// @errors: 2322
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/user/:id', (c) => {
+  const id = c.req.param('id');
+  const name = c.req.query('name');
+  
+  return c.json({ id, name }, 200, {
+    'X-Custom-Header': 'value'
+  });
+});
+
+export default app;
+```
+
+---
+
+## Middleware
+
+Apply middleware to API routes using Hono's middleware system:
+
+```ts twoslash
+// @errors: 2322
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.use('*', async (c, next) => {
+  console.log('Request received');
+  await next();
+});
+
+app.get('/protected', (c) => {
+  return c.json({ message: 'This is protected' });
+});
+
+export default app;
+```
+
+---
+
+## Type-Safe API Clients
+
+Use Hono's client for type-safe API calls from the browser:
+
+```ts twoslash
+// @errors: 2322
+// app/api/users/index.ts
+import { Hono } from 'hono';
+
+const app = new Hono();
+app.get('/', (c) => c.json({ users: [] }));
+export type AppType = typeof app;
+
+// client.ts
+import { hc } from 'hono/client';
+
+const client = hc<AppType>('/api') as any;
+const res = await client.users.$get();
+const data = await res.json();
+```
+
+---
+
+## See Also
+
+- [Data Fetching](/docs/framework/server/data-fetching) - Patterns for client-side data fetching
+- [Configuration](/docs/api/config) - Server settings
+- [Plugins](/docs/framework/plugins) - Extend API functionality

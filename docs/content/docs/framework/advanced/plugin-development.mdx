@@ -1,0 +1,423 @@
+---
+title: Plugin Development
+description: Creating custom plugins to extend Manic functionality.
+---
+
+# Plugin Development
+
+<Callout type="info" title="TL;DR">
+
+Learn how to create custom plugins to extend Manic with custom functionality, static files, and server hooks.
+
+</Callout>
+## What It Is
+
+Plugins extend Manic's core functionality:
+
+| Plugin Type | Purpose | Hooks |
+|------------|---------|-------|
+| **Build plugins** | Modify build output | `build()` |
+| **Server plugins** | Add server routes | `configureServer()` |
+| **Static plugins** | Emit static files | `staticFiles()` |
+
+---
+
+## Prerequisites
+
+- [Plugins Guide](/docs/framework/plugins) - Using plugins
+- [Config Reference](/docs/api/config) - Configuration
+- [Advanced: Internals](/docs/framework/advanced/manic-internals) - Understanding the framework
+
+---
+
+## Quick Start
+
+### Create a Simple Plugin
+
+```ts twoslash
+// @errors: 2322
+// my-plugin.ts
+import { createPlugin } from 'manicjs/config';
+
+export function myPlugin(options?: { name?: string }) {
+  return createPlugin({
+    name: 'my-plugin',
+    
+    build(ctx: { injectHtml: (tags: string) => void }) {
+      console.log('Building with my plugin!');
+      ctx.injectHtml('<meta name="my-plugin" content="true">');
+    },
+  });
+}
+```
+
+### Use in Config
+
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+
+function myPlugin(_opts?: { name?: string }) {
+  return { name: 'my-plugin' as const };
+}
+
+export default defineConfig({
+  plugins: [
+    myPlugin({ name: 'my-app' }),
+  ],
+});
+```
+
+---
+
+## Plugin Interface
+
+### ManicPlugin
+
+```ts
+interface ManicPlugin {
+  name: string;
+  
+  // Build-time hooks
+  build?: (ctx: ManicBuildPluginContext) => void | Promise<void>;
+  
+  // Dev server hooks  
+  configureServer?: (ctx: ManicServerPluginContext) => void | Promise<void>;
+  
+  // Static file generation
+  staticFiles?: StaticFile[];
+}
+
+interface ManicBuildPluginContext {
+  config: ManicConfig;
+  pageRoutes: { path: string; filePath: string; dynamic: boolean }[];
+  apiRoutes: { mountPath: string; filePath: string }[];
+  prod: boolean;
+  cwd: string;
+  dist: string;
+  emitClientFile(path: string, content: string | Uint8Array): Promise<void>;
+  injectHtml(tags: string): void;
+}
+
+interface ManicServerPluginContext {
+  config: ManicConfig;
+  pageRoutes: { path: string; filePath: string; dynamic: boolean }[];
+  apiRoutes: { mountPath: string; filePath: string }[];
+  prod: boolean;
+  cwd: string;
+  dist: string;
+  addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
+  addLinkHeader(value: string): void;
+  injectHtml(tags: string): void;
+}
+
+interface StaticFile {
+  path: string;
+  content: string | ((ctx: any) => string);
+  contentType?: string;
+}
+```
+
+---
+
+## Build Hook
+
+### Using build() Hook
+
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: {
+  name: string;
+  build?: (ctx: {
+    injectHtml: (tags: string) => void;
+    emitClientFile: (path: string, content: string | Uint8Array) => Promise<void>;
+  }) => void;
+}): any;
+
+createPlugin({
+  name: 'my-build-plugin',
+  
+  build(ctx) {
+    // Inject into HTML
+    ctx.injectHtml('<script src="/analytics.js"></script>');
+    
+    // Emit static file
+    ctx.emitClientFile('/analytics.js', 'console.log("tracked")');
+  },
+});
+```
+
+### Build Context API
+
+```ts
+interface ManicBuildPluginContext {
+  // All discovered page routes
+  pageRoutes: { path: string; filePath: string; dynamic: boolean }[];
+  
+  // All discovered API routes  
+  apiRoutes: { mountPath: string; filePath: string }[];
+  
+  // Output directory
+  dist: string;
+  
+  // Emit a file to dist/client/
+  emitClientFile(path: string, content: string | Uint8Array): Promise<void>;
+  
+  // Inject into <head>
+  injectHtml(tags: string): void;
+}
+```
+
+---
+
+## Server Hook
+
+### Using configureServer() Hook
+
+```ts twoslash
+// @errors: 2322 2339
+declare function createPlugin(config: { name: string; configureServer?: (ctx: { addRoute: (path: string, handler: (c: any) => any) => void; addLinkHeader: (value: string) => void; injectHtml: (tags: string) => void }) => void }): any;
+
+createPlugin({
+  name: 'my-server-plugin',
+  
+  configureServer(ctx) {
+    // Add custom route
+    ctx.addRoute('/health', (c: any) => c.text('OK'));
+    
+    // Add Link header for preloading
+    ctx.addLinkHeader('</style.css>; rel=preload; as=style');
+    
+    // Inject into HTML
+    ctx.injectHtml('<meta name="my-plugin" content="true">');
+  },
+});
+```
+
+### Server Context API
+
+```ts
+interface ManicServerPluginContext {
+  // Hono app instance
+  addRoute(path: string, handler: (req: Request) => Response | Promise<Response>): void;
+  
+  // Add Link header
+  addLinkHeader(value: string): void;
+  
+  // Inject into HTML
+  injectHtml(tags: string): void;
+}
+```
+
+---
+
+## Static Files
+
+### Using staticFiles
+
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; staticFiles?: { path: string; content: string | ((ctx: any) => string); contentType?: string }[] }): any;
+
+createPlugin({
+  name: 'my-static-plugin',
+  
+  staticFiles: [
+    {
+      path: '/manifest.json',
+      content: JSON.stringify({ name: 'my-app' }),
+      contentType: 'application/json',
+    },
+    {
+      path: '/custom.js',
+      content: 'console.log("hello")',
+    },
+  ],
+});
+```
+
+---
+
+## Examples
+
+### Example 1: Analytics Plugin
+
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; build?: (ctx: { injectHtml: (tags: string) => void }) => void }): any;
+declare function defineConfig(config: { plugins: any[] }): any;
+
+export function analyticsPlugin(trackingId: string) {
+  return createPlugin({
+    name: 'analytics',
+    
+    build(ctx) {
+      const script = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${trackingId}');
+      `;
+      
+      ctx.injectHtml(`
+        <script async src="https://www.googletagmanager.com/gtag/js?id=${trackingId}"></script>
+        <script>${script}</script>
+      `);
+    },
+  });
+}
+
+// Usage
+export default defineConfig({
+  plugins: [
+    analyticsPlugin('G-XXXXXXXXXX'),
+  ],
+});
+```
+
+### Example 2: Sitemap Generator
+
+```ts twoslash
+// @errors: 2322 2339
+declare function createPlugin(config: { name: string; build?: (ctx: { pageRoutes: { path: string }[]; injectHtml: (tags: string) => void; emitClientFile: (path: string, content: string) => void }) => void }): any;
+
+export function sitemapPlugin() {
+  return createPlugin({
+    name: 'sitemap',
+    
+    build(ctx) {
+      const urls = ctx.pageRoutes.map(route => {
+        const loc = `https://example.com${route.path}`;
+        return `<url><loc>${loc}</loc></url>`;
+      }).join('\n');
+      
+      const sitemap = `<?xml version="1.0"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+      
+      ctx.emitClientFile('/sitemap.xml', sitemap);
+    },
+  });
+}
+```
+
+### Example 3: SEO Plugin
+
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; build?: (ctx: { injectHtml: (tags: string) => void }) => void }): any;
+
+export function seoPlugin(options: { title: string; description: string }) {
+  return createPlugin({
+    name: 'seo',
+    
+    build(ctx) {
+      ctx.injectHtml(`
+        <title>${options.title}</title>
+        <meta name="description" content="${options.description}">
+        <meta property="og:title" content="${options.title}">
+        <meta property="og:description" content="${options.description}">
+      `);
+    },
+  });
+}
+```
+
+---
+
+## Advanced Patterns
+
+### Pattern 1: Conditional Features
+
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; build?: (ctx: { injectHtml: (tags: string) => void }) => void }): any;
+
+createPlugin({
+  name: 'conditional',
+  
+  build(ctx) {
+    if (process.env.NODE_ENV === 'production') {
+      // Production only
+      ctx.injectHtml('<meta name="robots" content="index">');
+    }
+  },
+});
+```
+
+### Pattern 2: Multiple Files
+
+```ts twoslash
+// @errors: 2322
+declare function createPlugin(config: { name: string; staticFiles?: { path: string; content: (ctx: { pageRoutes: { path: string }[] }) => string }[] }): any;
+
+createPlugin({
+  name: 'multi-file',
+  
+  staticFiles: [
+    {
+      path: '/data/v1.json',
+      content: (ctx) => JSON.stringify({ routes: ctx.pageRoutes }),
+    },
+  ],
+});
+```
+
+---
+
+## Common Issues
+
+### Issue 1: Plugin Not Loading
+
+**Solution:**
+
+```ts twoslash
+// @errors: 2322
+declare function defineConfig(config: { plugins: any[] }): any;
+declare function myPlugin(): { name: string };
+
+export default defineConfig({
+  plugins: [myPlugin()],  // Must be in plugins array
+});
+```
+
+### Issue 2: Route Conflicts
+
+**Solution:**
+
+```ts twoslash
+// @errors: 2322
+declare const ctx: { addRoute: (path: string, handler: unknown) => void };
+declare const handler: unknown;
+
+ctx.addRoute('/my-plugin/api', handler);
+```
+
+---
+
+## Best Practices
+
+<Callout type="info">
+
+Use createPlugin helper for consistency.
+
+</Callout>
+<Callout type="warn">
+ 
+Avoid modifying the same file multiple times in a single build pass to prevent race conditions.
+ 
+</Callout>
+
+<Callout type="info">
+
+Document plugin options clearly.
+
+</Callout>
+---
+
+See also:
+- [Plugins Guide](/docs/framework/plugins)
+- [Config Reference](/docs/api/config)
+- [Manic Internals](/docs/framework/advanced/manic-internals)

@@ -1,14 +1,30 @@
-import { defineConfig } from "manicjs/config";
-import { cloudflare, vercel, netlify } from "@manicjs/providers";
+import { defineConfig } from 'manicjs/config';
+import { cloudflare, vercel } from '@manicjs/providers';
+import { apiDocs } from '@manicjs/api-docs';
+import { seo } from '@manicjs/seo';
+import { sitemap } from '@manicjs/sitemap';
+import { mcp } from '@manicjs/mcp';
+import { tailwind } from '@manicjs/tailwind';
 
 export default defineConfig({
   app: {
-    name: "Manic",
+    name: 'Manic',
   },
 
   server: {
     port: 6070,
   },
 
-  providers: [vercel(), cloudflare(), netlify()],
+  plugins: [
+    tailwind(),
+    apiDocs(),
+    seo({
+      hostname: 'https://manic.js.org',
+      contentSignals: { 'ai-train': 'no', search: 'yes', 'ai-input': 'yes' },
+    }),
+    sitemap({ hostname: 'https://manic.js.org' }),
+    mcp({ name: 'manic-demo' }),
+  ],
+
+  providers: [vercel(), cloudflare()],
 });

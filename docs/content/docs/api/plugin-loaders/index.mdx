@@ -1,0 +1,30 @@
+---
+title: Plugin loaders
+description: Lower-level Hono factories exported from manicjs/plugins.
+---
+
+# Plugin loaders (`manicjs/plugins`)
+
+Advanced building blocks when you assemble servers manually.
+
+```ts
+import { apiLoaderPlugin, fileImporterPlugin } from 'manicjs/plugins';
+```
+
+---
+
+## Exports
+
+<Cards>
+  <Card title="apiLoaderPlugin" description="Glob APIs mount under /api OpenAPI skeleton" href="/docs/api/plugin-loaders/api-loader-plugin" />
+  <Card title="fileImporterPlugin" description="serveStatic helper for public dirs" href="/docs/api/plugin-loaders/file-importer-plugin" />
+</Cards>
+
+Most apps rely on **`createManicServer`** to invoke **`apiLoaderPlugin`** automatically ([Server](/docs/api/server)).
+
+---
+
+## See also
+
+- [createPlugin](/docs/api/config/plugins)
+- [Core · Caveats](/docs/core/caveats)

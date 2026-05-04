@@ -1,0 +1,69 @@
+---
+title: ThemeToggle
+description: Accessible button that toggles light/dark — optional render prop for icons.
+---
+
+# `<ThemeToggle />`
+
+Pre-built **`button`** wired to **`useTheme().toggle`**. Supplies **`aria-label`** based on **`isDark`**.
+
+```tsx twoslash
+// @errors: 2322
+import { ThemeToggle } from 'manicjs';
+
+export function Header() {
+  return (
+    <header>
+      <ThemeToggle className="rounded-lg px-3 py-1 border" />
+    </header>
+  );
+}
+```
+
+### Custom content
+
+```tsx twoslash
+// @errors: 2322
+import { ThemeToggle } from 'manicjs';
+
+<ThemeToggle>
+  {(resolved) => (resolved === 'dark' ? 'Light mode' : 'Dark mode')}
+</ThemeToggle>;
+```
+
+---
+
+## Props (`ThemeToggleProps`)
+
+<TypeTable
+  type={{
+    className: {
+      type: 'string',
+      description: 'Forwarded to the button element.',
+    },
+    style: {
+      type: 'CSSProperties',
+      description: 'Inline styles on the button.',
+    },
+    children: {
+      type: 'ReactNode | ((theme: "light" | "dark") => ReactNode)',
+      description: 'Optional label/icons; defaults to emoji sun/moon.',
+    },
+  }}
+/>
+
+---
+
+## Imports
+
+```ts
+import { ThemeToggle } from 'manicjs';
+import { ThemeToggle } from 'manicjs/theme';
+```
+
+---
+
+## See also
+
+- [useTheme](/docs/api/theme/use-theme)
+- [ThemeProvider](/docs/api/theme/theme-provider)

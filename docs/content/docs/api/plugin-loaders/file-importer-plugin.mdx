@@ -1,0 +1,26 @@
+---
+title: fileImporterPlugin
+description: Hono serveStatic helper for arbitrary public directories manicjs/plugins.
+---
+
+# `fileImporterPlugin(publicDir?)`
+
+```ts
+import { fileImporterPlugin } from 'manicjs/plugins';
+
+const staticApp = fileImporterPlugin('public');
+```
+
+Returns **`Hono`** app using **`hono/bun`** **`serveStatic`** rooted at **`./public`** by default.
+
+---
+
+## Framework note
+
+Stock **`createManicServer`** serves built assets via Bun routes — this helper targets **custom Hono mounts** or experiments rather than everyday Manic apps.
+
+---
+
+## See also
+
+- [apiLoaderPlugin](/docs/api/plugin-loaders/api-loader-plugin)

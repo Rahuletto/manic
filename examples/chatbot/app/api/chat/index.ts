@@ -1,87 +1,62 @@
-import { google } from "@ai-sdk/google";
-import { streamText, convertToModelMessages } from "ai";
-import { Elysia, t } from "elysia";
-
-const manicCtx = await Bun.file("app/system/manic.md").text();
-const benchmarksCtx = await Bun.file("app/system/benchmarks.md").text();
-
-const BASE_PROMPT = `You are an intelligent assistant, you can do anything you want. You have full flexibility with markdown aswell, from heading1 to paragraph to code blocks, code, pre, tables, etc..
-
-You are inside a ManicJS Framework project, Users are interested to ask you about this awesome framework.
-
-Also you dont have to dump everything to the user.`;
+import { google } from '@ai-sdk/google';
+import { streamText, convertToModelMessages } from 'ai';
+import { Hono } from 'hono';
+import { buildSystemPrompt } from '../../contexts/context-cache';
 
 const THINKING_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-3-flash-preview",
-  "gemini-3-pro-preview",
+  'gemini-2.5-flash',
+  'gemini-2.5-pro',
+  'gemini-3-flash-preview',
+  'gemini-3-pro-preview',
 ];
 
-type ContextSettings = {
-  manicDocs: boolean;
-  benchmarks: boolean;
-};
+const route = new Hono();
 
-function buildSystemPrompt(context: ContextSettings): string {
-  let prompt = BASE_PROMPT;
+route.post('/', async c => {
+  const { messages, model, context } = await c.req.json();
+  const supportsThinking = THINKING_MODELS.some(m => model.includes(m));
+  const isGemini3 = model.includes('gemini-3');
+  const systemPrompt = buildSystemPrompt(context);
 
-  if (context.manicDocs) {
-    prompt += `\n\n## ManicJS Documentation\n${manicCtx}`;
-  }
+  try {
+    const apiKey =
+      process.env.MANIC_GOOGLE_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY;
 
-  if (context.benchmarks) {
-    prompt += `\n\n## Benchmark Context\n${benchmarksCtx}`;
-  }
-
-  return prompt;
-}
-
-export default new Elysia().post(
-  "/",
-  async ({ body }) => {
-    const { messages, model, context } = body;
-
-    const supportsThinking = THINKING_MODELS.some((m) => model.includes(m));
-    const isGemini3 = model.includes("gemini-3");
-    const systemPrompt = buildSystemPrompt(context);
-
-    try {
-      const result = streamText({
-        model: google(model),
-        system: systemPrompt,
-        messages: await convertToModelMessages(messages),
-        providerOptions: supportsThinking
-          ? {
-              google: {
-                thinkingConfig: isGemini3
-                  ? {
-                      thinkingLevel: "high",
-                      includeThoughts: true,
-                    }
-                  : {
-                      thinkingBudget: 1024,
-                      includeThoughts: true,
-                    },
-              },
-            }
-          : undefined,
-      });
-
-      return result.toUIMessageStreamResponse();
-    } catch (e) {
-      console.error("Chat Error:", e);
-      throw e;
+    if (!apiKey) {
+      return c.json(
+        { error: 'Google API key not configured' },
+        { status: 401 }
+      );
     }
-  },
-  {
-    body: t.Object({
-      messages: t.Array(t.Any()),
-      model: t.String(),
-      context: t.Object({
-        manicDocs: t.Boolean(),
-        benchmarks: t.Boolean(),
-      }),
-    }),
+
+    const result = streamText({
+      model: google(model),
+      system: systemPrompt,
+      messages: await convertToModelMessages(messages),
+      providerOptions: supportsThinking
+        ? {
+            google: {
+              thinkingConfig: isGemini3
+                ? {
+                    thinkingLevel: 'high',
+                    includeThoughts: true,
+                  }
+                : {
+                    thinkingBudget: 1024,
+                    includeThoughts: true,
+                  },
+            },
+          }
+        : undefined,
+    });
+
+    return result.toUIMessageStreamResponse();
+  } catch (e) {
+    console.error('Chat Error:', e);
+    throw e;
   }
-);
+});
+
+export default route;

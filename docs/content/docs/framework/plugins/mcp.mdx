@@ -1,0 +1,286 @@
+---
+title: MCP
+description: Model Context Protocol server for AI agent integration.
+---
+
+# MCP
+
+Model Context Protocol (MCP) server plugin for integrating your Manic app with AI assistants and agents.
+
+Provides an MCP endpoint (JSON-RPC over Streamable HTTP), built-in framework tools, auto-discovery endpoints, and browser-side WebMCP integration.
+
+## Installation
+
+```bash
+bun add @manicjs/mcp
+```
+
+## Quick Start
+
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+import { mcp } from '@manicjs/mcp';
+
+export default defineConfig({
+  plugins: [
+    mcp(),
+  ],
+});
+```
+
+That's it — the plugin registers a fully functional MCP server at `/mcp` with built-in tools and discovery endpoints.
+
+---
+
+## Options
+
+<TypeTable
+  type={{
+    name: {
+      type: 'string',
+      default: '"manic-mcp"',
+      description: 'Server name exposed in MCP handshake',
+    },
+    version: {
+      type: 'string',
+      default: '"1.0.0"',
+      description: 'Server version exposed in MCP handshake',
+    },
+    path: {
+      type: 'string',
+      default: '"/mcp"',
+      description: 'MCP endpoint path',
+    },
+    tools: {
+      type: 'McpTool[]',
+      description: 'Additional tools alongside the built-in framework tools',
+    },
+  }}
+/>
+
+---
+
+## Defining Custom Tools
+
+### With `defineTool` (Recommended)
+
+Use `defineTool` with a Zod schema for type-safe tool definitions. The Zod schema is automatically converted to JSON Schema for the MCP protocol, and arguments are validated at call time.
+
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+declare function mcp(options?: Record<string, unknown>): unknown;
+declare function defineTool(name: string, config: Record<string, unknown>): unknown;
+const z = {
+  string: () => ({ describe: (_s: string) => ({}) }),
+  number: () => ({ optional: () => ({ describe: (_s: string) => ({}) }) }),
+  object: (_shape: Record<string, unknown>) => ({} as any),
+};
+declare function fetchUser(id: string): Promise<unknown>;
+declare function searchProducts(query: string, limit: number): Promise<unknown>;
+
+export default defineConfig({
+  plugins: [
+    mcp({
+      tools: [
+        defineTool('get_user', {
+          description: 'Get a user by ID',
+          input: z.object({
+            id: z.string().describe('The user ID'),
+          }),
+          execute: async ({ id }: { id: string }) => {
+            const user = await fetchUser(id);
+            return user;
+          },
+        }),
+
+        defineTool('search_products', {
+          description: 'Search products by query',
+          input: z.object({
+            query: z.string().describe('Search query'),
+            limit: z.number().optional().describe('Max results'),
+          }),
+          execute: async ({ query, limit }: { query: string; limit?: number }) => {
+            return searchProducts(query, limit ?? 10);
+          },
+        }),
+      ],
+    }),
+  ],
+});
+```
+
+### With `McpTool` Interface
+
+For cases where you don't want a Zod dependency, you can pass raw `McpTool` objects with a JSON Schema `inputSchema`:
+
+```ts twoslash
+// @errors: 2322
+import { defineConfig } from 'manicjs/config';
+import { mcp } from '@manicjs/mcp';
+import type { McpTool } from '@manicjs/mcp';
+declare function sendNotification(userId: string, message: string): Promise<void>;
+
+const myTool: McpTool = {
+  name: 'send_notification',
+  description: 'Send a notification to a user',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      userId: { type: 'string', description: 'Target user ID' },
+      message: { type: 'string', description: 'Notification body' },
+    },
+    required: ['userId', 'message'],
+  },
+  execute: async ({ userId, message }) => {
+    await sendNotification(String(userId), String(message));
+    return { success: true };
+  },
+};
+
+export default defineConfig({
+  plugins: [
+    mcp({ tools: [myTool] }),
+  ],
+});
+```
+
+### McpTool Interface
+
+```ts
+interface McpTool {
+  name: string;
+  description: string;
+  inputSchema: {
+    type: 'object';
+    properties?: Record<string, unknown>;
+    required?: string[];
+  };
+  execute(args: Record<string, unknown>): Promise<unknown> | unknown;
+}
+```
+
+---
+
+## Built-in Tools
+
+The plugin automatically registers framework-aware tools alongside any custom tools you provide:
+
+| Tool | Description |
+|------|-------------|
+| `get_routes` | Returns all page routes registered in the app (path + file path). |
+| `get_api_routes` | Returns all API routes registered under `/api`. |
+| `get_page_meta` | Fetches a page and extracts its `<title>`, meta tags, and canonical link. |
+| `get_rendered_elements` | Fetches a page and returns a simplified element list (tag, id, class, text). |
+| `get_console_logs` | Returns captured browser console logs. **Dev only.** |
+
+### `get_page_meta`
+
+Accepts `{ url: string }` — an absolute or relative URL. Returns `{ title, meta, canonical }`.
+
+### `get_rendered_elements`
+
+Accepts `{ url: string, selector?: string }` — fetches the page and returns up to 100 elements with their tag, id, class, and text content. The optional `selector` parameter scopes the extraction (defaults to `body`).
+
+### `get_console_logs`
+
+Dev-only tool. Accepts `{ level?: string, limit?: number }`. Filter by log level (`log`, `warn`, `error`, `info`, `debug`) and limit the number of entries returned (default 50). Requires the console capture script, which is automatically injected in dev mode.
+
+---
+
+## Discovery Endpoints
+
+The plugin registers the following well-known endpoints for agent auto-discovery:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/.well-known/mcp.json` | MCP discovery document (endpoint, tools, server info) |
+| `/.well-known/mcp/server-card.json` | MCP server card (transport, capabilities) |
+| `/.well-known/agent-skills/index.json` | Agent skills index (links to the skill document) |
+| `/.well-known/agent-skills/use-mcp/SKILL.md` | Markdown skill document with connection instructions and tool docs |
+
+These are served as routes in dev and emitted as static files in production builds. The plugin also adds RFC 8288 `Link` headers for discovery:
+
+```http
+Link: </.well-known/mcp/server-card.json>; rel="mcp"; type="application/json"
+Link: </.well-known/mcp.json>; rel="mcp-discovery"; type="application/json"
+Link: </.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"
+```
+
+---
+
+## WebMCP Browser Integration
+
+The plugin serves a `/webmcp.js` script and automatically injects `<script src="/webmcp.js"></script>` into your HTML. This script registers all MCP tools with the browser's `navigator.modelContext` API ([WebMCP](https://purl.org/AIP/webmcp)), allowing browser-based AI agents to call your tools directly.
+
+Each browser-side tool delegates execution to the MCP server endpoint via `fetch`, so tools are defined once and work in both server and browser contexts.
+
+---
+
+<Callout type="warn">
+
+**No built-in authentication** — The MCP endpoint has no authentication by default. If you need to secure it, handle authentication at the infrastructure level (e.g., Vercel Edge Functions, Cloudflare Access, or a reverse proxy with auth).
+
+</Callout>
+
+---
+
+## Full Example
+
+```ts twoslash
+// @errors: 2322
+// manic.config.ts
+import { defineConfig } from 'manicjs/config';
+declare function mcp(options?: Record<string, unknown>): unknown;
+declare function defineTool(name: string, config: Record<string, unknown>): unknown;
+const z = {
+  string: () => ({ describe: (_s: string) => ({}) }),
+  number: () => ({ optional: () => ({ describe: (_s: string) => ({}) }) }),
+  object: (_shape: Record<string, unknown>) => ({} as any),
+};
+declare function searchPosts(keyword: string, limit: number): Promise<unknown[]>;
+declare function getPostBySlug(slug: string): Promise<unknown>;
+
+export default defineConfig({
+  plugins: [
+    mcp({
+      name: 'my-app',
+      version: '2.0.0',
+      path: '/mcp',
+      tools: [
+        defineTool('query_posts', {
+          description: 'Search blog posts by keyword',
+          input: z.object({
+            keyword: z.string().describe('Search keyword'),
+            limit: z.number().optional().describe('Max results (default 10)'),
+          }),
+          execute: async ({ keyword, limit }: { keyword: string; limit?: number }) => {
+            const posts = await searchPosts(keyword, limit ?? 10);
+            return { posts };
+          },
+        }),
+
+        defineTool('get_post', {
+          description: 'Get a single blog post by slug',
+          input: z.object({
+            slug: z.string().describe('Post URL slug'),
+          }),
+          execute: async ({ slug }: { slug: string }) => {
+            return getPostBySlug(slug);
+          },
+        }),
+      ],
+    }),
+  ],
+});
+```
+
+## See Also
+
+- [MCP Specification](https://modelcontextprotocol.io)
+- [WebMCP Specification](https://purl.org/AIP/webmcp)
+- [SEO](/docs/framework/plugins/seo) - Combine with SEO for AI visibility
+- [Sitemap](/docs/framework/plugins/sitemap) - Auto-generate sitemap.xml

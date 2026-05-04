@@ -1,0 +1,15 @@
+{
+  "title": "Advanced",
+  "description": "Plugins and optimization.",
+  "pages": [
+    "index",
+    "manic-internals",
+    "build-optimization",
+    "plugin-development",
+    "environment-variables",
+    "error-handling",
+    "examples",
+    "state-management",
+    "testing"
+  ]
+}

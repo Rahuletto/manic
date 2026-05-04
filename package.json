@@ -1,18 +1,23 @@
 {
   "name": "manic-monorepo",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "next": "16.2.3",
+    "oxc-minify": "^0.125.0",
+    "oxlint": "^1.60.0",
+    "typescript": "^5"
+  },
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "demo",
-    "examples/*"
-  ],
   "scripts": {
     "dev": "cd demo && bun run dev",
     "build": "cd demo && bun run build",
     "typecheck": "cd packages/manic && bun run tsc --noEmit"
   },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5"
-  }
+  "workspaces": [
+    "packages/*",
+    "plugins/*",
+    "demo",
+    "docs",
+    "examples/*"
+  ]
 }

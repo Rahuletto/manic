@@ -1,0 +1,35 @@
+---
+title: createClient
+description: Typed Hono RPC client factory manicjs and manicjs/client export surface.
+---
+
+# `createClient<T>()`
+
+Thin wrapper around **`hono/client`** **`hc()`** — identical exports from **`manicjs`** and **`manicjs/client`** (`packages/manic/src/config/client.ts`).
+
+```ts
+import { createClient } from 'manicjs';
+import type { AppType } from './app/api'; // when you export AppType from API tree
+
+const client = createClient<AppType>();
+const res = await client.api.hello.$get();
+```
+
+---
+
+## Signature
+
+```ts
+function createClient<T>(
+  baseUrl?: string
+): ReturnType<typeof hc<T>>;
+```
+
+**`baseUrl`** defaults to **`window.location.origin`** in the browser or **`http://localhost:6070`** during SSR/tests.
+
+---
+
+## See also
+
+- [RPC patterns](/docs/api/client/rpc)
+- [Client overview](/docs/api/client)

@@ -1,6 +1,7 @@
-import { rmSync, cpSync, existsSync } from "node:fs";
-import { green, dim, yellow, bold, red } from "colorette";
+import { rmSync, cpSync, existsSync, mkdirSync } from "node:fs";
+import { green, dim, yellow, bold } from "colorette";
 import type { ManicProvider, BuildContext } from "../types";
+import { agentMiddleware } from "../middleware";
 
 export interface CloudflareOptions {
   /**
@@ -37,9 +38,83 @@ export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
         }
       }
 
-      // Generate _redirects for SPA routing
-      const redirects = `/*    /index.html   200`;
-      await Bun.write(`${cfDist}/_redirects`, redirects);
+      // Detect if apiDocs plugin is configured
+      const hasApiDocs = ctx.config.plugins?.some(
+        (p) => p.name === "@manicjs/api-docs"
+      );
+      const docsPath = "/docs";
+      const hasApi = ctx.apiEntries.length > 0;
+
+      if (hasApi || hasApiDocs) {
+        mkdirSync(`${cfDist}/api`, { recursive: true });
+        if (existsSync(`${ctx.dist}/api`)) {
+          cpSync(`${ctx.dist}/api`, `${cfDist}/api`, {
+            recursive: true,
+          });
+        }
+
+        const apiImports: string[] = [];
+        const apiMounts: string[] = [];
+        const apiRoutes: string[] = [];
+
+        for (const entry of ctx.apiEntries) {
+          const name = entry
+            .replace("app/api/", "")
+            .replace("/index.ts", "")
+            .replace("index.ts", "root");
+
+          const safeName = name.replace(/-/g, "_");
+          apiImports.push(`import api_${safeName} from "./api/${name}.js";`);
+          const routePath = name === "root" ? "/" : `/${name}`;
+          apiMounts.push(`apiApp.route("${routePath}", api_${safeName});`);
+          apiRoutes.push(routePath);
+        }
+
+        const serverCode = `import { Hono } from "hono";
+${apiImports.join("\n")}
+
+const app = new Hono();
+const apiApp = new Hono();
+
+${apiMounts.join("\n")}
+
+app.route("/api", apiApp);
+
+// OpenAPI spec
+const paths = {};
+${apiRoutes.map(route => `paths["/api${route === "/" ? "" : route}"] = { get: { responses: { 200: { description: "OK" } } } };`).join("\n")}
+const spec = { openapi: "3.0.0", info: { title: "${ctx.config.app?.name ?? "Manic"} API", version: "1.0.0" }, paths };
+app.get("/openapi.json", (c) => c.json(spec));
+
+${
+  hasApiDocs
+    ? `app.get("${docsPath}", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));
+app.get("${docsPath}/*", (c) => c.html(\`<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>API Reference</title></head><body><script id="api-reference" data-url="/openapi.json"></script><script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>\`));`
+    : ""
+}
+
+${agentMiddleware(ctx)}
+
+${ctx.config.plugins?.some(p => p.name === '@manicjs/mcp') ? `// MCP endpoint — all methods
+app.all("${(ctx.config.plugins?.find((p: any) => p.name === '@manicjs/mcp') as any)?.mcpPath ?? '/mcp'}", (c) => _handleMcp(c.req.raw));
+app.all("${(ctx.config.plugins?.find((p: any) => p.name === '@manicjs/mcp') as any)?.mcpPath ?? '/mcp'}/*", (c) => _handleMcp(c.req.raw));` : ''}
+
+// Serve static assets from Cloudflare Pages
+app.all("/*", async (c) => {
+  return withAgentSupport(c.req.raw, async (req) => {
+    const res = await c.env.ASSETS.fetch(req);
+    if (res.status === 404) return c.env.ASSETS.fetch(new URL("/index.html", req.url));
+    return res;
+  });
+});
+
+export default app;
+`;
+        await Bun.write(`${cfDist}/_worker.js`, serverCode);
+      } else {
+        const redirects = `/*    /index.html   200`;
+        await Bun.write(`${cfDist}/_redirects`, redirects);
+      }
 
       // Generate wrangler.toml
       const projectName =
@@ -58,18 +133,6 @@ pages_build_output_dir = "./dist"
       process.stdout.write(
         `\r${dim(green("● Exporting to Cloudflare Pages... done"))}\n`
       );
-
-      // Warn about API routes
-      if (ctx.apiEntries.length > 0) {
-        console.log(
-          yellow(
-            `  ⚠ API routes detected but not supported on Cloudflare Pages yet.`
-          )
-        );
-        console.log(
-          dim(`    Use Vercel or Netlify for API route support.`)
-        );
-      }
 
       console.log(yellow(bold("ℹ Deploy with: manic deploy")));
     },
