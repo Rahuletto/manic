@@ -21,6 +21,24 @@ const PACKAGES = [
     group: 'Core',
   },
   {
+    name: '@manicjs/tailwind',
+    path: 'plugins/tailwind',
+    dir: 'plugins/tailwind',
+    group: 'Plugins',
+  },
+  {
+    name: '@manicjs/unocss',
+    path: 'plugins/unocss',
+    dir: 'plugins/unocss',
+    group: 'Plugins',
+  },
+  {
+    name: '@manicjs/mdx',
+    path: 'plugins/mdx',
+    dir: 'plugins/mdx',
+    group: 'Plugins',
+  },
+  {
     name: '@manicjs/mcp',
     path: 'plugins/mcp',
     dir: 'plugins/mcp',
