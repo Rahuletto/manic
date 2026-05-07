@@ -23,16 +23,6 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
     "no-unused-vars": "warn",
-    "max-lines-per-function": "off",
-    "no-underscore-dangle": [
-      "error",
-      {
-        "allow": [
-          "_server",
-          "__MANIC_ROUTES__",
-          "__MANIC_ERROR_PAGES__"
-        ]
-      }
-    ]
+    "max-lines-per-function": "off"
   }
 }
