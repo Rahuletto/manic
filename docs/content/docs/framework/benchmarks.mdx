@@ -5,140 +5,76 @@ description: Comprehensive performance comparison of Manic vs other React framew
 
 # Framework Benchmarks
 
-Manic is purpose-built for maximum performance. These benchmarks compare Manic against leading React frameworks using identical test cases.
+Manic is purpose-built for maximum performance. These benchmarks compare Manic against leading React frameworks using identical starter-project test cases — **20 measured runs** each, cold and warm, on Apple Silicon macOS.
+
+> [!NOTE]
+> The testbench was co-authored by AmpCode and Cursor to reduce single-agent bias and improve fairness across frameworks.
 
 ## Test Environment
 
-| Tool | Version |
-|------|---------|
-| **Bun** | 1.3.5+ |
+| Tool | Detail |
+|------|--------|
+| **Scenario** | `starter` (identical starter project per framework) |
+| **Runs** | 20 per phase (cold + warm) |
 | **OS** | macOS (Apple Silicon) |
 
 ## Frameworks Tested
 
-| Framework | Version | Type |
-|-----------|---------|------|
-| **Manic** | latest | Bun-native SPA framework |
-| **Next.js** | 16.x | Full-stack React framework |
-| **Vite** | 7.x | Build tool + React |
-| **Astro** | 5.x | Static site generator |
-| **React Router** | 7.x | Full-stack React (Remix) |
+| Framework | Scenario |
+|-----------|---------|
+| **Manic** | `manic-starter` |
+| **Next.js** | `next-starter` |
+| **Vite** | `vite-starter` |
+| **Astro** | `astro-starter` |
+| **Remix (React Router)** | `remix-starter` |
+| **TanStack Start** | `tanstack-starter` |
+| **Nuxt** | `nuxt-starter` |
 
 ---
 
-## Dev Server Startup Time
+## Dev Server Startup (readyMeanMs)
 
-Time from running `dev` command to server ready.
+Time from running the `dev` command until the framework signals it is ready to serve.
 
-```mermaid
-flowchart TB
-    A[Run dev command] --> B{Framework}
-    B -->|Next.js 16| G["Server ready · 1098ms"]
-    B -->|React Router 7| F["Server ready · ~400ms"]
-    B -->|Vite 7| E["Server ready · 386ms"]
-    B -->|Astro 5| D["Server ready · 164ms"]
-    B -->|Manic| C["Server ready · 26ms"]
-    C --> H[Fastest cold start in this bench]
-```
-
-| Framework | Startup Time | Relative to Manic |
-|-----------|-------------|-------------------|
-| **Manic** | **26ms** | 1x (baseline) |
-| Astro | 164ms | 6.3x slower |
-| Vite | 386ms | 14.8x slower |
-| React Router | ~400ms | ~15.4x slower |
-| Next.js | 1,098ms | 42.2x slower |
+| Framework | Cold Ready Mean | Cold Ready p95 | Warm Ready Mean | Warm Ready p95 |
+|-----------|---------------:|---------------:|----------------:|---------------:|
+| **Manic** | **145 ms** | 207 ms | **174 ms** | 235 ms |
+| Vite | 341 ms | 452 ms | 270 ms | 348 ms |
+| Next.js | 494 ms | 787 ms | 344 ms | 546 ms |
+| Nuxt | 579 ms | 1,111 ms | 414 ms | 582 ms |
+| TanStack | 669 ms | 824 ms | 1,363 ms | 1,806 ms |
+| Remix | 737 ms | 1,062 ms | 1,224 ms | 1,784 ms |
+| Astro | 1,930 ms | 2,882 ms | 2,539 ms | 3,987 ms |
 
 ### Why Manic is Faster
-
-Documented **development** responsibilities for **Vite 7.x** and **Next.js 16.x** below follow the wording on the cited pages. Diagrams show a **conceptual order** where docs imply sequencing (for example Vite’s first-run pre-bundle **before** loading the site locally); they are **not** meant as byte-accurate timelines—internals can overlap or repeat work.
-
-```mermaid
-flowchart TB
-    subgraph vite7 ["Vite 7.x dev documented flow"]
-        direction TB
-        V1[Vite starts dev server]
-        V2[Crawl sources discover dependency imports]
-        V3["esbuild pre-bundles dependencies to ESM dev-only cached in node_modules/.vite"]
-        V4["Serve those deps plus application source as native ESM transform sources on demand"]
-        V5[Plugin pipeline HMR updates]
-        V1 --> V2 --> V3 --> V4 --> V5
-    end
-
-    subgraph next16 ["Next.js 16.x Turbopack documented responsibilities"]
-        direction TB
-        N1[next dev Turbopack default bundler]
-        N2["Incremental Rust bundler unified graph for client server and other outputs"]
-        N3["Bundles in development lazy compilation for modules requested by the dev server"]
-        N4["JavaScript TypeScript JSX handled with SWC under the hood"]
-        N5[Filesystem watchers incremental caching Fast Refresh]
-        N6["Optional webpack loaders turbopack.rules subset loader-runner"]
-        N1 --> N2 --> N3 --> N4 --> N5 --> N6
-    end
-
-    subgraph manic_dev ["Manic dev pipeline"]
-        direction TB
-        M1[Bun process entry]
-        M2[Route discovery write manifest]
-        M3[Bun.serve HTTP]
-        M4[OXC transform on demand plus file watcher]
-        M1 --> M2 --> M3 --> M4
-    end
-
-    classDef refStack fill:#fef3c7,color:#1f2937
-    classDef manicStack fill:#d1fae5,color:#065f46
-    class V1,V2,V3,V4,V5,N1,N2,N3,N4,N5,N6 refStack
-    class M1,M2,M3,M4 manicStack
-```
-
-**Sources (fact-check):**
-
-- **Vite (pin to 7.x for this page)** — The frameworks table benchmarks **Vite 7.x**. Dependency pre-bundling for Vite **7** is documented as **`esbuild`** and **development-only**: [Dependency pre-bundling (Vite 7)](https://v7.vite.dev/guide/dep-pre-bundling.html). The same page notes that **after** the server has started, newly discovered dependency imports can trigger another pre-bundle pass. **Current** docs for the latest Vite line describe dependency optimization with **Rolldown** instead ([Dependency pre-bundling](https://vitejs.dev/guide/dep-pre-bundling.html)); do **not** mix those claims when verifying versions. Split dev model (pre-bundle deps vs native ESM for sources): [Why Vite](https://vitejs.dev/guide/why.html).
-- **Next.js + Turbopack** — Default bundler, unified graph, bundling **in dev**, lazy compilation driven by dev-server requests, incremental parallelism: [Turbopack API reference — Why Turbopack?](https://nextjs.org/docs/app/api-reference/turbopack#why-turbopack). **SWC** for JS/TS: same page language-features table ([JavaScript & TypeScript — Uses SWC under the hood](https://nextjs.org/docs/app/api-reference/turbopack#language-features)). **Webpack loaders** via **`turbopack.rules`** and **`loader-runner`**: [`next.config` — `turbopack`](https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack).
-- **Webpack fallback** — **`next dev --webpack`** / **`next build --webpack`** when you need webpack ([Turbopack API reference — Supported platforms](https://nextjs.org/docs/app/api-reference/turbopack#supported-platforms)).
 
 Manic starts faster because:
 
 1. **Bun's native serve** — The dev server is `Bun.serve`, not a Node script bootstrapping a bundler daemon.
-2. **OXC end-to-end** — JSX/TS stripping, lint, format, and minify share one Rust parser and AST (`oxc-transform`, `oxlint`, `oxc-minify`). There is no chain of separate tools round-tripping text between processes.
+2. **OXC end-to-end** — JSX/TS stripping, lint, format, and minify share one Rust parser and AST (`oxc-transform`, `oxlint`, `oxc-minify`). No chain of separate tools round-tripping text between processes.
 3. **Minimal runtime** — No webpack, Vite, or Turbopack process to initialize before your app runs.
-
-**Why Turbopack can still carry webpack-era cost.** Next’s Turbopack documents a **`turbopack.rules`** surface for **webpack loaders** executed through a **subset** of the webpack loader API ([`next.config` `turbopack`](https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack)). Real apps often depend on loaders, aliases, or fallback to **`next dev --webpack`**, all of which keep the overall dev path heavier than a Bun-and-OXC SPA that never emulates webpack.
-
-**Why Bun + OXC stays fast.** Manic keeps the critical path narrow: **`Bun`** owns HTTP and **`Bun.build`** owns graphs and hashing; **`oxc-transform`** plugs in as the JSX/TS compiler. Production minification runs through **`oxc-minify`** in parallel over outputs. Fewer processes, fewer serialized handoffs, and no emulation layer for webpack loaders—so cold dev startup and builds skew lighter than stacks juggling Node entrypoints plus a compatibility-oriented bundler.
 
 ---
 
 ## Production Build Time
 
-Time for complete production build.
-
-| Framework | Build Time | Relative to Manic |
-|-----------|-----------|-------------------|
-| **Manic** | **1.8s** | 1x (baseline) |
-| Astro | 3.7s | 2.0x slower |
-| Vite | 6.1s | 3.3x slower |
-| React Router | 8.2s | 4.5x slower |
-| Next.js | 25.5s | 14.0x slower |
+| Framework | Cold Build Mean | Cold Build p95 | Warm Build Mean | Warm Build p95 |
+|-----------|---------------:|---------------:|----------------:|---------------:|
+| **Manic** | **408 ms** | 540 ms | **397 ms** | 505 ms |
+| Remix | 1,068 ms | 1,494 ms | 1,716 ms | 2,448 ms |
+| TanStack | 1,347 ms | 1,832 ms | 2,218 ms | 3,119 ms |
+| Astro | 1,712 ms | 2,432 ms | 2,463 ms | 4,210 ms |
+| Vite | 2,351 ms | 3,183 ms | 1,690 ms | 2,147 ms |
+| Nuxt | 6,334 ms | 10,455 ms | 4,193 ms | 5,311 ms |
+| Next.js | 6,659 ms | 9,274 ms | 8,167 ms | 9,194 ms |
 
 ### Build Breakdown (Manic)
 
-```mermaid
-pie title Build Time Breakdown
-    "OXC Lint" : 15
-    "Route Discovery" : 5
-    "Client Bundle" : 150
-    "API Bundle" : 50
-    "Server Bundle" : 100
-    "OXC Minify" : 200
-    "Process Overhead" : 1280
-```
-
-**Production parallelism (Manic).** Bundling runs mostly **in order**: oxlint → route manifest → **`Bun.build` client** → **each API route** (`Bun.build` per entry, sequentially in the CLI) → **`Bun.build` server**. Then **`Promise.all`** runs **`oxc-minify`** over **`dist/client`**, **`dist/api`** (if present), and **`server.js`** **at the same time** — and inside each folder, `.js` files are minified concurrently (`packages/manic/src/cli/commands/build.ts`).
+**Production parallelism (Manic).** Bundling runs mostly **in order**: oxlint → route manifest → **`Bun.build` client** → **each API route** → **`Bun.build` server**. Then **`Promise.all`** runs **`oxc-minify`** over `dist/client`, `dist/api`, and `server.js` **at the same time**.
 
 ```mermaid
 flowchart TB
-    subgraph manic_prod ["Manic production build order plus parallel minify"]
+    subgraph manic_prod ["Manic production build order + parallel minify"]
         direction TB
         L0[oxlint]
         L0 --> L1[Write routes manifest]
@@ -158,128 +94,35 @@ flowchart TB
     class L0,L1,L2,L3,L4,L5,L6,L7,L8 prodManic
 ```
 
-The actual bundling is ~300ms. The rest is process startup overhead that scales poorly with more code in other frameworks.
-
 ---
 
 ## Build Output Size
 
-Size of production build directory.
-
-| Framework | Output | Size | Notes |
-|-----------|--------|------|-------|
-| **Astro** | `dist/` | 20KB | Static HTML only |
-| Vite | `dist/` | 212KB | Client-only SPA |
-| React Router | `build/` | 372KB | Client + Server |
-| **Manic** | `.manic/` | 2.5MB | Full bundle (unminified) |
-
-### Output Composition (Manic)
-
-Approximate layout after `manic build` (exact chunk names are hashed):
-
-<Files>
-  <Folder name=".manic" defaultOpen>
-    <Folder name="client" defaultOpen>
-      <File name="index.html" />
-      <File name="main-[hash].js" />
-      <Folder name="chunks">
-        <File name="[route]-[hash].js" />
-      </Folder>
-    </Folder>
-    <Folder name="api" defaultOpen>
-      <Folder name="users">
-        <File name="index.js" />
-      </Folder>
-      <Folder name="posts">
-        <File name="index.js" />
-      </Folder>
-    </Folder>
-    <File name="server.js" />
-  </Folder>
-</Files>
-
-Typical sizes from this benchmark run: client bundle ~1.99MB (before CDN gzip), API + `server.js` add the remainder of the `.manic/` total (~2.5MB unminified in the table above).
+| Framework | Cold Output Mean | Notes |
+|-----------|----------------:|-------|
+| **Astro** | **16.4 KB** | Static HTML only |
+| Vite | 232.8 KB | Client-only SPA |
+| Remix | 358.2 KB | Client + Server |
+| **Manic** | 371.8 KB | Client + Server + API |
+| TanStack | 1.23 MB | Client + Server |
+| Nuxt | 2.52 MB | Full-stack |
+| Next.js | 5.54 MB | Full-stack |
 
 ---
 
-## Dependencies
+## Summary
 
-| Framework | Package Count | node_modules Size |
-|-----------|---------------|------------------|
-| **Manic** | **39** | 138MB |
-| Vite | 124 | 108MB |
-| React Router | 151 | 116MB |
-| Astro | 258 | 165MB |
-| Next.js | 286 | 405MB |
-
-### Why Fewer Dependencies
-
-Manic uses Bun's native APIs instead of external packages:
-
-| Feature | Other Frameworks | Manic |
-|---------|-----------------|-------|
-| HTTP Server | express/Elysia | `Bun.serve` |
-| Bundler | webpack/vite/rollup | `Bun.build` |
-| Minifier | terser/esbuild | `oxc-minify` |
-| Testing | jest/vitest | `bun test` |
-| Package Manager | npm/yarn | `bun install` |
-
----
-
-## Summary Comparison
-
-| Metric | Next.js | Vite | Astro | React Router | Manic | Winner |
-|--------|--------|------|-------|-------------|-------|--------|
-| Dev Startup | 1,098ms | 386ms | 164ms | ~400ms | **26ms** | Manic |
-| Build Time | 25.5s | 6.1s | 3.7s | 8.2s | **1.8s** | Manic |
-| Dependencies | 286 | 124 | 258 | 151 | **39** | Manic |
-
----
-
-## When to Choose Manic
-
-**Choose Manic when:**
-- Maximum DX speed is critical
-- Bun runtime is acceptable
-- Client-side SPA (no SSR needed)
-- Full-stack with Hono API routes
-
-**Choose Next.js when:**
-- SSR is required
-- Largest ecosystem needed
-- Enterprise support needed
-
-**Choose Astro when:**
-- Content-focused static site
-- Minimal JavaScript output
-
-**Choose Vite when:**
-- Quick prototyping
-- Simple React SPA
-
----
-
-## Running Benchmarks
-
-```bash
-# Navigate to testbench
-cd testbench
-
-# Dev server startup
-bun run dev    # Watch for "Ready in Xms"
-
-# Build benchmarks  
-time bun run build
-
-# Check output sizes
-du -sh .manic
-```
+| Metric | Manic | Vite | Next.js | Remix | TanStack | Nuxt | Astro |
+|--------|------:|-----:|--------:|------:|---------:|-----:|------:|
+| Cold Dev Ready | **145 ms** | 341 ms | 494 ms | 737 ms | 669 ms | 579 ms | 1,930 ms |
+| Cold Build | **408 ms** | 2,351 ms | 6,659 ms | 1,068 ms | 1,347 ms | 6,334 ms | 1,712 ms |
+| Output Size | 371.8 KB | 232.8 KB | 5.54 MB | 358.2 KB | 1.23 MB | 2.52 MB | 16.4 KB |
 
 ---
 
 ## Notes
 
-- Timings are averages across multiple runs
-- Results may vary ±10-20%
-- Cold starts vs warm starts differ
-- Network doesn't affect local benchmarks
+- All numbers are **means over 20 runs** on Apple Silicon macOS.
+- Cold = fresh cache; Warm = cache present from a prior run.
+- Results may vary by machine and project size.
+- Raw data and reproduction steps: [github.com/rahuletto/manic-benchmark](https://github.com/rahuletto/manic-benchmark)
