@@ -9,6 +9,7 @@
     "build",
     "start",
     "deploy",
-    "lint-fmt"
+    "lint-fmt",
+    "plugin"
   ]
 }

@@ -30,6 +30,29 @@ Plugins extend Manic's core functionality:
 
 ---
 
+## Generate AGENTS.md for plugin packages
+
+If you want a reusable AI/agent instruction file for plugin contributors, generate one directly from this repo:
+
+```bash
+bun run agents:plugin -- @acme/manic-analytics --out plugins/manic-analytics/AGENTS.md
+```
+
+You can also run:
+
+```bash
+bun scripts/generate-plugin-agents.ts @acme/manic-analytics --out plugins/manic-analytics/AGENTS.md
+```
+
+The generated `AGENTS.md` includes:
+
+- `createPlugin`-first conventions
+- dev/prod parity guidance (`staticFiles`, `build`, `configureServer`)
+- provider-agnostic rules
+- a typed starter plugin scaffold and validation checklist
+
+---
+
 ## Quick Start
 
 ### Create a Simple Plugin

@@ -5,7 +5,11 @@
     "**/dist/**",
     "**/build/**"
   ],
-  "plugins": ["react", "react-hooks", "react-perf"],
+  "plugins": [
+    "react",
+    "react-hooks",
+    "react-perf"
+  ],
   "categories": {
     "correctness": "error",
     "perf": "error",
@@ -17,6 +21,16 @@
     "react/react-in-jsx-scope": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": [
+          "_server",
+          "__MANIC_ROUTES__",
+          "__MANIC_ERROR_PAGES__"
+        ]
+      }
+    ],
     "no-unused-vars": "warn",
     "max-lines-per-function": "off"
   }

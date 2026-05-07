@@ -66,6 +66,32 @@ The fastest way to bootstrap a Manic app is with the official `create-manic` tem
 
 The dev server starts on [http://localhost:6070](http://localhost:6070) by default.
 
+### Scaffold flags (non-interactive)
+
+`create-manic` supports prompt-free setup for CI, scripts, and power users:
+
+```bash
+bun create manic ./my-app \
+  -y \
+  --project-name "My App" \
+  --project-path ./my-app \
+  --mode frontend \
+  --port 7001 \
+  --no-view-transitions \
+  --no-install
+```
+
+| Flag | Description |
+| :--- | :--- |
+| `-y`, `--yes` | Skip prompts and use defaults/provided flags. |
+| `--project-name <name>` | Display app name used in `manic.config.ts` (`app.name`). |
+| `--project-path <path>` | Directory path where project is generated. |
+| `--mode <fullstack\|frontend>` | Select API-enabled fullstack mode or frontend-only mode. |
+| `--port <port>` | Initial `server.port` value in config. |
+| `--view-transitions`, `--no-view-transitions` | Enable/disable router view transitions in config. |
+| `--docs`, `--no-docs` | Enable/disable API Docs plugin in fullstack mode. |
+| `--install`, `--no-install` | Install dependencies immediately after scaffolding. |
+
 ---
 
 ## What You Just Generated

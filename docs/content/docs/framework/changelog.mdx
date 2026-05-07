@@ -1,0 +1,32 @@
+---
+title: Changelog
+description: Recent framework and CLI updates.
+---
+
+# Changelog
+
+## 2026-05-07
+
+### CLI and scaffold improvements
+
+- `manic build` now respects project lint config via `oxlint --config .oxlintrc.json .` when config exists.
+- Default `no-underscore-dangle` allowlist added for framework internals:
+  - `_server`
+  - `__MANIC_ROUTES__`
+  - `__MANIC_ERROR_PAGES__`
+- New plugin manager command:
+  - `bunx manic plugin add <package>`
+  - `bunx manic plugin remove <package>`
+- `create-manic` now supports richer interactive + non-interactive setup:
+  - project name
+  - project path
+  - mode (`fullstack` / `frontend`)
+  - port
+  - view transitions on/off
+  - install dependencies now (`--install` / `--no-install`)
+
+### Docs updates
+
+- Added CLI docs for `manic plugin`.
+- Added `create-manic` flag reference in getting started.
+- Added plugin `AGENTS.md` generator command and docs.

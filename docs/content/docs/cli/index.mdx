@@ -23,6 +23,7 @@ With a global install (`bun add -g manicjs`), you can run **`manic`** without **
   <Card title="manic start" description="Run production server.js from outdir" href="/docs/cli/start" />
   <Card title="manic deploy" description="Print or run provider deploy commands" href="/docs/cli/deploy" />
   <Card title="manic lint / fmt" description="oxlint and oxfmt via bun x" href="/docs/cli/lint-fmt" />
+  <Card title="manic plugin" description="Add and remove plugins with config auto-updates" href="/docs/cli/plugin" />
 </Cards>
 
 ### Typical workflows
@@ -52,6 +53,7 @@ flowchart TB
 | **`deploy`** | stdout hints or vendor CLI runs | Ignored | Ignored | Sometimes (**`--run`** → **`Bun.spawn`**) |
 | **`lint`** | oxlint diagnostics | — | — | Yes (**`bun x oxlint`** subprocess) |
 | **`fmt`** | Rewrites sources via oxfmt | — | — | Yes (**`bun x oxfmt`** subprocess) |
+| **`plugin`** | Plugin package + config management | — | — | Yes (**`bun add/remove`**) |
 
 ---
 
@@ -78,6 +80,7 @@ Commands that do not spawn your **`~manic`** server (**`build`**, **`lint`**, **
 | [`manic deploy`](/docs/cli/deploy) | Ensure build output exists, print (or run) provider deploy commands. |
 | [`manic lint`](/docs/cli/lint-fmt) | Run **oxlint** with **`.oxlintrc.json`**. |
 | [`manic fmt`](/docs/cli/lint-fmt) | Run **oxfmt** with **`.oxfmt.json`**. |
+| [`manic plugin`](/docs/cli/plugin) | Add/remove plugin packages and update **`manic.config.*`** automatically. |
 
 ### argv routing (same binary, different handlers)
 

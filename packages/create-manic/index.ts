@@ -14,8 +14,9 @@
  */
 import { mkdir, cp, rm } from 'fs/promises';
 import { existsSync } from 'fs';
-import { resolve, join } from 'path';
+import { resolve as resolvePath, join } from 'path';
 import * as readline from 'readline';
+import { $ } from 'bun';
 
 /** @internal */
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
@@ -43,9 +44,9 @@ const rl = readline.createInterface({
  */
 function ask(question: string, defaultValue?: string): Promise<string> {
   const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
-  return new Promise(resolve => {
+  return new Promise(done => {
     rl.question(`  ${question}${suffix}: `, answer => {
-      resolve(answer.trim() || defaultValue || '');
+      done(answer.trim() || defaultValue || '');
     });
   });
 }
@@ -55,11 +56,11 @@ function askYesNo(
   defaultYes: boolean = true
 ): Promise<boolean> {
   const hint = defaultYes ? 'Y/n' : 'y/N';
-  return new Promise(resolve => {
+  return new Promise(done => {
     rl.question(`  ${question} ${dim(`(${hint})`)}: `, answer => {
       const a = answer.trim().toLowerCase();
-      if (a === '') resolve(defaultYes);
-      else resolve(a === 'y' || a === 'yes');
+      if (a === '') done(defaultYes);
+      else done(a === 'y' || a === 'yes');
     });
   });
 }
@@ -72,50 +73,149 @@ function askChoice(
   const choiceStr = choices
     .map(c => (c === defaultChoice ? bold(c) : c))
     .join(' / ');
-  return new Promise(resolve => {
+  return new Promise(done => {
     rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, answer => {
       const a = answer.trim().toLowerCase();
-      if (choices.includes(a)) resolve(a);
-      else resolve(defaultChoice);
+      if (choices.includes(a)) done(a);
+      else done(defaultChoice);
     });
   });
 }
 
+function toPackageName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/gu, '-')
+    .replace(/^-+|-+$/gu, '') || 'my-manic-app';
+}
+
+interface CliOptions {
+  yes: boolean;
+  projectName?: string;
+  projectPath?: string;
+  mode?: 'fullstack' | 'frontend';
+  port?: string;
+  includeDocs?: boolean;
+  viewTransitions?: boolean;
+  install?: boolean;
+}
+
+function parseArgs(args: string[]): {
+  positionalPath?: string;
+  options: CliOptions;
+} {
+  const options: CliOptions = { yes: false };
+  let positionalPath: string | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const next = args[i + 1];
+
+    if (arg === '-y' || arg === '--yes') {
+      options.yes = true;
+      continue;
+    }
+    if (arg === '--project-name' && next) {
+      options.projectName = next;
+      i++;
+      continue;
+    }
+    if (arg === '--project-path' && next) {
+      options.projectPath = next;
+      i++;
+      continue;
+    }
+    if (arg === '--mode' && (next === 'fullstack' || next === 'frontend')) {
+      options.mode = next;
+      i++;
+      continue;
+    }
+    if (arg === '--port' && next) {
+      options.port = next;
+      i++;
+      continue;
+    }
+    if (arg === '--docs') {
+      options.includeDocs = true;
+      continue;
+    }
+    if (arg === '--no-docs') {
+      options.includeDocs = false;
+      continue;
+    }
+    if (arg === '--view-transitions') {
+      options.viewTransitions = true;
+      continue;
+    }
+    if (arg === '--no-view-transitions') {
+      options.viewTransitions = false;
+      continue;
+    }
+    if (arg === '--install') {
+      options.install = true;
+      continue;
+    }
+    if (arg === '--no-install') {
+      options.install = false;
+      continue;
+    }
+    if (!arg.startsWith('-') && !positionalPath) {
+      positionalPath = arg;
+    }
+  }
+
+  return { positionalPath, options };
+}
+
 async function main() {
-  const args = process.argv.slice(2);
-  let projectName = args[0];
+  const { positionalPath, options } = parseArgs(process.argv.slice(2));
 
   console.log(`
 ${red(bold('■ MANIC'))}
 ${dim('--- --- --- --- ---')}
 `);
 
-  if (!projectName) {
-    projectName = await ask('Project name', 'my-manic-app');
-  }
-
-  const projectPath = resolve(process.cwd(), projectName);
+  const normalizedPath = options.yes
+    ? (options.projectPath ?? positionalPath ?? 'my-manic-app')
+    : (options.projectPath ??
+      positionalPath ??
+      (await ask('Project path', 'my-manic-app')));
+  const projectPath = resolvePath(process.cwd(), normalizedPath);
+  const pathParts = normalizedPath.split('/').filter(Boolean);
+  const pathName = pathParts[pathParts.length - 1] || 'my-manic-app';
+  const projectName = options.yes
+    ? (options.projectName ?? pathName)
+    : (options.projectName ?? (await ask('Project name', pathName)));
 
   if (existsSync(projectPath)) {
     console.log(
-      `\n${red('Error:')} Directory ${cyan(projectName)} already exists.`
+      `\n${red('Error:')} Directory ${cyan(normalizedPath)} already exists.`
     );
     rl.close();
     process.exit(1);
   }
 
-  const appName = await ask('App name', projectName);
-  const mode = await askChoice(
-    'Project mode',
-    ['fullstack', 'frontend'],
-    'fullstack'
-  );
-  const port = await ask('Port', '6070');
+  const mode = options.yes
+    ? (options.mode ?? 'fullstack')
+    : (options.mode ??
+      (await askChoice('Project mode', ['fullstack', 'frontend'], 'fullstack')));
+  const port = options.yes
+    ? (options.port ?? '6070')
+    : (options.port ?? (await ask('Port', '6070')));
   const isFrontend = mode === 'frontend';
   const includeDocs = isFrontend
     ? false
-    : await askYesNo('Include API documentation (Scalar)?', true);
-  const viewTransitions = await askYesNo('Enable View Transitions?', true);
+    : options.yes
+      ? (options.includeDocs ?? true)
+      : (options.includeDocs ??
+        (await askYesNo('Include API documentation (Scalar)?', true)));
+  const viewTransitions = options.yes
+    ? (options.viewTransitions ?? true)
+    : (options.viewTransitions ?? (await askYesNo('Enable View Transitions?', true)));
+  const installPackages = options.yes
+    ? (options.install ?? false)
+    : (options.install ?? (await askYesNo('Install packages now?', true)));
 
   console.log(`\n${dim('Creating project...')}\n`);
 
@@ -132,7 +232,7 @@ ${dim('--- --- --- --- ---')}
 
   const pkgPath = join(projectPath, 'package.json');
   const pkg = await Bun.file(pkgPath).json();
-  pkg.name = projectName;
+  pkg.name = toPackageName(projectName);
 
   if (isFrontend) {
     delete pkg.dependencies['hono'];
@@ -166,7 +266,7 @@ ${dim('--- --- --- --- ---')}
 
 export default defineConfig({${isFrontend ? '\n  mode: "frontend",\n' : ''}
   app: {
-    name: "${appName}",
+    name: "${projectName}",
   },
 
   server: {
@@ -181,12 +281,17 @@ export default defineConfig({${isFrontend ? '\n  mode: "frontend",\n' : ''}
 
   await Bun.write(join(projectPath, 'manic.config.ts'), configContent);
 
-  console.log(`${green('Success!')} Created ${cyan(projectName)}`);
+  if (installPackages) {
+    console.log(dim('Installing packages...\n'));
+    await $`cd ${projectPath} && bun install`;
+  }
+
+  console.log(`${green('Success!')} Created ${cyan(projectName)} at ${cyan(normalizedPath)}`);
   console.log(`
 ${dim('Next steps:')}
 
-  ${cyan(`cd ${projectName}`)}
-  ${cyan('bun install')}
+  ${cyan(`cd ${normalizedPath}`)}
+  ${installPackages ? dim('# packages already installed') : cyan('bun install')}
   ${cyan('bun dev')}
 `);
 

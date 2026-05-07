@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "cd demo && bun run dev",
     "build": "cd demo && bun run build",
-    "typecheck": "cd packages/manic && bun run tsc --noEmit"
+    "typecheck": "cd packages/manic && bun run tsc --noEmit",
+    "agents:plugin": "bun scripts/generate-plugin-agents.ts"
   },
   "workspaces": [
     "packages/*",
