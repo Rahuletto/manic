@@ -96,7 +96,12 @@ async function main(): Promise<void> {
   }
 
   if (args.includes('-v') || args.includes('--version')) {
-    console.log('latest');
+    try {
+      const pkg = (await Bun.file(new URL('../../package.json', import.meta.url)).json()) as { version?: string };
+      console.log(pkg.version ?? 'latest');
+    } catch {
+      console.log('latest');
+    }
     process.exit(0);
   }
 
