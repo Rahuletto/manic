@@ -25,9 +25,12 @@ const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
 /** @internal */
 const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
 /** @internal */
+const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
+/** @internal */
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 /** @internal */
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
+const MIN_BUN_VERSION = '1.3.13';
 
 /** @internal */
 const rl = readline.createInterface({
@@ -101,6 +104,134 @@ interface CliOptions {
   install?: boolean;
 }
 
+async function fetchLatestVersion(packageName: string): Promise<string | null> {
+  const encodedName = encodeURIComponent(packageName);
+  try {
+    const response = await fetch(`https://registry.npmjs.org/${encodedName}/latest`);
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { version?: string };
+    if (!payload.version || typeof payload.version !== 'string') return null;
+    return payload.version;
+  } catch {
+    return null;
+  }
+}
+
+async function lockLatestTaggedDeps(pkg: any): Promise<void> {
+  const sections: Array<'dependencies' | 'devDependencies'> = [
+    'dependencies',
+    'devDependencies',
+  ];
+
+  for (const section of sections) {
+    const deps = pkg[section] as Record<string, string> | undefined;
+    if (!deps) continue;
+    const entries = Object.entries(deps).filter(([, version]) => version === 'latest');
+    for (const [name] of entries) {
+      process.stdout.write(dim(`Resolving ${name}@latest... `));
+      const version = await fetchLatestVersion(name);
+      if (!version) {
+        process.stdout.write(`${yellow('failed')}\n`);
+        console.log(
+          dim(`  Could not resolve ${name}. Keeping "latest" for now.`)
+        );
+        continue;
+      }
+      deps[name] = version;
+      process.stdout.write(`${green(version)}\n`);
+    }
+  }
+}
+
+function parseVersion(version: string): number[] {
+  const [core] = version.trim().split('-');
+  const parts = core.split('.').map(part => parseInt(part, 10));
+  while (parts.length < 3) parts.push(0);
+  return parts.slice(0, 3).map(v => (Number.isNaN(v) ? 0 : v));
+}
+
+function isVersionAtLeast(current: string, minimum: string): boolean {
+  const a = parseVersion(current);
+  const b = parseVersion(minimum);
+  for (let i = 0; i < 3; i++) {
+    if (a[i] > b[i]) return true;
+    if (a[i] < b[i]) return false;
+  }
+  return true;
+}
+
+async function getBunVersion(): Promise<string | null> {
+  const result = await $`bun --version`.quiet().nothrow();
+  if (result.exitCode !== 0) return null;
+  return result.stdout.toString().trim() || null;
+}
+
+async function ensureBunVersion(options: CliOptions): Promise<void> {
+  const version = await getBunVersion();
+  if (!version) {
+    console.log(`\n${red('Error:')} Bun is not installed or not available in PATH.`);
+    console.log(
+      dim('Install Bun: https://bun.sh/docs/installation') +
+        `\n${dim(`Required minimum version: ${MIN_BUN_VERSION}`)}`
+    );
+    process.exit(1);
+  }
+
+  if (isVersionAtLeast(version, MIN_BUN_VERSION)) {
+    return;
+  }
+
+  console.log(
+    `\n${yellow('Warning:')} Detected Bun ${cyan(version)} but Manic requires ${cyan(`${MIN_BUN_VERSION}+`)}.`
+  );
+
+  if (options.yes) {
+    console.log(
+      dim(
+        'Cannot prompt for upgrade in --yes mode. Please run "bun upgrade" and try again.'
+      )
+    );
+    process.exit(1);
+  }
+
+  const shouldUpgrade = await askYesNo(
+    `Upgrade Bun now? ${dim('(runs: bun upgrade)')}`,
+    true
+  );
+
+  if (!shouldUpgrade) {
+    console.log(
+      dim('Please upgrade Bun manually with "bun upgrade" and rerun create-manic.')
+    );
+    process.exit(1);
+  }
+
+  console.log(dim('\nUpgrading Bun...\n'));
+  const upgrade = await $`bun upgrade`.nothrow();
+  if (upgrade.exitCode !== 0) {
+    console.log(
+      `\n${red('Error:')} Auto-upgrade failed. Please upgrade manually with ${cyan('bun upgrade')}.`
+    );
+    if (upgrade.stderr.length > 0) {
+      console.log(dim(upgrade.stderr.toString().trim()));
+    }
+    process.exit(1);
+  }
+
+  const upgradedVersion = await getBunVersion();
+  if (!upgradedVersion || !isVersionAtLeast(upgradedVersion, MIN_BUN_VERSION)) {
+    console.log(
+      `\n${red('Error:')} Bun upgrade did not reach required version ${cyan(`${MIN_BUN_VERSION}+`)}.`
+    );
+    console.log(dim('Please run "bun upgrade" manually and retry.'));
+    process.exit(1);
+  }
+
+  console.log(
+    `${green('Success!')} Bun upgraded to ${cyan(upgradedVersion)} (required: ${cyan(`${MIN_BUN_VERSION}+`)})`
+  );
+}
+
 function parseArgs(args: string[]): {
   positionalPath?: string;
   options: CliOptions;
@@ -170,6 +301,7 @@ function parseArgs(args: string[]): {
 
 async function main() {
   const { positionalPath, options } = parseArgs(process.argv.slice(2));
+  await ensureBunVersion(options);
 
   console.log(`
 ${red(bold('■ MANIC'))}
@@ -241,6 +373,8 @@ ${dim('--- --- --- --- ---')}
   } else if (!includeDocs) {
     delete pkg.dependencies['@manicjs/api-docs'];
   }
+
+  await lockLatestTaggedDeps(pkg);
 
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
 
