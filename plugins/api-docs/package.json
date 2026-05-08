@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/api-docs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Scalar API docs plugin for Manic framework",
   "keywords": [
     "api",

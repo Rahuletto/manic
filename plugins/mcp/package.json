@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP (Model Context Protocol) plugin for Manic — Streamable HTTP MCP server endpoint",
   "keywords": [
     "agents",

@@ -2,6 +2,7 @@ import type { ManicPlugin } from 'manicjs/config';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** MDX Bun plugin options type. @see https://www.manicjs.tech/docs/framework/plugins/mdx#options */
 export type { MdxPluginOptions } from './bun-plugin.ts';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -18,6 +19,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
  *
  * @param options - MDX plugin configuration options
  * @returns ManicPlugin for MDX
+ * @see https://www.manicjs.tech/docs/framework/plugins/mdx#options
  *
  * @example
  * import { mdx } from '@manicjs/mdx';

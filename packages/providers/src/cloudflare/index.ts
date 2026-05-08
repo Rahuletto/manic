@@ -15,6 +15,7 @@ export interface CloudflareOptions {
   projectName?: string;
 }
 
+/** Create the Cloudflare Pages/Workers provider. @see https://www.manicjs.tech/docs/framework/deployment/cloudflare#configuration */
 export function cloudflare(options: CloudflareOptions = {}): ManicProvider {
   const compatDate = options.compatibilityDate ?? "2025-06-01";
 

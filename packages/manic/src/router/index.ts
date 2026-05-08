@@ -3,6 +3,8 @@
  * @description Client-side routing for Manic SPA applications.
  * Provides file-based routing, dynamic imports, and View Transitions support.
  *
+ * @see https://www.manicjs.tech/docs/api/router#components
+ *
  * @example
  * // Basic usage in app/main.tsx
  * import { Router, Link } from 'manicjs/router';
@@ -22,12 +24,19 @@
  */
 
 export type { RouteDef, RouterContextValue } from './lib/types';
-export {
-  Router,
-  useQueryParams,
-  navigate,
-  setViewTransitions,
-  preloadRoute,
-} from './lib/Router';
+/** @see https://www.manicjs.tech/docs/api/router/router#props */
+export { Router } from './lib/Router';
+/** @see https://www.manicjs.tech/docs/api/router/use-query-params#hook-signature */
+export { useQueryParams } from './lib/Router';
+/** @see https://www.manicjs.tech/docs/api/router/navigate#function-signature */
+export { navigate } from './lib/Router';
+/** @see https://www.manicjs.tech/docs/api/transitions/set-view-transitions#signature */
+export { setViewTransitions } from './lib/Router';
+/** @see https://www.manicjs.tech/docs/api/router/preload-route#signature */
+export { preloadRoute } from './lib/Router';
+/** @see https://www.manicjs.tech/docs/api/router/link#props */
 export { Link } from './lib/Link';
-export { RouterContext, useRouter } from './lib/context';
+/** @see https://www.manicjs.tech/docs/api/router/router-context#provided-value-routercontextvalue */
+export { RouterContext } from './lib/context';
+/** @see https://www.manicjs.tech/docs/api/router/use-router#hook-signature */
+export { useRouter } from './lib/context';

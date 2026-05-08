@@ -9,6 +9,7 @@ import type { UserConfig } from 'unocss';
  *
  * @param config - Config is ignored — use uno.config.ts instead
  * @returns ManicPlugin for UnoCSS
+ * @see https://www.manicjs.tech/docs/framework/plugins/unocss#quick-start
  *
  * @example
  * import { unocss } from '@manicjs/unocss';

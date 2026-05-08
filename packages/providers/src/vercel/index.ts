@@ -28,6 +28,7 @@ export interface VercelOptions {
  *
  * @param options - Vercel deployment options
  * @returns ManicProvider for Vercel deployment
+ * @see https://www.manicjs.tech/docs/framework/deployment/vercel#how-it-works
  *
  * @example
  * import { vercel } from '@manicjs/providers';

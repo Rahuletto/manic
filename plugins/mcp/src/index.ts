@@ -4,7 +4,9 @@ import { buildDiscoveryDocs } from './discovery';
 import { handleMessage, sseEvent } from './handler';
 import { consoleIngestHandler, CONSOLE_SCRIPT } from './console';
 
+/** Tool type for MCP integrations. @see https://www.manicjs.tech/docs/framework/plugins/mcp#mcptool-interface */
 export type { McpTool } from './tool';
+/** Helper to define typed MCP tools. @see https://www.manicjs.tech/docs/framework/plugins/mcp#with-definetool-recommended */
 export { defineTool } from './tool';
 
 /**
@@ -34,6 +36,7 @@ export interface McpConfig {
  *
  * @param config - MCP configuration options
  * @returns ManicPlugin for MCP
+ * @see https://www.manicjs.tech/docs/framework/plugins/mcp#options
  *
  * @example
  * import { mcp, defineTool } from '@manicjs/mcp';

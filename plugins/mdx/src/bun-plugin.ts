@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
+/** Options for MDX compilation and content processing. @see https://www.manicjs.tech/docs/framework/plugins/mdx#options */
 export interface MdxPluginOptions {
   /** File extensions to treat as MDX (default: /\.mdx?$/) */
   filter?: RegExp;
@@ -28,6 +29,7 @@ export interface MdxPluginOptions {
   mdxOptions?: Omit<CompileOptions, 'remarkPlugins' | 'rehypePlugins'>;
 }
 
+/** Bun-level MDX plugin for advanced customization. @see https://www.manicjs.tech/docs/framework/plugins/mdx#custom-remarkrehype-plugins */
 export function mdxBunPlugin(options: MdxPluginOptions = {}): BunPlugin {
   const {
     filter = /\.mdx?$/,

@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/tui",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shared TUI and terminal output primitives for Manic CLI tools",
   "keywords": [
     "cli",
