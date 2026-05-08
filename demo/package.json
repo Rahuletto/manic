@@ -17,11 +17,12 @@
     "@manicjs/providers": "workspace:*",
     "@manicjs/seo": "workspace:*",
     "@manicjs/sitemap": "workspace:*",
-    "@manicjs/tailwind": "workspace:*",
+    "@manicjs/tailwind": "^1.0.0",
     "hono": "^4.12.14",
     "manicjs": "workspace:*",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "tailwind": "^4.0.0",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
