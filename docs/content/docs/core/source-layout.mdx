@@ -21,6 +21,16 @@ Published **`exports`** map those folders to **`manicjs/*`** subpaths ([Package 
 
 ---
 
+## Workspace note
+
+CLI terminal UI helpers live in a separate workspace package:
+
+- **`packages/tui/`** → published as **`@manicjs/tui`**
+
+This package is intentionally shared by `manicjs`, `create-manic`, and provider packages so terminal output and interactive prompts stay consistent.
+
+---
+
 ## See also
 
 - [Architecture](/docs/core/architecture)

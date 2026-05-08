@@ -1,6 +1,6 @@
 # docs
 
-Published documentation: https://manic-docs.vercel.app/
+Published documentation: https://www.manicjs.tech/docs
 
 This is a Next.js application generated with
 [Create Fumadocs](https://github.com/fuma-nama/fumadocs).

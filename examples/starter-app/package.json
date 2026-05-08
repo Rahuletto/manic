@@ -12,10 +12,10 @@
     "format": "manic fmt"
   },
   "dependencies": {
-    "@manicjs/api-docs": "latest",
+    "@manicjs/api-docs": "1.0.0",
     "@manicjs/tailwind": "workspace:*",
     "hono": "^4.12.14",
-    "manicjs": "latest",
+    "manicjs": "1.0.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "tailwindcss": "^4.2.2"
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "oxfmt": "latest",
-    "oxlint": "latest"
+    "oxfmt": "0.48.0",
+    "oxlint": "1.63.0"
   }
 }

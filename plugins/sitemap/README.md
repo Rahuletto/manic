@@ -1,6 +1,11 @@
 # @manicjs/sitemap
 
-Sitemap plugin for [Manic](https://github.com/Rahuletto/manic). Auto-generates `sitemap.xml` from your file-based routes.
+Sitemap plugin for Manic. Auto-generates `sitemap.xml` from your file-based routes.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Plugin docs: [manicjs.tech/docs/framework/plugins/sitemap](https://www.manicjs.tech/docs/framework/plugins/sitemap)
 
 ## Install
 
@@ -31,10 +36,6 @@ Serves `/sitemap.xml` in dev and emits it as a static file in production builds.
 | `priority`   | `number`   | `0.8`      | Priority for all URLs                |
 | `exclude`    | `string[]` | `[]`       | Route paths to exclude               |
 
-## File structure
+## License
 
-```
-src/
-  index.ts     — plugin entry, ManicPlugin implementation
-  generate.ts  — generateSitemapXml() pure function
-```
+GPL-3.0

@@ -1,6 +1,14 @@
 # @manicjs/providers
 
-Deployment providers for Manic framework. Deploy your Manic app anywhere with drop-in adapters.
+Deployment adapters for Manic.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Deployment overview: [manicjs.tech/docs/framework/deployment](https://www.manicjs.tech/docs/framework/deployment)
+- Vercel: [manicjs.tech/docs/framework/deployment/vercel](https://www.manicjs.tech/docs/framework/deployment/vercel)
+- Cloudflare: [manicjs.tech/docs/framework/deployment/cloudflare](https://www.manicjs.tech/docs/framework/deployment/cloudflare)
+- Self hosting: [manicjs.tech/docs/framework/deployment/self-hosting](https://www.manicjs.tech/docs/framework/deployment/self-hosting)
 
 ## Installation
 
@@ -22,7 +30,7 @@ export default defineConfig({
 });
 ```
 
-## Provider Comparison
+## Provider Support
 
 | Feature      | Vercel | Netlify          | Cloudflare |
 | ------------ | ------ | ---------------- | ---------- |
@@ -82,12 +90,12 @@ cloudflare({
 });
 ```
 
-Deploys as a static site with SPA routing.
+Deploys static output with SPA routing.
 
-**Limitations:**
+Limitations:
 
-- ❌ API routes not supported (Elysia incompatible with Cloudflare Workers runtime)
-- Use Vercel or Netlify if you need API routes
+- API routes are not supported on Cloudflare Pages in this adapter
+- Use Vercel/Netlify for full API route support
 
 Deploy manually:
 
@@ -95,7 +103,7 @@ Deploy manually:
 bunx wrangler pages deploy dist --project-name my-app
 ```
 
-## Creating Custom Providers
+## Custom Providers
 
 Implement the `ManicProvider` interface:
 
@@ -115,3 +123,7 @@ export function myProvider(): ManicProvider {
   };
 }
 ```
+
+## License
+
+GPL-3.0

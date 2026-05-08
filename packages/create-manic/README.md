@@ -1,11 +1,16 @@
-# create-manic
+# `create-manic`
 
-Scaffold a new Manic app.
-Visit [Manic](https://github.com/rahuletto/manic) for more information. Documentation lives at [manic-docs.vercel.app](https://manic-docs.vercel.app/).
+Official project scaffolder for Manic.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Getting started: [manicjs.tech/docs/framework/getting-started](https://www.manicjs.tech/docs/framework/getting-started)
+- CLI reference: [manicjs.tech/docs/cli](https://www.manicjs.tech/docs/cli)
 
 ## Requirements
 
-- [Bun](https://bun.sh) v1.3.0 or higher
+- [Bun](https://bun.sh) `>= 1.3.13`
 
 ## Usage
 
@@ -16,6 +21,13 @@ bun install
 bun dev
 ```
 
+## What It Sets Up
+
+- App structure (`app/`, routes, server entry)
+- Manic config (`manic.config.ts`)
+- Optional first-party plugin wiring
+- Lint/format scripts and project defaults
+
 ## License
 
-Manic is licensed under GPL-3.0
+GPL-3.0

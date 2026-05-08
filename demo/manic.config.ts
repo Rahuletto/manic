@@ -16,7 +16,6 @@ export default defineConfig({
   },
 
   plugins: [
-    tailwind(),
     apiDocs(),
     seo({
       hostname: 'https://manic.js.org',
@@ -24,6 +23,7 @@ export default defineConfig({
     }),
     sitemap({ hostname: 'https://manic.js.org' }),
     mcp({ name: 'manic-demo' }),
+    tailwind(),
   ],
 
   providers: [vercel(), cloudflare()],

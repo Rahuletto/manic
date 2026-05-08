@@ -1,5 +1,5 @@
 import { rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
-import { green, dim, yellow, bold } from 'colorette';
+import { green, dim } from '@manicjs/tui';
 import type { ManicProvider, BuildContext } from '../types';
 import { agentMiddleware } from '../middleware';
 
@@ -211,8 +211,6 @@ ${runtime === 'edge' ? 'export default (req, ctx) => app.fetch(req, { vercel: ct
       process.stdout.write(
         `\r${dim(green('● Exporting to Vercel... done'))}\n`
       );
-      console.log(yellow(bold('ℹ Deploy: manic deploy --run')));
-      console.log(dim('  For GitHub CI/CD: commit vercel.json and push'));
     },
   };
 }

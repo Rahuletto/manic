@@ -15,72 +15,17 @@
 import { mkdir, cp, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve as resolvePath, join } from 'path';
-import * as readline from 'readline';
 import { $ } from 'bun';
-
-/** @internal */
-const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
-/** @internal */
-const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
-/** @internal */
-const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
-/** @internal */
-const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
-/** @internal */
-const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
-
-/** @internal */
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-/**
- * Prompts for a text answer
- * @param question - Question to ask
- * @param defaultValue - Default value if no answer provided
- * @returns User's answer or default
- * @internal
- */
-function ask(question: string, defaultValue?: string): Promise<string> {
-  const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
-  return new Promise(done => {
-    rl.question(`  ${question}${suffix}: `, answer => {
-      done(answer.trim() || defaultValue || '');
-    });
-  });
-}
-
-function askYesNo(
-  question: string,
-  defaultYes: boolean = true
-): Promise<boolean> {
-  const hint = defaultYes ? 'Y/n' : 'y/N';
-  return new Promise(done => {
-    rl.question(`  ${question} ${dim(`(${hint})`)}: `, answer => {
-      const a = answer.trim().toLowerCase();
-      if (a === '') done(defaultYes);
-      else done(a === 'y' || a === 'yes');
-    });
-  });
-}
-
-function askChoice(
-  question: string,
-  choices: string[],
-  defaultChoice: string
-): Promise<string> {
-  const choiceStr = choices
-    .map(c => (c === defaultChoice ? bold(c) : c))
-    .join(' / ');
-  return new Promise(done => {
-    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, answer => {
-      const a = answer.trim().toLowerCase();
-      if (choices.includes(a)) done(a);
-      else done(defaultChoice);
-    });
-  });
-}
+import {
+  red,
+  green,
+  cyan,
+  yellow,
+  dim,
+  brandTitle,
+  PromptSession,
+} from '@manicjs/tui';
+const MIN_BUN_VERSION = '1.3.13';
 
 function toPackageName(value: string): string {
   return value
@@ -99,6 +44,134 @@ interface CliOptions {
   includeDocs?: boolean;
   viewTransitions?: boolean;
   install?: boolean;
+}
+
+async function fetchLatestVersion(packageName: string): Promise<string | null> {
+  const encodedName = encodeURIComponent(packageName);
+  try {
+    const response = await fetch(`https://registry.npmjs.org/${encodedName}/latest`);
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { version?: string };
+    if (!payload.version || typeof payload.version !== 'string') return null;
+    return payload.version;
+  } catch {
+    return null;
+  }
+}
+
+async function lockLatestTaggedDeps(pkg: any): Promise<void> {
+  const sections: Array<'dependencies' | 'devDependencies'> = [
+    'dependencies',
+    'devDependencies',
+  ];
+
+  for (const section of sections) {
+    const deps = pkg[section] as Record<string, string> | undefined;
+    if (!deps) continue;
+    const entries = Object.entries(deps).filter(([, version]) => version === 'latest');
+    for (const [name] of entries) {
+      process.stdout.write(dim(`Resolving ${name}@latest... `));
+      const version = await fetchLatestVersion(name);
+      if (!version) {
+        process.stdout.write(`${yellow('failed')}\n`);
+        console.log(
+          dim(`  Could not resolve ${name}. Keeping "latest" for now.`)
+        );
+        continue;
+      }
+      deps[name] = version;
+      process.stdout.write(`${green(version)}\n`);
+    }
+  }
+}
+
+function parseVersion(version: string): number[] {
+  const [core] = version.trim().split('-');
+  const parts = core.split('.').map(part => parseInt(part, 10));
+  while (parts.length < 3) parts.push(0);
+  return parts.slice(0, 3).map(v => (Number.isNaN(v) ? 0 : v));
+}
+
+function isVersionAtLeast(current: string, minimum: string): boolean {
+  const a = parseVersion(current);
+  const b = parseVersion(minimum);
+  for (let i = 0; i < 3; i++) {
+    if (a[i] > b[i]) return true;
+    if (a[i] < b[i]) return false;
+  }
+  return true;
+}
+
+async function getBunVersion(): Promise<string | null> {
+  const result = await $`bun --version`.quiet().nothrow();
+  if (result.exitCode !== 0) return null;
+  return result.stdout.toString().trim() || null;
+}
+
+async function ensureBunVersion(
+  options: CliOptions,
+  prompts: PromptSession
+): Promise<void> {
+  const version = await getBunVersion();
+  if (!version) {
+    console.log(`\n${red('Error:')} Bun is not installed or not available in PATH.`);
+    console.log(
+      dim('Install Bun: https://bun.sh/docs/installation') +
+        `\n${dim(`Required minimum version: ${MIN_BUN_VERSION}`)}`
+    );
+    process.exit(1);
+  }
+
+  if (isVersionAtLeast(version, MIN_BUN_VERSION)) {
+    return;
+  }
+
+  console.log(
+    `\n${yellow('Warning:')} Detected Bun ${cyan(version)} but Manic requires ${cyan(`${MIN_BUN_VERSION}+`)}.`
+  );
+
+  if (options.yes) {
+    console.log(
+      dim(
+        'Cannot prompt for upgrade in --yes mode. Please run "bun upgrade" and try again.'
+      )
+    );
+    process.exit(1);
+  }
+
+  const shouldUpgrade = await prompts.confirm('Upgrade Bun now?');
+
+  if (!shouldUpgrade) {
+    console.log(
+      dim('Please upgrade Bun manually with "bun upgrade" and rerun create-manic.')
+    );
+    process.exit(1);
+  }
+
+  console.log(dim('\nUpgrading Bun...\n'));
+  const upgrade = await $`bun upgrade`.nothrow();
+  if (upgrade.exitCode !== 0) {
+    console.log(
+      `\n${red('Error:')} Auto-upgrade failed. Please upgrade manually with ${cyan('bun upgrade')}.`
+    );
+    if (upgrade.stderr.length > 0) {
+      console.log(dim(upgrade.stderr.toString().trim()));
+    }
+    process.exit(1);
+  }
+
+  const upgradedVersion = await getBunVersion();
+  if (!upgradedVersion || !isVersionAtLeast(upgradedVersion, MIN_BUN_VERSION)) {
+    console.log(
+      `\n${red('Error:')} Bun upgrade did not reach required version ${cyan(`${MIN_BUN_VERSION}+`)}.`
+    );
+    console.log(dim('Please run "bun upgrade" manually and retry.'));
+    process.exit(1);
+  }
+
+  console.log(
+    `${green('Success!')} Bun upgraded to ${cyan(upgradedVersion)} (required: ${cyan(`${MIN_BUN_VERSION}+`)})`
+  );
 }
 
 function parseArgs(args: string[]): {
@@ -169,10 +242,12 @@ function parseArgs(args: string[]): {
 }
 
 async function main() {
+  const prompts = new PromptSession();
   const { positionalPath, options } = parseArgs(process.argv.slice(2));
+  await ensureBunVersion(options, prompts);
 
   console.log(`
-${red(bold('■ MANIC'))}
+${brandTitle()}
 ${dim('--- --- --- --- ---')}
 `);
 
@@ -180,42 +255,42 @@ ${dim('--- --- --- --- ---')}
     ? (options.projectPath ?? positionalPath ?? 'my-manic-app')
     : (options.projectPath ??
       positionalPath ??
-      (await ask('Project path', 'my-manic-app')));
+      (await prompts.input('Project path', 'my-manic-app')));
   const projectPath = resolvePath(process.cwd(), normalizedPath);
   const pathParts = normalizedPath.split('/').filter(Boolean);
   const pathName = pathParts[pathParts.length - 1] || 'my-manic-app';
   const projectName = options.yes
     ? (options.projectName ?? pathName)
-    : (options.projectName ?? (await ask('Project name', pathName)));
+    : (options.projectName ?? (await prompts.input('Project name', pathName)));
 
   if (existsSync(projectPath)) {
     console.log(
       `\n${red('Error:')} Directory ${cyan(normalizedPath)} already exists.`
     );
-    rl.close();
+    prompts.close();
     process.exit(1);
   }
 
   const mode = options.yes
     ? (options.mode ?? 'fullstack')
     : (options.mode ??
-      (await askChoice('Project mode', ['fullstack', 'frontend'], 'fullstack')));
+      (await prompts.select('Project mode', ['fullstack', 'frontend'], 0)));
   const port = options.yes
     ? (options.port ?? '6070')
-    : (options.port ?? (await ask('Port', '6070')));
+    : (options.port ?? (await prompts.input('Port', '6070')));
   const isFrontend = mode === 'frontend';
   const includeDocs = isFrontend
     ? false
     : options.yes
       ? (options.includeDocs ?? true)
       : (options.includeDocs ??
-        (await askYesNo('Include API documentation (Scalar)?', true)));
+        (await prompts.confirm('Include API documentation (Scalar)?', true)));
   const viewTransitions = options.yes
     ? (options.viewTransitions ?? true)
-    : (options.viewTransitions ?? (await askYesNo('Enable View Transitions?', true)));
+    : (options.viewTransitions ?? (await prompts.confirm('Enable View Transitions?', true)));
   const installPackages = options.yes
     ? (options.install ?? false)
-    : (options.install ?? (await askYesNo('Install packages now?', true)));
+    : (options.install ?? (await prompts.confirm('Install packages now?', true)));
 
   console.log(`\n${dim('Creating project...')}\n`);
 
@@ -241,6 +316,8 @@ ${dim('--- --- --- --- ---')}
   } else if (!includeDocs) {
     delete pkg.dependencies['@manicjs/api-docs'];
   }
+
+  await lockLatestTaggedDeps(pkg);
 
   await Bun.write(pkgPath, JSON.stringify(pkg, null, 2));
 
@@ -295,7 +372,7 @@ ${dim('Next steps:')}
   ${cyan('bun dev')}
 `);
 
-  rl.close();
+  prompts.close();
 }
 
 main().catch(e => {
