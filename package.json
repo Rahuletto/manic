@@ -6,14 +6,16 @@
     "next": "16.2.3",
     "oxc-minify": "^0.125.0",
     "oxlint": "^1.60.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "simple-git-hooks": "^2.13.1"
   },
   "private": true,
   "scripts": {
     "dev": "cd demo && bun run dev",
     "build": "cd demo && bun run build",
     "typecheck": "cd packages/manic && bun run tsc --noEmit",
-    "agents:plugin": "bun scripts/generate-plugin-agents.ts"
+    "agents:plugin": "bun scripts/generate-plugin-agents.ts",
+    "prepare": "simple-git-hooks"
   },
   "workspaces": [
     "packages/*",
@@ -21,5 +23,8 @@
     "demo",
     "docs",
     "examples/*"
-  ]
+  ],
+  "simple-git-hooks": {
+    "pre-commit": "bash scripts/stage-submodule-pointers.sh"
+  }
 }
