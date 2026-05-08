@@ -1,6 +1,11 @@
 # @manicjs/mcp
 
-[Model Context Protocol](https://modelcontextprotocol.io) plugin for [Manic](https://github.com/Rahuletto/manic). Exposes a Streamable HTTP MCP server so AI coding agents can inspect and interact with your running app.
+Model Context Protocol plugin for Manic. Exposes a streamable HTTP MCP server for AI agents.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Plugin docs: [manicjs.tech/docs/framework/plugins/mcp](https://www.manicjs.tech/docs/framework/plugins/mcp)
 
 ## Install
 
@@ -95,18 +100,6 @@ Converts the Zod schema to JSON Schema `inputSchema` and validates args at call 
 | `path`    | `string`    | `"/mcp"`      | Endpoint path                    |
 | `tools`   | `McpTool[]` | `[]`          | Additional tools                 |
 
-## File structure
-
-```
-src/
-  index.ts        — plugin entry, McpConfig, mcp()
-  tool.ts         — McpTool interface, defineTool()
-  default-tools.ts — built-in framework tools
-  handler.ts      — JSON-RPC message dispatch
-  discovery.ts    — well-known doc generation (SKILL.md, server-card, agent-skills)
-  console.ts      — browser console capture (dev only)
-```
-
 ## Protocol
 
 Implements [MCP Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) spec `2025-03-26`:
@@ -115,3 +108,7 @@ Implements [MCP Streamable HTTP transport](https://modelcontextprotocol.io/speci
 - `GET /mcp` — persistent SSE stream
 - `DELETE /mcp` — terminate session
 - Session management via `Mcp-Session-Id` header
+
+## License
+
+GPL-3.0

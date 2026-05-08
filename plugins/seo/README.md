@@ -1,6 +1,11 @@
 # @manicjs/seo
 
-SEO plugin for [Manic](https://github.com/Rahuletto/manic). Generates `robots.txt`, adds RFC 8288 `Link` headers for agent discovery, and supports [Content Signals](https://contentsignals.org/) for AI crawler policy declarations.
+SEO plugin for Manic. Generates `robots.txt`, injects metadata, and supports RFC 8288 link headers plus Content Signals.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Plugin docs: [manicjs.tech/docs/framework/plugins/seo](https://www.manicjs.tech/docs/framework/plugins/seo)
 
 ## Install
 
@@ -42,10 +47,6 @@ export default defineConfig({
 | `linkHeaders`    | `LinkHeader[]` | `[]`      | Extra RFC 8288 Link headers                          |
 | `contentSignals` | `object`       | —         | AI crawler policy (`ai-train`, `search`, `ai-input`) |
 
-## File structure
+## License
 
-```
-src/
-  index.ts   — plugin entry, ManicPlugin implementation
-  robots.ts  — generateRobotsTxt() pure function
-```
+GPL-3.0

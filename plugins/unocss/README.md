@@ -1,6 +1,11 @@
 # @manicjs/unocss
 
-UnoCSS plugin for [Manic](https://manic.js.org).
+UnoCSS plugin for Manic.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Plugin docs: [manicjs.tech/docs/framework/plugins/unocss](https://www.manicjs.tech/docs/framework/plugins/unocss)
 
 ## Install
 
@@ -20,7 +25,7 @@ export default defineConfig({
 });
 ```
 
-Manic automatically registers `bun-plugin-unocss` for dev and build — no `bunfig.toml` needed.
+Manic auto-registers `bun-plugin-unocss` for development and production builds. No manual `bunfig.toml` setup is required.
 
 ## Configuration
 

@@ -1,6 +1,11 @@
 # @manicjs/tailwind
 
-Tailwind CSS v4 plugin for [Manic](https://manic.js.org).
+Tailwind CSS plugin for Manic.
+
+## Documentation
+
+- Website: [manicjs.tech](https://www.manicjs.tech/)
+- Plugin docs: [manicjs.tech/docs/framework/plugins/tailwind](https://www.manicjs.tech/docs/framework/plugins/tailwind)
 
 ## Install
 
@@ -27,7 +32,7 @@ Add Tailwind to your CSS entry:
 @import 'tailwindcss';
 ```
 
-That's it. Manic automatically registers `bun-plugin-tailwind` for dev and build — no `bunfig.toml` needed.
+Manic auto-registers `bun-plugin-tailwind` for development and production builds. No manual `bunfig.toml` setup is required.
 
 ## Customization
 
