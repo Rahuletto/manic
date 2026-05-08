@@ -139,6 +139,7 @@ function generateMetaTags(config: SeoConfig): string {
  *
  * @param config - SEO configuration options
  * @returns ManicPlugin for SEO
+ * @see https://www.manicjs.tech/docs/framework/plugins/seo#global-options
  *
  * @example
  * import { seo } from '@manicjs/seo';

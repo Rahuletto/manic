@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/sitemap",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sitemap generation for Manic framework",
   "keywords": [
     "manic",

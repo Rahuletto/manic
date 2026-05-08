@@ -4,6 +4,7 @@ import type { ZodObject, ZodRawShape, infer as ZodInfer } from 'zod';
  * MCP tool definition
  * @interface McpTool
  */
+/** MCP tool contract used by the plugin runtime. @see https://www.manicjs.tech/docs/framework/plugins/mcp#mcptool-interface */
 export interface McpTool {
   /** Tool name (unique identifier) */
   name: string;
@@ -46,6 +47,7 @@ type ToolDef<S extends ZodObject<ZodRawShape>> = {
  *   execute: async ({ id }) => ({ id, name: 'John' }),
  * })
  */
+/** Define a strongly-typed MCP tool from a Zod schema. @see https://www.manicjs.tech/docs/framework/plugins/mcp#with-definetool-recommended */
 export function defineTool<S extends ZodObject<ZodRawShape>>(
   name: string,
   def: ToolDef<S>

@@ -7,6 +7,7 @@ import type { ManicPlugin } from 'manicjs/config';
  * In production, Tailwind classes are bundled with the client.
  *
  * @returns ManicPlugin for Tailwind CSS
+ * @see https://www.manicjs.tech/docs/framework/plugins/tailwind#quick-start
  *
  * @example
  * import { tailwind } from '@manicjs/tailwind';

@@ -10,6 +10,7 @@ export interface NetlifyOptions {
   edge?: boolean;
 }
 
+/** Create the Netlify deployment provider. @see https://www.manicjs.tech/docs/framework/deployment#official-providers */
 export function netlify(options: NetlifyOptions = {}): ManicProvider {
   // Default to serverless functions for better compatibility
   const useEdge = options.edge ?? false;

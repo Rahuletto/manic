@@ -31,6 +31,7 @@ export interface SitemapConfig {
  *
  * @param config - Sitemap configuration
  * @returns ManicPlugin that generates sitemap.xml
+ * @see https://www.manicjs.tech/docs/framework/plugins/sitemap#options
  *
  * @example
  * import { sitemap } from '@manicjs/sitemap';

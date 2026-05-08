@@ -21,6 +21,7 @@ export interface ApiDocsOptions {
  *
  * @param options - API documentation options
  * @returns ManicPlugin for API docs
+ * @see https://www.manicjs.tech/docs/framework/plugins/api-docs#options
  *
  * @example
  * import { apiDocs } from '@manicjs/api-docs';

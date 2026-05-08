@@ -3,6 +3,7 @@ import type { ManicConfig } from 'manicjs/config';
 /**
  * Context passed to provider build functions
  * @interface BuildContext
+ * @see https://www.manicjs.tech/docs/core/providers-contract#interface
  */
 export interface BuildContext {
   /** Build output directory (typically ".manic") */
@@ -20,6 +21,7 @@ export interface BuildContext {
 /**
  * Interface for deployment providers
  * @interface ManicProvider
+ * @see https://www.manicjs.tech/docs/core/providers-contract#interface
  */
 export interface ManicProvider {
   /** Provider name (e.g., "vercel", "cloudflare", "netlify") */
