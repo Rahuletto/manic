@@ -8,18 +8,40 @@ Manic is a high-performance, production-grade React framework built from the gro
 
 ---
 
+## 🧭 Umbrella Repository Model
+
+This repository is now an umbrella repository that assembles the Manic ecosystem using git submodules.
+
+- `packages/*` and `plugins/*` are submodule gitlinks, each pointing to a separate repository under `manic-js`.
+- Changes made inside submodule directories must be committed and pushed in the submodule repository first.
+- The umbrella repository must then commit the updated submodule pointers.
+
+### Required Submodule Workflow
+
+When working in this umbrella repository, always follow this sequence:
+
+1. Edit inside submodule (e.g. `packages/manic`)
+2. Commit + push in that submodule repo
+3. Go to umbrella root `Coding/manic`
+4. Commit the submodule pointer change
+5. Push umbrella
+
+The umbrella pre-commit hook auto-stages submodule pointer changes, but you still need to commit and push them from the umbrella repo.
+
+---
+
 ## 📂 Repository Structure
 
-### Core Workspace
+### Core Workspace (Submodules + Local App/Test Surfaces)
 
 | Path                     | Purpose                                                           |
 | :----------------------- | :---------------------------------------------------------------- |
-| `packages/manic/`        | The core framework engine (CLI, runtime, router, server).         |
-| `packages/create-manic/` | CLI scaffolding tool (`bun create manic`) and project templates.  |
-| `packages/providers/`    | Deployment adapters for Vercel, Netlify, Cloudflare, and more.    |
+| `packages/manic/`        | Submodule: the core framework engine (CLI, runtime, router, server).         |
+| `packages/create-manic/` | Submodule: CLI scaffolding tool (`bun create manic`) and project templates.  |
+| `packages/providers/`    | Submodule: deployment adapters for Vercel, Netlify, Cloudflare, and more.    |
 | `demo/`                  | The primary development testbench for local feature verification. |
 | `examples/`              | Curated reference applications and integration patterns.          |
-| `plugins/`               | First-party Manic plugins.                                        |
+| `plugins/`               | Submodules for first-party Manic plugins.                          |
 
 ### Framework Internals (`packages/manic/src/`)
 
@@ -139,8 +161,8 @@ For contributors building plugins in this monorepo:
 
 ## 📝 Development Workflow
 
-1. **Feature Work**: Modify `packages/manic/src/`.
-2. **Plugin Work**: Modify packages under `plugins/` and follow `plugins/AGENTS.md`.
-3. **Local Validation**: Run `bun dev` or `bun build && bun start` in `demo/`.
-4. **Internal CLI Testing**: `bun run packages/manic/src/cli/index.ts <cmd>`.
-5. **Format/Lint**: Use `manic fmt` and `manic lint`.
+1. **Feature Work**: Modify code inside the relevant submodule directory.
+2. **Submodule Commit**: Commit and push in that submodule repository first.
+3. **Umbrella Pointer Sync**: Commit updated submodule pointers in umbrella root.
+4. **Local Validation**: Run `bun dev` or `bun build && bun start` in `demo/` as needed.
+5. **Publish/Release**: Use umbrella scripts only as orchestrators; source of truth is each submodule repo.

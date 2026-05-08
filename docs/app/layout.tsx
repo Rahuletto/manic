@@ -14,6 +14,9 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://manic.js.org'), // Fallback URL for SEO
+  verification: {
+    google: 'JGFgfGmGQs-FLZNMog1Uucr09OYHMwIKk6ORzv17-0o',
+  },
   icons: {
     icon: '/favicon.svg',
   },
