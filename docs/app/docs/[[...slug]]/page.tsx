@@ -63,8 +63,12 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
   return {
     title: page.data.title,
     description: page.data.description,
-    metadataBase: new URL('https://manic.js.org'),
+    metadataBase: new URL('https://manicjs.tech'),
+    alternates: {
+      canonical: page.url,
+    },
     openGraph: {
+      url: `https://manicjs.tech${page.url}`,
       images: [getPageImage(page).url],
     },
   };
