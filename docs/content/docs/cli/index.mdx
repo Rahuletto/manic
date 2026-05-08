@@ -15,6 +15,25 @@ With a global install (`bun add -g manicjs`), you can run **`manic`** without **
 
 ---
 
+## CLI TUI layer (`@manicjs/tui`)
+
+Manic CLI output is now routed through a shared terminal UI package: **`@manicjs/tui`**.
+
+- It centralizes brand styling (including Manic red **`#F15156`**), headers, status lines, and hint blocks.
+- It provides reusable prompt primitives (text input, confirm, arrow-key select) used by CLI tools like `create-manic`.
+- It is the single place to evolve command UX (spacing, visual hierarchy, status semantics, prompt interactions) without duplicating styles across commands.
+
+### For contributors
+
+When adding or updating CLI commands:
+
+1. Add command metadata in the registry (`packages/manic/src/cli/index.ts`) so `manic help` and `manic help <command>` stay accurate.
+2. Prefer `@manicjs/tui` helpers over inline `console.log` styling.
+3. Use semantic status helpers (`pending`, `success`, `error`) and keep command output concise.
+4. For interactive flows, use shared prompt utilities from `@manicjs/tui` (instead of ad-hoc readline logic).
+
+---
+
 ## Commands at a glance
 
 <Cards>

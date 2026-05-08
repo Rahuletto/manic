@@ -15,75 +15,17 @@
 import { mkdir, cp, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve as resolvePath, join } from 'path';
-import * as readline from 'readline';
 import { $ } from 'bun';
-
-/** @internal */
-const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
-/** @internal */
-const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
-/** @internal */
-const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
-/** @internal */
-const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
-/** @internal */
-const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
-/** @internal */
-const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
+import {
+  red,
+  green,
+  cyan,
+  yellow,
+  dim,
+  brandTitle,
+  PromptSession,
+} from '@manicjs/tui';
 const MIN_BUN_VERSION = '1.3.13';
-
-/** @internal */
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-/**
- * Prompts for a text answer
- * @param question - Question to ask
- * @param defaultValue - Default value if no answer provided
- * @returns User's answer or default
- * @internal
- */
-function ask(question: string, defaultValue?: string): Promise<string> {
-  const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
-  return new Promise(done => {
-    rl.question(`  ${question}${suffix}: `, answer => {
-      done(answer.trim() || defaultValue || '');
-    });
-  });
-}
-
-function askYesNo(
-  question: string,
-  defaultYes: boolean = true
-): Promise<boolean> {
-  const hint = defaultYes ? 'Y/n' : 'y/N';
-  return new Promise(done => {
-    rl.question(`  ${question} ${dim(`(${hint})`)}: `, answer => {
-      const a = answer.trim().toLowerCase();
-      if (a === '') done(defaultYes);
-      else done(a === 'y' || a === 'yes');
-    });
-  });
-}
-
-function askChoice(
-  question: string,
-  choices: string[],
-  defaultChoice: string
-): Promise<string> {
-  const choiceStr = choices
-    .map(c => (c === defaultChoice ? bold(c) : c))
-    .join(' / ');
-  return new Promise(done => {
-    rl.question(`  ${question} ${dim(`(${choiceStr})`)}: `, answer => {
-      const a = answer.trim().toLowerCase();
-      if (choices.includes(a)) done(a);
-      else done(defaultChoice);
-    });
-  });
-}
 
 function toPackageName(value: string): string {
   return value
@@ -166,7 +108,10 @@ async function getBunVersion(): Promise<string | null> {
   return result.stdout.toString().trim() || null;
 }
 
-async function ensureBunVersion(options: CliOptions): Promise<void> {
+async function ensureBunVersion(
+  options: CliOptions,
+  prompts: PromptSession
+): Promise<void> {
   const version = await getBunVersion();
   if (!version) {
     console.log(`\n${red('Error:')} Bun is not installed or not available in PATH.`);
@@ -194,10 +139,7 @@ async function ensureBunVersion(options: CliOptions): Promise<void> {
     process.exit(1);
   }
 
-  const shouldUpgrade = await askYesNo(
-    `Upgrade Bun now? ${dim('(runs: bun upgrade)')}`,
-    true
-  );
+  const shouldUpgrade = await prompts.confirm('Upgrade Bun now?');
 
   if (!shouldUpgrade) {
     console.log(
@@ -300,11 +242,12 @@ function parseArgs(args: string[]): {
 }
 
 async function main() {
+  const prompts = new PromptSession();
   const { positionalPath, options } = parseArgs(process.argv.slice(2));
-  await ensureBunVersion(options);
+  await ensureBunVersion(options, prompts);
 
   console.log(`
-${red(bold('■ MANIC'))}
+${brandTitle()}
 ${dim('--- --- --- --- ---')}
 `);
 
@@ -312,42 +255,42 @@ ${dim('--- --- --- --- ---')}
     ? (options.projectPath ?? positionalPath ?? 'my-manic-app')
     : (options.projectPath ??
       positionalPath ??
-      (await ask('Project path', 'my-manic-app')));
+      (await prompts.input('Project path', 'my-manic-app')));
   const projectPath = resolvePath(process.cwd(), normalizedPath);
   const pathParts = normalizedPath.split('/').filter(Boolean);
   const pathName = pathParts[pathParts.length - 1] || 'my-manic-app';
   const projectName = options.yes
     ? (options.projectName ?? pathName)
-    : (options.projectName ?? (await ask('Project name', pathName)));
+    : (options.projectName ?? (await prompts.input('Project name', pathName)));
 
   if (existsSync(projectPath)) {
     console.log(
       `\n${red('Error:')} Directory ${cyan(normalizedPath)} already exists.`
     );
-    rl.close();
+    prompts.close();
     process.exit(1);
   }
 
   const mode = options.yes
     ? (options.mode ?? 'fullstack')
     : (options.mode ??
-      (await askChoice('Project mode', ['fullstack', 'frontend'], 'fullstack')));
+      (await prompts.select('Project mode', ['fullstack', 'frontend'], 0)));
   const port = options.yes
     ? (options.port ?? '6070')
-    : (options.port ?? (await ask('Port', '6070')));
+    : (options.port ?? (await prompts.input('Port', '6070')));
   const isFrontend = mode === 'frontend';
   const includeDocs = isFrontend
     ? false
     : options.yes
       ? (options.includeDocs ?? true)
       : (options.includeDocs ??
-        (await askYesNo('Include API documentation (Scalar)?', true)));
+        (await prompts.confirm('Include API documentation (Scalar)?', true)));
   const viewTransitions = options.yes
     ? (options.viewTransitions ?? true)
-    : (options.viewTransitions ?? (await askYesNo('Enable View Transitions?', true)));
+    : (options.viewTransitions ?? (await prompts.confirm('Enable View Transitions?', true)));
   const installPackages = options.yes
     ? (options.install ?? false)
-    : (options.install ?? (await askYesNo('Install packages now?', true)));
+    : (options.install ?? (await prompts.confirm('Install packages now?', true)));
 
   console.log(`\n${dim('Creating project...')}\n`);
 
@@ -429,7 +372,7 @@ ${dim('Next steps:')}
   ${cyan('bun dev')}
 `);
 
-  rl.close();
+  prompts.close();
 }
 
 main().catch(e => {

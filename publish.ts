@@ -1,5 +1,19 @@
 #!/usr/bin/env bun
-import { ReadStream } from 'tty';
+import {
+  bold,
+  brandTitle,
+  cyan,
+  dim,
+  divider,
+  eventLine,
+  green,
+  PromptSession,
+  red,
+  sectionTitle,
+  statusError,
+  statusSuccess,
+  white,
+} from '@manicjs/tui';
 
 const PACKAGES = [
   {
@@ -18,6 +32,12 @@ const PACKAGES = [
     name: 'create-manic',
     path: 'packages/create-manic',
     dir: 'packages/create-manic',
+    group: 'Core',
+  },
+  {
+    name: '@manicjs/tui',
+    path: 'packages/tui',
+    dir: 'packages/tui',
     group: 'Core',
   },
   {
@@ -64,104 +84,6 @@ const PACKAGES = [
   },
 ];
 
-const R = '\x1b[0m',
-  RED = '\x1b[31m',
-  GREEN = '\x1b[32m',
-  CYAN = '\x1b[36m',
-  BOLD = '\x1b[1m',
-  DIM = '\x1b[2m';
-
-// ── Terminal input ────────────────────────────────────────────────────────────
-
-function readKey(): Promise<string> {
-  return new Promise(resolve => {
-    const tty = new ReadStream(0);
-    tty.setRawMode(true);
-    tty.resume();
-    tty.once('data', (buf: Buffer) => {
-      tty.setRawMode(false);
-      tty.destroy();
-      resolve(buf.toString());
-    });
-  });
-}
-
-// ── Prompt primitive ──────────────────────────────────────────────────────────
-
-type Item = { label: string; group?: string };
-
-function renderList(
-  title: string,
-  items: Item[],
-  cursor: number,
-  selected: Set<number>,
-  multi: boolean
-): string[] {
-  const lines: string[] = [
-    `  ${BOLD}${title}${R}  ${DIM}${multi ? 'space=toggle · a=all · ' : ''}↑↓=move · enter=confirm${R}`,
-    '',
-  ];
-  let lastGroup = '';
-  for (let i = 0; i < items.length; i++) {
-    const g = items[i].group;
-    if (g && g !== lastGroup) {
-      lastGroup = g;
-      lines.push(`  ${DIM}── ${g} ──${R}`);
-    }
-    const cur = i === cursor,
-      sel = selected.has(i);
-    const box = multi ? (sel ? `${GREEN}◉${R} ` : `${DIM}○${R} `) : '';
-    const lbl = cur ? `${CYAN}${BOLD}${items[i].label}${R}` : items[i].label;
-    lines.push(`  ${cur ? '›' : ' '} ${box}${lbl}`);
-  }
-  return lines;
-}
-
-async function pick(
-  title: string,
-  items: Item[],
-  multi: boolean
-): Promise<number[]> {
-  const selected = new Set<number>();
-  let cursor = 0;
-  let prevLineCount = 0;
-
-  const draw = () => {
-    const lines = renderList(title, items, cursor, selected, multi);
-    if (prevLineCount) {
-      // Move up line by line, erasing each
-      process.stdout.write(`\x1b[2K\x1b[1A`.repeat(prevLineCount) + '\x1b[2K');
-    }
-    process.stdout.write(lines.join('\n') + '\n');
-    prevLineCount = lines.length;
-  };
-
-  process.stdout.write('\x1b[?25l'); // hide cursor
-  draw();
-
-  while (true) {
-    const k = await readKey();
-    if (k === '\x03') {
-      process.stdout.write('\x1b[?25h\n');
-      process.exit(0);
-    }
-    if (k === '\r' || k === '\n') break;
-    if (k === '\x1b[A' || k === 'k') cursor = Math.max(0, cursor - 1);
-    if (k === '\x1b[B' || k === 'j')
-      cursor = Math.min(items.length - 1, cursor + 1);
-    if (multi && k === ' ')
-      selected.has(cursor) ? selected.delete(cursor) : selected.add(cursor);
-    if (multi && k === 'a')
-      selected.size === items.length
-        ? selected.clear()
-        : items.forEach((_, i) => selected.add(i));
-    draw();
-  }
-
-  process.stdout.write('\x1b[?25h\n'); // show cursor
-  return multi ? [...selected] : [cursor];
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function getVersion(p: string) {
@@ -185,73 +107,75 @@ function bump(v: string, t: string) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log(`\n${RED}${BOLD}■ MANIC${R} ${DIM}publisher${R}\n`);
+  const prompts = new PromptSession();
+  console.log(`\n${brandTitle('publisher')}`);
+  console.log(divider());
+  console.log(sectionTitle('Release Publisher'));
+  console.log(divider());
 
   const versions = await Promise.all(PACKAGES.map(p => getVersion(p.path)));
-
-  const selectedIdxs = await pick(
-    'Select packages to publish',
-    PACKAGES.map((p, i) => ({
-      label: `${p.name}  ${DIM}v${versions[i]}${R}`,
-      group: p.group,
-    })),
-    true
+  const choices = PACKAGES.map(
+    (pkg, i) => `${pkg.name} (${pkg.group}, v${versions[i]})`
   );
+  const groups = PACKAGES.map(pkg => pkg.group);
+  const selectedLabels = await prompts.multiSelect(
+    'Select packages to publish',
+    choices,
+    [],
+    groups
+  );
+  const selectedSet = new Set(selectedLabels);
+  const selectedIdxs = PACKAGES.map((pkg, i) => ({ pkg, i }))
+    .filter(({ i }) => selectedSet.has(choices[i]))
+    .map(({ i }) => i);
   if (!selectedIdxs.length) {
-    console.log('Nothing selected.');
+    console.log(eventLine('publish', 'nothing selected', 'warn'));
+    prompts.close();
     process.exit(0);
   }
 
-  const [bumpIdx] = await pick(
+  const bumpChoice = await prompts.select(
     'Version bump',
-    [
-      { label: 'patch  (x.y.z+1)' },
-      { label: 'minor  (x.y+1.0)' },
-      { label: 'major  (x+1.0.0)' },
-      { label: 'none   (keep current)' },
-    ],
-    false
+    ['patch', 'minor', 'major', 'none'],
+    0
   );
-  const bumpType = ['patch', 'minor', 'major', 'none'][bumpIdx];
+  const bumpType = bumpChoice as 'patch' | 'minor' | 'major' | 'none';
 
   const chosen = selectedIdxs.map(i => ({
     ...PACKAGES[i],
     current: versions[i],
   }));
   const newVersions: Record<string, string> = {};
-  console.log(`\n  ${BOLD}Preview${R}\n`);
+  console.log(`\n  ${bold('Preview')}\n`);
   for (const pkg of chosen) {
     const nv = bumpType === 'none' ? pkg.current : bump(pkg.current, bumpType);
     newVersions[pkg.name] = nv;
     const arrow =
       nv !== pkg.current
-        ? `${DIM}${pkg.current}${R} → ${GREEN}${nv}${R}`
-        : `${DIM}${pkg.current} (unchanged)${R}`;
-    console.log(`  ${GREEN}●${R} ${pkg.name}  ${arrow}`);
+        ? `${dim(pkg.current)} → ${green(nv)}`
+        : `${dim(`${pkg.current} (unchanged)`)}`;
+    console.log(`  ${green('●')} ${white(pkg.name)}  ${arrow}`);
   }
 
-  const [confirmIdx] = await pick(
-    '\nProceed?',
-    [{ label: 'Yes, publish' }, { label: 'Cancel' }],
-    false
-  );
-  if (confirmIdx !== 0) {
-    console.log('\nCancelled.');
+  const proceed = await prompts.confirm('Proceed with publish?', false);
+  if (!proceed) {
+    console.log(`\n${eventLine('publish', 'cancelled', 'warn')}`);
+    prompts.close();
     process.exit(0);
   }
 
   if (bumpType !== 'none') {
-    console.log(`\n  ${DIM}Bumping versions...${R}`);
+    console.log(`\n  ${dim('Bumping versions...')}`);
     for (const pkg of chosen) {
       await setVersion(pkg.path, newVersions[pkg.name]);
-      console.log(`  ${GREEN}✓${R} ${pkg.name} → ${newVersions[pkg.name]}`);
+      console.log(`  ${statusSuccess(`${pkg.name} → ${newVersions[pkg.name]}`)}`);
     }
   }
 
-  console.log(`\n  ${DIM}Publishing...${R}\n`);
+  console.log(`\n  ${dim('Publishing...')}\n`);
   let failed = 0;
   for (const pkg of chosen) {
-    process.stdout.write(`  ${DIM}Publishing ${pkg.name}...${R}\n`);
+    process.stdout.write(`  ${dim(`Publishing ${pkg.name}...`)}\n`);
     const proc = Bun.spawn(['bun', 'publish', '--access', 'public'], {
       cwd: pkg.dir,
       stdout: 'inherit',
@@ -260,13 +184,9 @@ async function main() {
     });
     const code = await proc.exited;
     if (code === 0) {
-      console.log(
-        `  ${GREEN}✓${R} ${pkg.name}  ${DIM}v${newVersions[pkg.name]}${R}`
-      );
+      console.log(statusSuccess(`${pkg.name}  ${dim(`v${newVersions[pkg.name]}`)}`));
     } else {
-      console.log(
-        `  ${RED}✗${R} ${pkg.name}  ${DIM}exited ${code} — reverting version${R}`
-      );
+      console.log(statusError(`${pkg.name} exited ${code} — reverting version`));
       await setVersion(pkg.path, pkg.current);
       failed++;
     }
@@ -274,9 +194,10 @@ async function main() {
 
   console.log(
     failed === 0
-      ? `\n  ${GREEN}${BOLD}All packages published successfully${R}\n`
-      : `\n  ${RED}${failed} package(s) failed${R}\n`
+      ? `\n  ${green(bold('All packages published successfully'))}\n`
+      : `\n  ${red(`${failed} package(s) failed`)}\n`
   );
+  prompts.close();
 }
 
 main().catch(e => {
