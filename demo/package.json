@@ -19,7 +19,7 @@
     "@manicjs/sitemap": "^1.0.5",
     "@manicjs/tailwind": "^1.0.5",
     "hono": "^4.12.18",
-    "manicjs": "^1.0.7",
+    "manicjs": "^1.0.9",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.0"
