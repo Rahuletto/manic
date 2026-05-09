@@ -4,7 +4,21 @@ set -e
 WORKSPACE_ROOT=$(pwd)
 MANIC_ORG="manic-js"
 
+# Detect protocol (SSH vs HTTPS) from current git config
+GIT_PROTO="https"
+if git config --get url."git@github.com:".insteadof > /dev/null 2>&1; then
+  GIT_PROTO="ssh"
+fi
+
+# Build base URL
+if [ "$GIT_PROTO" = "ssh" ]; then
+  BASE_URL="git@github.com:"
+else
+  BASE_URL="https://github.com/"
+fi
+
 echo "🚀 Setting up Manic workspace..."
+echo "   Using protocol: $GIT_PROTO"
 echo ""
 
 # Clone all repos from manic-js organization
@@ -26,13 +40,7 @@ REPOS=(
   "example-chatbot:example-chatbot"
 )
 
-# Special case: demo from Rahuletto/manic (already cloned as submodule init, or skip if exists)
-if [ ! -d "demo" ]; then
-  echo "📦 Cloning demo (Rahuletto/manic)..."
-  git clone https://github.com/Rahuletto/manic demo
-fi
-
-# Clone all other repos
+# Clone all repos
 for repo_pair in "${REPOS[@]}"; do
   IFS=':' read -r repo_name target_dir <<< "$repo_pair"
   
@@ -42,12 +50,23 @@ for repo_pair in "${REPOS[@]}"; do
   fi
   
   mkdir -p "$(dirname "$target_dir")"
+  
+  # Build repo URL
+  if [ "$GIT_PROTO" = "ssh" ]; then
+    REPO_URL="${BASE_URL}${MANIC_ORG}/${repo_name}.git"
+  else
+    REPO_URL="${BASE_URL}${MANIC_ORG}/${repo_name}.git"
+  fi
+  
   echo "📦 Cloning $MANIC_ORG/$repo_name → $target_dir"
-  git clone "https://github.com/$MANIC_ORG/$repo_name.git" "$target_dir"
+  git clone "$REPO_URL" "$target_dir"
 done
 
 echo ""
 echo "✅ All repos cloned successfully!"
+echo ""
+echo "Demo app is included in Rahuletto/manic (this repository)"
+echo "It's not cloned separately since it's the workspace root."
 echo ""
 echo "Next steps:"
 echo "  1. bun install       # Install and link workspaces"

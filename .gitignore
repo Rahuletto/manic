@@ -1,9 +1,6 @@
 # dependencies (bun install)
 node_modules
 
-# workspace lockfile (local only, each repo has its own)
-bun.lock
-
 # workspace directories (each is independent git repo)
 # These are cloned via setup.sh, not committed to umbrella
 core/

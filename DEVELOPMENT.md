@@ -31,21 +31,42 @@ This is a **Bun workspace** coordinating development across independent reposito
 
 ## Initial Setup
 
-### 1. Clone and initialize workspaces
+### 1. Clone workspace root
 
 ```bash
+# Use HTTPS (default)
 git clone https://github.com/Rahuletto/manic manic-workspace
 cd manic-workspace
-./setup.sh          # Clones all 16 repos into subdirectories
+
+# OR use SSH (if you have SSH keys configured)
+git clone git@github.com:Rahuletto/manic.git manic-workspace
+cd manic-workspace
 ```
+
+Run setup to clone all manic-js/* repos:
+
+```bash
+./setup.sh          # Clones all 16 manic-js/* repos into subdirectories
+```
+
+The setup script automatically detects your git protocol (SSH or HTTPS) from your git config and uses the same for cloning all repos.
+
+**Note on demo:** The `demo/` directory is included in the Rahuletto/manic repository (this repo). It is NOT cloned separately by setup.sh to avoid recursive cloning. The demo is the primary testbench for verifying framework changes.
 
 ### 2. Install dependencies
 
 ```bash
-bun install         # Links all workspaces, creates bun.lock
+bun install         # Links all workspaces, creates shared bun.lock
 ```
 
-This creates symlinks in `node_modules` pointing to each workspace, enabling hot reload during development.
+**Important:** The `bun.lock` file at the workspace root is committed to the repository. It ensures:
+- Reproducible builds across developers and CI/CD
+- Consistent dependency versions for the integrated workspace
+- All workspace packages see the same dependency tree locally
+
+**Note:** Individual packages (core, plugins, etc.) may have their own bun.lock files when used standalone outside the workspace.
+
+This command creates symlinks in `node_modules` pointing to each workspace, enabling hot reload during development.
 
 ## Development Workflow
 
@@ -164,9 +185,16 @@ cd ../plugins/tailwind && git push
 
 ### Q: What happens to bun.lock?
 
-It's local only. **Don't commit it.** Each repo has its own `bun.lock` (for CI/CD).
+The workspace root `bun.lock` **IS committed to the repository**. This is critical because:
 
-The workspace `bun.lock` ensures consistent versions during local development.
+- ✅ Ensures reproducible builds across developers
+- ✅ Prevents "works on my machine" dependency issues
+- ✅ Provides exact version pinning for the integrated workspace
+- ✅ Required by CI/CD pipelines for consistency
+
+**Each independent repo** (core, plugins, etc.) may also have its own `bun.lock` file when used standalone outside the workspace context.
+
+**Do not ignore the root bun.lock.** Commit it with your changes.
 
 ### Q: How do submodules compare?
 
