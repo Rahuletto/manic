@@ -5,6 +5,51 @@ description: Recent framework and CLI updates.
 
 # Changelog
 
+## 2026-05-09
+
+### Bundler extraction foundation (canary)
+
+- Introduced a new workspace package: `@manicjs/bundler`.
+- Moved full bundling pipeline ownership into `@manicjs/bundler`:
+  - lint gate
+  - client bundle
+  - plugin build hooks
+  - API route bundle
+  - server bundle
+  - minification
+  - provider build hooks
+- `manic build` is now a framework adapter that delegates to `@manicjs/bundler`.
+- Added `manic-bundler` CLI entrypoint so the bundler package can be used independently.
+- Moved shared bundler internals into modular files:
+  - `core.ts`
+  - `pipeline.ts`
+  - `types.ts`
+- Improved type safety and API docs for bundler contracts with explicit typed interfaces and JSDoc in `@manicjs/bundler`.
+- Standardized provider console styling on `@manicjs/tui`.
+- Bundler utility exports:
+  - `resolver`
+  - `formatSize`
+  - `formatTime`
+  - `getDirSize`
+  - `countRoutes`
+  - `minifyDir`
+- Updated lint toolchain to latest `oxlint` in workspace surfaces touched by extraction to avoid stale-rule parse failures.
+
+### Canary performance hardening
+
+- Added repeatable canary benchmark runner: `bun run perf:baseline` (writes `.tmp/canary-baseline.json`).
+- Enabled stricter (but conservative) client tree-shaking boundaries in `@manicjs/bundler` via chunk splitting while keeping framework behavior/API contracts unchanged.
+- Stopped double-minifying bundled server artifacts by minifying `server.js` directly (avoids redundant traversals).
+- Optimized route manifest generation to avoid unnecessary rewrites and reduce file-churn overhead in dev.
+- Added debug-level route telemetry (`MANIC_DEBUG=1`) for manifest sync duration and process RSS snapshots.
+- Hardened port cleanup to target listener processes only (`LISTEN`/`LISTENING`) so closing Manic does not terminate connected browser processes.
+- Removed process-group kill behavior from CLI port-release flow to avoid collateral shutdown of unrelated apps.
+- Canary benchmark snapshot after stricter tree-shaking pass (`stable-demo-runtime` vs `canary-runtime`):
+  - warm build time: **-3.81%**
+  - output size: **-21.5%** (`-92 KB`)
+  - gate status: `noBuildRegression=true`, `noSizeRegression=true`
+- Added standalone framework-builder docs for using `@manicjs/bundler` directly without `manicjs` runtime coupling.
+
 ## 2026-05-07
 
 ### CLI and scaffold improvements

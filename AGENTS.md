@@ -166,3 +166,11 @@ For contributors building plugins in this monorepo:
 3. **Umbrella Pointer Sync**: Commit updated submodule pointers in umbrella root.
 4. **Local Validation**: Run `bun dev` or `bun build && bun start` in `demo/` as needed.
 5. **Publish/Release**: Use umbrella scripts only as orchestrators; source of truth is each submodule repo.
+
+---
+
+## 📚 Docs Source Generation Rule (Required)
+
+- `docs/.source/*` is auto-generated typing output used by Twoslash in framework docs.
+- Do not manually edit files under `docs/.source/*`.
+- If `docs/.source/*` changes appear from generation/build/doc workflows, include them in the commit set even when those lines were not directly authored by the agent.

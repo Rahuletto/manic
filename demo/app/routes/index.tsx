@@ -1,4 +1,3 @@
-import { Link } from 'manicjs';
 import { useTheme } from 'manicjs/theme';
 import { useState, useCallback } from 'react';
 
@@ -84,13 +83,15 @@ export default function Home() {
       </div>
 
       <div className="mt-6 flex gap-6 md:flex-row flex-col items-start">
-        <Link
-          to="/build"
+        <a
+          href="https://www.manicjs.tech/docs/framework/benchmarks"
+          target="_blank"
+          rel="noopener noreferrer"
           className="btn-primary flex items-center justify-center"
           style={LINKBUTTON_STYLE}
         >
           How fast? →
-        </Link>
+        </a>
         <a
           href="https://manic-docs.vercel.app/"
           target="_blank"

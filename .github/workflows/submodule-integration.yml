@@ -1,0 +1,58 @@
+name: Umbrella Integration
+
+on:
+  pull_request:
+    paths:
+      - 'packages/**'
+      - 'plugins/**'
+      - '.gitmodules'
+      - 'demo/**'
+      - '.github/workflows/submodule-integration.yml'
+  push:
+    branches:
+      - main
+      - canary
+    paths:
+      - 'packages/**'
+      - 'plugins/**'
+      - '.gitmodules'
+      - 'demo/**'
+      - '.github/workflows/submodule-integration.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: submodule-integration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo-gate:
+    name: Framework Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout umbrella
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install umbrella dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Validate demo production build
+        working-directory: demo
+        run: bun run build
+
+      - name: Validate demo start boot
+        working-directory: demo
+        run: |
+          set -euo pipefail
+          timeout 25s bun run start >/tmp/demo-start.log 2>&1 || code=$?
+          if [ "${code:-0}" != "0" ] && [ "${code:-0}" != "124" ]; then
+            cat /tmp/demo-start.log
+            exit "${code}"
+          fi

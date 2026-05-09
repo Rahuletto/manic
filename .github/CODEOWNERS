@@ -1,0 +1,30 @@
+# Global default: all changes require framework maintainers review.
+* @Rahuletto
+
+# Governance and policy
+/.github/** @Rahuletto
+/AGENTS.md @Rahuletto
+/agents.toml @Rahuletto
+/.agents/** @Rahuletto
+
+# Core framework submodules (pointer changes)
+/packages/manic @Rahuletto
+/packages/create-manic @Rahuletto
+/packages/providers @Rahuletto
+/packages/tui @Rahuletto
+
+# First-party plugin submodules (pointer changes)
+/plugins/api-docs @Rahuletto
+/plugins/mcp @Rahuletto
+/plugins/mdx @Rahuletto
+/plugins/seo @Rahuletto
+/plugins/sitemap @Rahuletto
+/plugins/tailwind @Rahuletto
+/plugins/unocss @Rahuletto
+
+# Integration and release surfaces
+/demo/** @Rahuletto
+/examples/** @Rahuletto
+/docs/** @Rahuletto
+/scripts/** @Rahuletto
+/publish.ts @Rahuletto

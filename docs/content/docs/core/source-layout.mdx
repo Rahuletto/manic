@@ -9,7 +9,7 @@ Quick contributor map from repo root **`packages/manic/src/`**:
 
 | Directory | Role |
 | :--- | :--- |
-| **`cli/`** | **`manic`** commands · **`commands/build.ts`** production orchestration · **`plugins/oxc.ts`** Bun transform adapter |
+| **`cli/`** | **`manic`** commands · **`commands/build.ts`** framework adapter into `@manicjs/bundler` · **`plugins/oxc.ts`** Bun transform adapter |
 | **`config/`** | **`defineConfig`**, **`loadConfig`**, **`createPlugin`**, defaults merge |
 | **`router/`** | Client **`Router`**, **`Link`**, **`navigate`**, **`matcher.ts`** registry · **`Router.tsx`** navigation + VT gate |
 | **`server/`** | **`createManicServer`** · **`lib/discovery.ts`** manifests · **`lib/markdown.ts`** negotiation |
@@ -26,8 +26,10 @@ Published **`exports`** map those folders to **`manicjs/*`** subpaths ([Package 
 CLI terminal UI helpers live in a separate workspace package:
 
 - **`packages/tui/`** → published as **`@manicjs/tui`**
+- **`packages/bundler/`** → published as **`@manicjs/bundler`** (owns the full bundling pipeline + reusable bundler internals)
 
-This package is intentionally shared by `manicjs`, `create-manic`, and provider packages so terminal output and interactive prompts stay consistent.
+`@manicjs/tui` is intentionally shared by `manicjs`, `create-manic`, and provider packages so terminal output stays consistent.
+`@manicjs/bundler` is the extraction seam for reusable bundler internals while `manicjs` keeps framework-level orchestration.
 
 ---
 

@@ -123,3 +123,14 @@ flowchart TB
 - Cold = fresh cache; Warm = cache present from a prior run.
 - Results may vary by machine and project size.
 - Raw data and reproduction steps: [github.com/rahuletto/manic-benchmark](https://github.com/rahuletto/manic-benchmark)
+
+## Canary optimization snapshot
+
+Recent canary profiling (same demo workload, stable runtime vs canary runtime) after stricter tree-shaking boundaries:
+
+| Metric | Delta |
+|--------|------:|
+| Warm build mean | **-3.81%** |
+| Output size (`.manic`) | **-21.5%** (`-92 KB`) |
+
+These gains come from conservative pipeline optimizations (client chunk splitting + reduced redundant minify work) rather than risky third-party side-effect pruning.

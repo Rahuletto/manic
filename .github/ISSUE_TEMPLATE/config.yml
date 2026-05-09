@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Manic Documentation
+    url: https://manic-docs.vercel.app/
+    about: Read framework guides, APIs, and architecture docs.

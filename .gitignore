@@ -46,3 +46,4 @@ markdowns
 agents.lock
 .agents/.gitignore
 .vercel
+.tmp

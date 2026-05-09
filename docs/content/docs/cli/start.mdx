@@ -45,6 +45,10 @@ with **`cwd`** set to the project root and **`env`** extended with:
 
 Stdout/stderr are inherited so logs appear in your terminal.
 
+## Shutdown safety
+
+`manic start` teardown targets only the spawned production server process and listener-owner cleanup for the selected port. Connected client apps (such as browsers) are not treated as kill targets during normal shutdown.
+
 ## CLI flags
 
 Same global parsing as **`manic dev`**:

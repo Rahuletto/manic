@@ -31,3 +31,7 @@
 [submodule "plugins/unocss"]
 	path = plugins/unocss
 	url = https://github.com/manic-js/plugin-unocss.git
+[submodule "packages/bundler"]
+	path = packages/bundler
+	url = https://github.com/manic-js/bundler.git
+	branch = canary

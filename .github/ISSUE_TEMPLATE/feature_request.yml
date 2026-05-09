@@ -1,19 +1,26 @@
 name: Feature Request
-description: Propose a new feature or improvement
-labels: [enhancement]
+description: Propose a framework feature or product-level improvement
+labels: ["type: feature", "needs: triage"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Please explain the problem first, then the proposed design.
+        Requests with clear tradeoffs and constraints are prioritized.
+
   - type: textarea
     id: problem
     attributes:
-      label: Problem / motivation
-      description: What problem does this solve?
+      label: Problem statement
+      description: What problem are you solving and who is impacted?
     validations:
       required: true
 
   - type: textarea
-    id: solution
+    id: proposal
     attributes:
       label: Proposed solution
+      description: Include API/CLI shape, behavior, and expected DX.
     validations:
       required: true
 
@@ -21,17 +28,37 @@ body:
     id: alternatives
     attributes:
       label: Alternatives considered
+      description: What did you evaluate and why is this better?
 
-  - type: checkboxes
+  - type: dropdown
     id: scope
     attributes:
-      label: Affected area
+      label: Primary scope
       options:
-        - label: Build engine
-        - label: Router
-        - label: Server / SSR
-        - label: CLI
-        - label: Providers (Vercel / Netlify / Cloudflare)
-        - label: Config
-        - label: Plugins
-        - label: Docs
+        - CLI
+        - Build engine
+        - Router
+        - Server runtime
+        - API routes
+        - Plugin system
+        - Providers
+        - Docs
+        - Tooling/CI
+    validations:
+      required: true
+
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Non-goals
+      description: Explicitly state what this request does not try to solve.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Submission checklist
+      options:
+        - label: I searched existing issues/discussions.
+          required: true
+        - label: I can help validate this feature in real projects.
+          required: false

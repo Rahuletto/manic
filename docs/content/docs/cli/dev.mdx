@@ -66,7 +66,8 @@ After **`loadConfig()`**:
    | **`HOST`** | **`0.0.0.0`** if **`--network`**, else **`localhost`** |
    | **`NETWORK`** | **`true`** or **`false`** |
 
-4. **Config watch** — If **`manic.config.ts`** or **`manic.config.js`** exists at the repo root, **`fs.watch`** debounces (**100ms**) **kill + respawn** after re-importing the config module so plugins and bunfig stay in sync.
+4. **Config watch** — If **`manic.config.ts`** or **`manic.config.js`** exists at the repo root, **`fs.watch`** debounces (**160ms**) **kill + respawn** after re-importing the config module so plugins and bunfig stay in sync.
+5. **App graph watch** — `app/**` is watched for structural changes (`rename` on `tsx/jsx/css/mdx`) and schedules a restart so newly created components/routes are picked up without manual restarts.
 
 ---
 
@@ -75,6 +76,10 @@ After **`loadConfig()`**:
 React Fast Refresh is driven by the **OXC** transform pipeline injected during dev transforms (see **`oxc`** plugin). Behavior matches standard Fast Refresh expectations (preserve state where possible).
 
 Toggle **`server.hmr`** in **`manic.config.ts`** if you disable HMR at the framework level (**not** a **`manic dev --no-hmr`** flag—the CLI does not define one).
+
+## Shutdown safety
+
+`manic dev` only attempts to stop the spawned Manic server process and release the occupied listener port. Cleanup intentionally avoids process-group kills so quitting dev does not terminate unrelated apps (for example, browsers connected to localhost).
 
 ---
 
