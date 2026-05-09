@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "bash setup.sh && bun install --frozen-lockfile",
   "buildCommand": "cd demo && bun run build",
   "outputDirectory": "demo/.manic/client",
   "framework": "hono"
