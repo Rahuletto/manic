@@ -1,7 +1,7 @@
 {
   "name": "@manicjs/bundler",
   "version": "0.0.0-canary.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "bin": {
     "manic-bundler": "./src/cli.ts"
@@ -13,6 +13,9 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "manic-bundler build",
