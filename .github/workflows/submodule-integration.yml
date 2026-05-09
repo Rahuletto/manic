@@ -1,4 +1,4 @@
-name: Submodule Integration
+name: Umbrella Integration
 
 on:
   pull_request:
@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   demo-gate:
-    name: Demo Build Gate
+    name: Framework Integration
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
