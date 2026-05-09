@@ -1,32 +1,26 @@
 {
-  "name": "manic-monorepo",
-  "devDependencies": {
-    "@manicjs/tui": "workspace:*",
-    "@types/bun": "^1.3.13",
-    "next": "^16.2.6",
-    "oxc-minify": "^0.129.0",
-    "oxlint": "^1.63.0",
-    "typescript": "^6.0.3"
-  },
+  "name": "manic-workspace",
+  "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "dev": "cd demo && bun run dev",
-    "build": "cd demo && bun run build",
-    "perf:baseline": "bun scripts/dev/benchmark-canary.ts",
-    "perf:matrix": "bun run perf:baseline && cd demo && bun run build",
-    "typecheck": "cd packages/manic && bun run tsc --noEmit",
-    "publish": "bun run ./publish.ts",
-    "prepare": "bash scripts/install-local-hooks.sh",
-    "test:workspace": "bash scripts/run-workspace-tests.sh",
-    "test:workspace:full": "RUN_MANIC_INTEGRATION_TESTS=1 bash scripts/run-workspace-tests.sh",
-    "verify:framework": "bash scripts/verify-framework-gate.sh",
-    "verify:submodule": "bash scripts/verify-submodule-quality.sh"
-  },
+  "description": "Bun workspace for Manic framework development",
   "workspaces": [
-    "packages/*",
+    "core",
+    "bundler",
+    "providers",
+    "create-manic",
+    "tui",
     "plugins/*",
-    "demo",
     "docs",
-    "examples/*"
-  ]
+    "example-starter",
+    "example-chatbot",
+    "demo"
+  ],
+  "scripts": {
+    "setup": "bash setup.sh",
+    "dev": "cd demo && bun dev",
+    "build": "bun run -r build",
+    "test": "bun run -r test",
+    "release": "bash scripts/release.sh"
+  },
+  "devDependencies": {}
 }

@@ -1,0 +1,219 @@
+# Manic Development Setup
+
+This is a **Bun workspace** coordinating development across independent repositories in the `manic-js` organization.
+
+## Architecture
+
+```
+~/manic-workspace/
+├── core/                 (manic-js/core - main framework)
+├── bundler/              (manic-js/bundler - standalone bundler)
+├── providers/            (manic-js/providers - deployment adapters)
+├── create-manic/         (manic-js/create-manic - CLI scaffolding)
+├── tui/                  (manic-js/tui - terminal UI)
+├── plugins/
+│   ├── tailwind/         (manic-js/plugin-tailwind)
+│   ├── unocss/           (manic-js/plugin-unocss)
+│   ├── mdx/              (manic-js/plugin-mdx)
+│   ├── mcp/              (manic-js/plugin-mcp)
+│   ├── seo/              (manic-js/plugin-seo)
+│   ├── sitemap/          (manic-js/plugin-sitemap)
+│   └── api-docs/         (manic-js/plugin-api-docs)
+├── docs/                 (manic-js/docs)
+├── example-starter/      (manic-js/example-starter)
+├── example-chatbot/      (manic-js/example-chatbot)
+├── demo/                 (Rahuletto/manic - testbench)
+│
+├── package.json          (workspace root config)
+├── bun.lock              (shared lockfile - LOCAL ONLY)
+└── DEVELOPMENT.md        (this file)
+```
+
+## Initial Setup
+
+### 1. Clone and initialize workspaces
+
+```bash
+git clone https://github.com/Rahuletto/manic manic-workspace
+cd manic-workspace
+./setup.sh          # Clones all 16 repos into subdirectories
+```
+
+### 2. Install dependencies
+
+```bash
+bun install         # Links all workspaces, creates bun.lock
+```
+
+This creates symlinks in `node_modules` pointing to each workspace, enabling hot reload during development.
+
+## Development Workflow
+
+### Working on a package
+
+Edit directly in the workspace directory:
+
+```bash
+# Edit a plugin
+edit plugins/tailwind/src/index.ts
+
+# Changes are immediately reflected in demo via symlinks
+cd demo && bun dev
+```
+
+### Push changes to individual repo
+
+Each directory is a full git repository. Push changes normally:
+
+```bash
+cd plugins/tailwind
+git add src/index.ts
+git commit -m "feat: update tailwind integration"
+git push origin main     # Pushes to manic-js/plugin-tailwind
+```
+
+### Update root workspace
+
+Only change DEVELOPMENT.md, setup.sh, or package.json here. Rarely needed.
+
+```bash
+git add DEVELOPMENT.md
+git commit -m "docs: update setup instructions"
+git push origin main     # Pushes to Rahuletto/manic
+```
+
+## Commands
+
+### Start demo dev server
+
+```bash
+bun run dev         # Equivalent to: cd demo && bun dev
+```
+
+All workspace packages are symlinked and hot-reload on changes.
+
+### Build all packages
+
+```bash
+bun run build       # Runs `bun run build` in each workspace
+```
+
+### Run tests
+
+```bash
+bun run test        # Runs `bun run test` in each workspace
+```
+
+### Release packages
+
+```bash
+bun run release     # Publishes all packages to npm (coordinated)
+```
+
+## Hot Reload & Local Linking
+
+When you run `bun install`, Bun automatically:
+
+1. Detects workspaces in `package.json`
+2. Creates symlinks in `node_modules/@manicjs/*` → to each package's `src/`
+3. Watches files in demo
+
+```bash
+# Example: edit plugin-tailwind
+edit plugins/tailwind/src/index.ts
+# save → demo's dev server detects change → hot reloads
+```
+
+**No build step needed.** Direct source file watching.
+
+## FAQ
+
+### Q: How do I add a new package to the workspace?
+
+1. Clone the repo into the appropriate directory
+2. Add it to `workspaces` in `package.json`
+3. Run `bun install` again
+
+### Q: What if I want to work on one repo only?
+
+Clone it standalone:
+
+```bash
+git clone https://github.com/manic-js/plugin-mdx
+cd plugin-mdx
+bun install
+bun test
+```
+
+The workspace is optional; each repo works independently.
+
+### Q: How are releases coordinated?
+
+Each repo publishes independently via CI/CD. Optional: use `scripts/release.sh` to batch-publish all at once.
+
+### Q: Can I push to multiple repos at once?
+
+No. Each repo has its own git history. Push individually:
+
+```bash
+cd core && git push
+cd ../bundler && git push
+cd ../plugins/tailwind && git push
+# etc
+```
+
+### Q: What happens to bun.lock?
+
+It's local only. **Don't commit it.** Each repo has its own `bun.lock` (for CI/CD).
+
+The workspace `bun.lock` ensures consistent versions during local development.
+
+### Q: How do submodules compare?
+
+**Submodules (❌ old):** Tracked commit pointers in umbrella, merge conflicts, complex workflow.
+
+**Workspaces (✅ new):** Just symlinked directories, each repo is independent, simple push flow.
+
+## Troubleshooting
+
+### Hot reload not working?
+
+Ensure demo is running with `bun dev`:
+
+```bash
+cd demo && bun dev
+```
+
+Check that the package is listed in demo's `package.json` dependencies.
+
+### Lockfile conflicts?
+
+The workspace `bun.lock` is local. Delete and regenerate:
+
+```bash
+rm bun.lock
+bun install
+```
+
+### Clone failed?
+
+Check GitHub token:
+
+```bash
+gh auth status
+```
+
+Ensure you have access to manic-js org repos.
+
+## Resources
+
+- **Bun Workspaces:** https://bun.sh/docs/cli/install#workspaces
+- **Manic Docs:** https://manic-docs.vercel.app
+- **Contributing:** See CONTRIBUTING.md in each repo
+
+## Questions?
+
+Open an issue in the appropriate repo:
+- Core framework: https://github.com/manic-js/core/issues
+- Specific plugin: https://github.com/manic-js/plugin-{name}/issues
+- Demo/testbench: https://github.com/Rahuletto/manic/issues
