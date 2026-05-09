@@ -32,7 +32,7 @@ Each submodule `.github/workflows/ci.yml` MUST run these scripts in that exact o
 ## Failure Policy
 
 - Any failure in required CI scripts is merge-blocking.
-- Any submodule pointer change in umbrella MUST pass `Submodule Integration` (`demo` build gate).
+- Any submodule pointer change in umbrella MUST pass `Framework Integration`.
 - If a package/plugin change causes `demo` integration failure, the change is considered regressive and MUST be fixed before merge.
 
 ## Workflow Hygiene

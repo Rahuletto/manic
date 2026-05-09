@@ -6,7 +6,7 @@ This runbook defines required branch-protection settings for `main` and `canary`
 
 For umbrella repository:
 
-- `Submodule Integration / Demo Build Gate`
+- `Framework Integration`
 
 For each submodule repository (`packages/*`, `plugins/*`), require:
 
@@ -17,9 +17,8 @@ For each submodule repository (`packages/*`, `plugins/*`), require:
 Enable all of the following:
 
 - Require a pull request before merging
-- Require approvals: minimum 1
+- Require approvals: minimum 0 (solo maintainer friendly)
 - Dismiss stale pull request approvals when new commits are pushed
-- Require review from Code Owners
 - Require status checks to pass before merging
 - Require branches to be up to date before merging
 - Require conversation resolution before merging
@@ -41,14 +40,28 @@ gh api \
   -X PUT \
   repos/Rahuletto/manic/branches/main/protection \
   -H "Accept: application/vnd.github+json" \
-  -f required_status_checks.strict=true \
-  -f required_status_checks.contexts[]='Submodule Integration / Demo Build Gate' \
-  -F enforce_admins=true \
-  -f required_pull_request_reviews.dismiss_stale_reviews=true \
-  -f required_pull_request_reviews.require_code_owner_reviews=true \
-  -f required_pull_request_reviews.required_approving_review_count=1 \
-  -f required_conversation_resolution=true \
-  -f restrictions=
+  --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["Framework Integration"]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 0
+  },
+  "restrictions": null,
+  "required_conversation_resolution": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creations": false,
+  "required_linear_history": false,
+  "lock_branch": false,
+  "allow_fork_syncing": true
+}
+JSON
 ```
 
 Set protection for `canary`:
@@ -58,14 +71,28 @@ gh api \
   -X PUT \
   repos/Rahuletto/manic/branches/canary/protection \
   -H "Accept: application/vnd.github+json" \
-  -f required_status_checks.strict=true \
-  -f required_status_checks.contexts[]='Submodule Integration / Demo Build Gate' \
-  -F enforce_admins=true \
-  -f required_pull_request_reviews.dismiss_stale_reviews=true \
-  -f required_pull_request_reviews.require_code_owner_reviews=true \
-  -f required_pull_request_reviews.required_approving_review_count=1 \
-  -f required_conversation_resolution=true \
-  -f restrictions=
+  --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["Framework Integration"]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 0
+  },
+  "restrictions": null,
+  "required_conversation_resolution": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creations": false,
+  "required_linear_history": false,
+  "lock_branch": false,
+  "allow_fork_syncing": true
+}
+JSON
 ```
 
 ## Verify

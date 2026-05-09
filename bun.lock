@@ -80,7 +80,7 @@
     },
     "packages/bundler": {
       "name": "@manicjs/bundler",
-      "version": "0.0.0-canary.1",
+      "version": "0.0.0-canary.0",
       "bin": {
         "manic-bundler": "./src/cli.ts",
       },
@@ -1597,6 +1597,8 @@
     "fumadocs-docgen/oxc-transform": ["oxc-transform@0.124.0", "", { "optionalDependencies": { "@oxc-transform/binding-android-arm-eabi": "0.124.0", "@oxc-transform/binding-android-arm64": "0.124.0", "@oxc-transform/binding-darwin-arm64": "0.124.0", "@oxc-transform/binding-darwin-x64": "0.124.0", "@oxc-transform/binding-freebsd-x64": "0.124.0", "@oxc-transform/binding-linux-arm-gnueabihf": "0.124.0", "@oxc-transform/binding-linux-arm-musleabihf": "0.124.0", "@oxc-transform/binding-linux-arm64-gnu": "0.124.0", "@oxc-transform/binding-linux-arm64-musl": "0.124.0", "@oxc-transform/binding-linux-ppc64-gnu": "0.124.0", "@oxc-transform/binding-linux-riscv64-gnu": "0.124.0", "@oxc-transform/binding-linux-riscv64-musl": "0.124.0", "@oxc-transform/binding-linux-s390x-gnu": "0.124.0", "@oxc-transform/binding-linux-x64-gnu": "0.124.0", "@oxc-transform/binding-linux-x64-musl": "0.124.0", "@oxc-transform/binding-openharmony-arm64": "0.124.0", "@oxc-transform/binding-wasm32-wasi": "0.124.0", "@oxc-transform/binding-win32-arm64-msvc": "0.124.0", "@oxc-transform/binding-win32-ia32-msvc": "0.124.0", "@oxc-transform/binding-win32-x64-msvc": "0.124.0" } }, "sha512-uxVsQFZAaMv4cL3ijc1tx0WczUoBJBbwIFbtTf2QOdRww1s12Ib8dGc5Og63Fh4tmHt9ajYu+9BjxCRSL0b9/g=="],
 
     "manic-demo/@manicjs/tailwind": ["@manicjs/tailwind@1.0.3", "", { "dependencies": { "bun-plugin-tailwind": "^0.1.2" } }, "sha512-+tzj7wegcK6HNZ+PydYSYZ5z2tiCmFTy8edQLt2GJnLrfJdB0lLjzHlY6vQw7Iph7QDSUxNDB6xPVVUx/0gqjg=="],
+
+    "manicjs/@manicjs/bundler": ["@manicjs/bundler@0.0.0-canary.1", "", { "dependencies": { "oxc-minify": "^0.129.0", "oxc-resolver": "^11.19.1" }, "bin": { "manic-bundler": "src/cli.ts" } }, "sha512-AD4ygfnCGNspB1MxZA5ypHjS/ScBOW72wfTydntDnGgNLJheooN3/Z6n5pssfimD5SQtPlXEZbvstFKtRblRQg=="],
 
     "next/postcss": ["postcss@8.4.31", "", { "dependencies": { "nanoid": "^3.3.6", "picocolors": "^1.0.0", "source-map-js": "^1.0.2" } }, "sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ=="],
 
