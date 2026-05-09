@@ -5,6 +5,12 @@ on:
     branches: [main, workspace/*, sync/*]
   pull_request:
     branches: [main]
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   validate-workspace:
@@ -34,7 +40,10 @@ jobs:
       - name: Verify documentation
         run: |
           test -f DEVELOPMENT.md || { echo "Missing DEVELOPMENT.md"; exit 1; }
-          test -f AI_AGENT_CHECKLIST.md || { echo "Missing AI_AGENT_CHECKLIST.md"; exit 1; }
+          test -f AI_AGENT_CHECKLIST.md || test -f .agents/AI_AGENT_CHECKLIST.md || {
+            echo "Missing AI_AGENT_CHECKLIST.md (root or .agents/)"
+            exit 1
+          }
           test -f AGENTS.md || { echo "Missing AGENTS.md"; exit 1; }
           test -f .github/CONFIG_SYNC.md || { echo "Missing .github/CONFIG_SYNC.md"; exit 1; }
           echo "✓ All required documentation present"
