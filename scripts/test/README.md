@@ -1,26 +1,39 @@
-# Workspace Test Suite
+# Workspace Testing & Quality
 
-Bun test runner for validating the Manic workspace across all packages and the demo app.
+Distributed testing across all workspace packages using Bun's test runner.
 
-## Test Files
+## Test Structure
 
-- **`scripts/test/workspace.test.ts`** — Workspace structure and package validation
-  - Verifies bun.lock exists
-  - Validates package.json workspaces config
-  - Checks required documentation files
-  - Verifies quality config files (.oxlintrc.json, .oxfmt.json)
-  - Validates all packages and plugins exist
+Each package in the workspace manages its own tests:
 
-- **`demo/app/routes/index.test.tsx`** — Demo page routes tests
-- **`demo/app/api/health.test.ts`** — Demo API routes tests
+- **core** (`packages/manic`)
+  - `test:cli` — CLI command tests
+  - `test:e2e` — End-to-end integration tests
+  - `test:framework` — Framework validation against demo
 
-Each package under `packages/*/`, `plugins/*/`, and the demo can have its own `.test.ts` files.
+- **bundler** (`packages/bundler`)
+  - Has its own test suite
+  
+- **plugins** (`plugins/*`)
+  - Each plugin has smoke tests
 
-## Usage
+- **demo** (`demo/`)
+  - Integration tests
 
-### Run all tests
+## Running Tests
+
+### Run all workspace tests
 ```bash
 bun test
+# or
+bun run test
+```
+
+### Run tests for a specific package
+```bash
+cd core && bun run test
+cd bundler && bun run test
+cd plugins/tailwind && bun run test
 ```
 
 ### Run tests in watch mode
@@ -28,19 +41,31 @@ bun test
 bun run test:watch
 ```
 
-### Run specific test file
+## Linting & Formatting
+
+### Lint workspace packages
 ```bash
-bun test scripts/test/workspace.test.ts
+bun run lint
 ```
 
-### Run with filtering
+### Check formatting
 ```bash
-bun test --name "Workspace"
+bun run format
+```
+
+### CI linting (all files)
+```bash
+bun run ci:lint
+```
+
+### CI formatting check
+```bash
+bun run ci:format
 ```
 
 ## Pre-push Hook
 
-The `.githooks/pre-push` hook automatically runs `bun test` before each push.
+The `.githooks/pre-push` hook automatically runs tests before each push.
 
 Install the hook:
 ```bash
@@ -54,44 +79,48 @@ git push --no-verify
 
 ## Test Coverage
 
-✅ **Workspace Structure**
-- bun.lock present and valid
-- package.json has workspaces config
-- All required documentation files exist
-- Quality config files (.oxlintrc.json, .oxfmt.json) present
-- Git hooks configured
+Each package is responsible for its own tests:
 
-✅ **Packages**
-- Core, bundler, providers, create-manic, tui
-- Each has valid package.json
-- Entry points defined
+✅ **Core** (`manicjs`)
+- CLI commands validation
+- Framework integration with demo
+- Route generation
+- API mounting
+- Plugin loading
+
+✅ **Bundler** (`@manicjs/bundler`)
+- Build output artifacts
+- Code splitting
+- Minification
+- Tree shaking
 
 ✅ **Plugins**
-- tailwind, unocss, mdx, mcp, seo, sitemap, api-docs
-- Each has valid package.json
-- Main export defined
+- Plugin descriptor validation
+- Config generation
+- Integration tests
 
-✅ **Demo App**
-- Page routes have test files
-- API routes have test files
-- Tests run successfully
+✅ **Providers**
+- Deployment adapter tests
+
+✅ **Demo**
+- Framework feature validation
+- Real-world usage patterns
 
 ## Writing Tests
 
-Add test files anywhere in the workspace:
+Add `.test.ts` files in any package:
 
 ```typescript
-// demo/app/routes/about.test.tsx
 import { describe, it, expect } from "bun:test";
 
-describe("About Page", () => {
-  it("should render about page", () => {
+describe("Feature", () => {
+  it("should work", () => {
     expect(true).toBe(true);
   });
 });
 ```
 
-Tests are discovered automatically by Bun and run with `bun test`.
+Tests are discovered automatically and run with `bun test` or `bun run test`.
 
 ## Exit Codes
 
