@@ -58,7 +58,7 @@
     },
     "create-manic": {
       "name": "create-manic",
-      "version": "1.0.10",
+      "version": "1.0.12",
       "bin": {
         "create-manic": "./index.ts",
       },
@@ -75,9 +75,9 @@
         "@manicjs/providers": "^1.1.1",
         "@manicjs/seo": "^1.0.5",
         "@manicjs/sitemap": "^1.0.5",
-        "@manicjs/tailwind": "^1.0.5",
+        "@manicjs/tailwind": "^1.0.6",
         "hono": "^4.12.18",
-        "manicjs": "^1.0.7",
+        "manicjs": "^1.0.9",
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
         "tailwindcss": "^4.3.0",
@@ -214,7 +214,7 @@
     },
     "plugins/tailwind": {
       "name": "@manicjs/tailwind",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "dependencies": {
         "bun-plugin-tailwind": "^0.1.2",
       },
