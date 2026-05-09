@@ -18,7 +18,9 @@
     "publish": "bun run ./publish.ts",
     "prepare": "bash scripts/install-local-hooks.sh",
     "test:workspace": "bash scripts/run-workspace-tests.sh",
-    "test:workspace:full": "RUN_MANIC_INTEGRATION_TESTS=1 bash scripts/run-workspace-tests.sh"
+    "test:workspace:full": "RUN_MANIC_INTEGRATION_TESTS=1 bash scripts/run-workspace-tests.sh",
+    "verify:framework": "bash scripts/verify-framework-gate.sh",
+    "verify:submodule": "bash scripts/verify-submodule-quality.sh"
   },
   "workspaces": [
     "packages/*",
