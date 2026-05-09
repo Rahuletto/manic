@@ -24,6 +24,8 @@ I will preserve Manic's architecture, protect reliability, and refuse shortcuts 
 3. Agents MUST NOT use `git commit --trailer ...`.
 4. Agents MUST NOT append trailer blocks such as `Signed-off-by:`, `Co-authored-by:`, or similar metadata unless maintainers explicitly require it for a specific change.
 5. If a tool auto-inserts trailers, agents MUST remove them before finalizing commits unless explicitly required.
+6. `docs/.source/*` is auto-generated Twoslash typing output. Agents MUST NOT edit these files manually.
+7. If `docs/.source/*` changes are present from generation steps, agents MUST include those changes in the relevant commit, even if the agent did not directly author each line.
 
 ## 3) Plan-First Execution Discipline
 
