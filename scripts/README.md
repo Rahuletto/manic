@@ -14,7 +14,10 @@ This directory contains umbrella-level automation scripts.
 - `verify-framework-gate.sh`:
   Runs umbrella framework gate checks (`bun run build`).
 - `verify-submodule-quality.sh`:
-  Runs best-available quality checks in a submodule (`ci:*`, `validate`, or `lint`).
+  Runs best-available quality checks in submodules (`ci:lint`, `validate`, or `lint`).
+
+## Dev scripts (`scripts/dev/`)
+
 - `benchmark-canary.ts`:
   Performance baseline benchmarking script for canary runtime comparisons.
 - `generate-plugin-agents.ts`:
@@ -26,3 +29,4 @@ This directory contains umbrella-level automation scripts.
 - `bun run test:workspace:full`
 - `bun run verify:framework`
 - `bun run verify:submodule`
+- `bun run perf:baseline`
