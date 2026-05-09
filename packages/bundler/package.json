@@ -40,5 +40,9 @@
     "oxfmt": "^0.48.0",
     "oxlint": "^1.63.0",
     "typescript": "^6.0.3"
-  }
+  },
+  "files": [
+    "src/**/*",
+    "README.md"
+  ]
 }
