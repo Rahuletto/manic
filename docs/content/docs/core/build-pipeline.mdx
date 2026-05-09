@@ -23,7 +23,7 @@ flowchart TD
   PB["Plugin build hooks + reinject HTML"]
   AB["Bun.build API entries"]
   SB["Bun.build server.js"]
-  MN["Parallel oxc-minify client api root"]
+  MN["Parallel oxc-minify client api server.js"]
   STAT["Print sizes timing"]
   PV["provider.build adapters"]
 
@@ -46,7 +46,7 @@ flowchart TD
 | **8 · API bundles** | **`app/api/**/index.ts`** | Skipped when **`mode === 'frontend'`** or folder missing |
 | **9 · RFC catalog** | **`<outdir>/client/.well-known/api-catalog`** | Written when ≥1 API bundle exists |
 | **10 · Server bundle** | **`~manic.ts`** → **`server.js`** | Rewrites HTML import + temp **`_entry.ts`** |
-| **11 · Minify** | **JS under client / api / dist root** | **`minifySync`**, **`es2022`**, mangle |
+| **11 · Minify** | **JS under client / api + `server.js`** | **`minifySync`**, **`es2022`**, mangle; avoids redundant full-root traversal |
 | **12 · Providers** | Adapter-specific dirs | Executes **after** minification completes |
 
 ---
@@ -93,6 +93,7 @@ There is **no** **`manic build --debug`** flag in the CLI — instrumentation me
 ## See also
 
 - [Bundler transform](/docs/core/bundler-transform) — **`oxcPlugin`**, **`Bun.build`** matrices
+- [Bundler standalone guide](/docs/core/bundler-standalone) — reuse `@manicjs/bundler` in your own framework
 - [Discovery engine](/docs/core/discovery-engine) — manifest contents
 - [Performance model](/docs/core/performance-model) — why stages cost what they cost
 - [manic build CLI](/docs/cli/build) — operator workflows
