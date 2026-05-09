@@ -1,16 +1,19 @@
 name: Bug Report
-description: Report a bug in Manic
-labels: [bug]
+description: Report a reproducible defect in Manic framework behavior
+labels: ["type: bug", "needs: triage"]
 body:
   - type: markdown
     attributes:
-      value: Please search existing issues before filing a new one.
+      value: |
+        Thanks for reporting this issue.
+        Please search existing issues first and provide a minimal reproduction.
 
   - type: input
-    id: version
+    id: manic-version
     attributes:
       label: Manic version
-      placeholder: e.g. 0.3.1
+      description: The exact `manicjs` version or commit SHA.
+      placeholder: e.g. 0.12.0
     validations:
       required: true
 
@@ -18,28 +21,69 @@ body:
     id: bun-version
     attributes:
       label: Bun version
-      placeholder: e.g. 1.2.0
+      description: Output of `bun --version`.
+      placeholder: e.g. 1.2.15
     validations:
       required: true
 
-  - type: textarea
-    id: description
+  - type: input
+    id: os
     attributes:
-      label: Description
-      description: What happened? What did you expect?
+      label: OS and architecture
+      description: Include distro/version and CPU architecture.
+      placeholder: e.g. macOS 15.4 (arm64), Ubuntu 24.04 (x64)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact-area
+    attributes:
+      label: Impacted area
+      options:
+        - CLI
+        - Build engine
+        - Router
+        - Server runtime
+        - API routes
+        - Plugin system
+        - Providers
+        - Docs
+        - Other
     validations:
       required: true
 
   - type: textarea
     id: reproduction
     attributes:
-      label: Reproduction
-      description: Minimal steps or repo to reproduce the issue.
+      label: Minimal reproduction
+      description: Provide exact steps and a repro repository/link if available.
+      placeholder: |
+        1. bun create manic my-app
+        2. cd my-app
+        3. bunx manic build
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Relevant logs / errors
+      label: Logs, stack traces, screenshots
+      description: Paste relevant logs or links.
       render: shell
+    validations:
+      required: true

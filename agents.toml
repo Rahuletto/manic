@@ -11,3 +11,23 @@ source = "getsentry/dotagents"
 [[skills]]
 name = "manic-framework"
 source = "path:manic-skill"
+
+[[skills]]
+name = "manic-framework-builder"
+source = "path:.agents/skills/manic-framework-builder"
+
+[[skills]]
+name = "code-quality-enforcer"
+source = "path:.agents/skills/code-quality-enforcer"
+
+[[skills]]
+name = "perf-efficiency"
+source = "path:.agents/skills/perf-efficiency"
+
+[[skills]]
+name = "framework-docs-pro"
+source = "path:.agents/skills/framework-docs-pro"
+
+[[skills]]
+name = "submodule-ci-guardian"
+source = "path:.agents/skills/submodule-ci-guardian"
