@@ -16,11 +16,12 @@
     "demo"
   ],
   "scripts": {
-    "setup": "bash setup.sh",
+    "setup": "bash setup.sh && bash scripts/install-local-hooks.sh",
     "dev": "cd demo && bun dev",
     "build": "bun run -r build",
-    "test": "bun run -r test",
-    "release": "bash scripts/release.sh"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "hooks": "bash scripts/install-local-hooks.sh"
   },
   "devDependencies": {}
 }
