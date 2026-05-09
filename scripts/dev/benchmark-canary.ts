@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+/* eslint-disable no-await-in-loop */
+// Note: This dev script intentionally awaits sequentially for accurate timing
 import { mkdir, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -37,7 +39,7 @@ async function dirSizeKb(dir: string): Promise<number> {
   const stdout = await new Response(proc.stdout).text();
   const code = await proc.exited;
   if (code !== 0) return 0;
-  const value = Number.parseInt(stdout.trim().split(/\s+/)[0] ?? '0', 10);
+  const value = Number.parseInt(stdout.trim().split(/\s+/u)[0] ?? '0', 10);
   return Number.isFinite(value) ? value : 0;
 }
 
