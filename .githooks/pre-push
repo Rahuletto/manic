@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pre-push hook: Run tests before pushing
+# Pre-push hook: Ensure deployable manifests use npm versions, then run tests.
 
 set -e
 
@@ -10,6 +10,55 @@ echo "🔐 Running pre-push validation..."
 echo ""
 
 cd "$WORKSPACE_ROOT"
+
+# If you only `git add` and never `git commit`, push is a no-op and CI will not run.
+UPSTREAM=$(git rev-parse --abbrev-ref "@{upstream}" 2>/dev/null || true)
+AHEAD=0
+if [ -n "$UPSTREAM" ]; then
+  AHEAD=$(git rev-list --count "${UPSTREAM}..HEAD" 2>/dev/null) || AHEAD=0
+fi
+if [ "${AHEAD:-0}" -eq 0 ] && ! git diff --cached --quiet 2>/dev/null; then
+  echo ""
+  echo "❌ You have staged changes but nothing to push (0 commits ahead of ${UPSTREAM:-upstream})."
+  echo "   Commit first; then CI will run on the next push."
+  echo ""
+  echo "   git commit -m 'your message'"
+  echo "   git push"
+  echo ""
+  echo "—"
+  echo "Note: Git may print 'error: failed to push some refs' after this. That only means the"
+  echo "pre-push hook aborted locally — not a rejection from GitHub. After you commit, push again."
+  echo ""
+  exit 1
+fi
+if [ -n "$UPSTREAM" ] && [ "${AHEAD:-0}" -eq 0 ]; then
+  echo "ℹ️  Branch matches ${UPSTREAM} (nothing new to push). Skip push if you expected CI from new commits."
+  echo ""
+fi
+
+# Remote installs (Vercel) cannot resolve workspace: — sibling repos are not in git.
+echo "📌 Resolving workspace: protocol in demo/docs (if any)..."
+bun "$WORKSPACE_ROOT/scripts/resolve-workspace-deps-for-push.ts"
+bun install
+
+if ! git diff --quiet -- demo/package.json docs/package.json bun.lock 2>/dev/null; then
+  echo ""
+  echo "❌ package.json or bun.lock still differ after resolving workspace: protocol."
+  echo "   Commit the updated files, then push:"
+  echo ""
+  echo "     git add demo/package.json docs/package.json bun.lock"
+  echo "     git commit -m 'chore: resolve workspace deps for deploy'"
+  echo ""
+  exit 1
+fi
+
+for f in demo/package.json docs/package.json; do
+  if [ -f "$f" ] && grep -q '"workspace:' "$f" 2>/dev/null; then
+    echo "❌ $f still contains workspace: protocol. Run:"
+    echo "   bun scripts/resolve-workspace-deps-for-push.ts && bun install"
+    exit 1
+  fi
+done
 
 # Run package tests
 echo "📦 Running package tests..."

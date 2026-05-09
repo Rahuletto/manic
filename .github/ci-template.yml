@@ -1,9 +1,12 @@
-# This is a TEMPLATE for CI workflows in manic-js/* repos
-# Copy this to each independent repo as .github/workflows/ci.yml
-# 
+# This is a TEMPLATE for CI workflows in manic-js/* repos (not executed here).
+# Copy this file to each independent repo as `.github/workflows/ci.yml`.
+#
 # Usage in manic-js/core/.github/workflows/ci.yml:
 # - Replace {PACKAGE_NAME} with the actual package name
 # - Uncomment the tests section if the repo has tests
+#
+# NOTE: This file must live outside `.github/workflows/` on Rahuletto/manic so
+# GitHub Actions does not treat it as a workflow for the umbrella repository.
 
 name: CI - {PACKAGE_NAME}
 

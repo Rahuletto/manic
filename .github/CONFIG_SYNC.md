@@ -19,7 +19,7 @@ The following files should be **identical or nearly identical** across all repos
 **Trigger sync when:**
 - [ ] Changes to `.oxlintrc.json` or `.oxfmt.json` in root
 - [ ] New linting rules added to AGENTS.md
-- [ ] CI/CD improvements in `ci-template.yml`
+- [ ] CI/CD improvements in `.github/ci-template.yml`
 - [ ] Major version updates (Bun, OXC, TypeScript)
 
 ## How to Sync
@@ -29,7 +29,7 @@ The following files should be **identical or nearly identical** across all repos
 Edit in Rahuletto/manic:
 - `.oxlintrc.json`
 - `.oxfmt.json`
-- `.github/workflows/ci-template.yml`
+- `.github/ci-template.yml`
 - `AGENTS.md` (AI Agent Code Quality Standards section)
 
 ### 2. Distribute to manic-js/* Repos
@@ -66,7 +66,7 @@ for repo in "${REPOS[@]}"; do
   # Copy files
   cp "../.oxlintrc.json" .
   cp "../.oxfmt.json" .
-  cp "../.github/workflows/ci-template.yml" ".github/workflows/ci.yml"
+  cp "../.github/ci-template.yml" ".github/workflows/ci.yml"
   
   # Update package.json scripts (merge, don't replace)
   # This is done manually per repo to preserve repo-specific scripts
@@ -95,7 +95,7 @@ For each repo under manic-js/:
    ```bash
    cp ../../.oxlintrc.json .
    cp ../../.oxfmt.json .
-   cp ../../.github/workflows/ci-template.yml .github/workflows/ci.yml
+   cp ../../.github/ci-template.yml .github/workflows/ci.yml
    ```
 
 3. Review and commit:

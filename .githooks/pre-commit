@@ -1,0 +1,23 @@
+#!/bin/bash
+# Resolve workspace: protocol in deployable apps before commit (Vercel / remote installs).
+
+set -e
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+STAGED=$(git diff --cached --name-only)
+if ! echo "$STAGED" | grep -qE '^demo/package\.json$|^docs/package\.json$'; then
+  exit 0
+fi
+
+echo "🔧 Resolving workspace: protocol for deploy (demo/docs)..."
+bun "$ROOT/scripts/resolve-workspace-deps-for-push.ts"
+bun install
+
+[ -f "$ROOT/demo/package.json" ] && git add demo/package.json
+# docs/ is gitignored except for force-added paths (e.g. package.json, .source).
+[ -f "$ROOT/docs/package.json" ] && git add -f docs/package.json
+[ -f "$ROOT/bun.lock" ] && git add bun.lock
+
+echo "✓ Deployable package.json ready (npm semver, not workspace:)"

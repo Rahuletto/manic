@@ -115,7 +115,7 @@ Each `*/` is independent. You push to each independently.
 | Detailed standards | `AGENTS.md` (root) |
 | Dev setup | `DEVELOPMENT.md` (root) |
 | Config sync | `.github/CONFIG_SYNC.md` |
-| CI template | `.github/workflows/ci-template.yml` |
+| CI template | `.github/ci-template.yml` |
 
 ## Help
 

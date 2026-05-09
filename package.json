@@ -26,7 +26,8 @@
     "format": "bunx oxfmt --config .oxfmt.json core/src bundler/src providers/src",
     "ci:lint": "bunx oxlint --config .oxlintrc.json .",
     "ci:format": "bunx oxfmt --check --config .oxfmt.json .",
-    "hooks": "bash scripts/install-local-hooks.sh"
+    "hooks": "bash scripts/install-local-hooks.sh",
+    "resolve-workspace-deps": "bun scripts/resolve-workspace-deps-for-push.ts"
   },
   "devDependencies": {}
 }

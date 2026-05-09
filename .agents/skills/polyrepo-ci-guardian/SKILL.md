@@ -61,6 +61,6 @@ When to sync:
 
 - **Root:** Rahuletto/manic/.oxlintrc.json (source of truth)
 - **Root:** Rahuletto/manic/.oxfmt.json (source of truth)
-- **Root:** Rahuletto/manic/.github/workflows/ci-template.yml (template)
+- **Root:** Rahuletto/manic/.github/ci-template.yml (template)
 - **Each repo:** Own `.github/workflows/ci.yml` (based on template)
 - **Each repo:** Own `.oxlintrc.json` and `.oxfmt.json` (synced from root)
