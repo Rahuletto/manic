@@ -20,8 +20,9 @@ This is a **Bun workspace** coordinating development across independent reposito
 │   ├── sitemap/          (manic-js/plugin-sitemap)
 │   └── api-docs/         (manic-js/plugin-api-docs)
 ├── docs/                 (manic-js/docs — cloned locally; not tracked in Rahuletto/manic)
-├── example-starter/      (manic-js/example-starter)
-├── example-chatbot/      (manic-js/example-chatbot)
+├── examples/
+│   ├── starter/        (manic-js/example-starter)
+│   └── chatbot/        (manic-js/example-chatbot)
 ├── demo/                 (Rahuletto/manic - testbench)
 │
 ├── package.json          (workspace root config)
@@ -54,6 +55,10 @@ The setup script automatically detects your git protocol (SSH or HTTPS) from you
 **Note on demo:** The `demo/` directory is included in the Rahuletto/manic repository (this repo). It is NOT cloned separately by setup.sh to avoid recursive cloning. The demo is the primary testbench for verifying framework changes.
 
 ### 2. Install dependencies
+
+Run **`./setup.sh` before the first `bun install`** so every workspace directory
+(including `examples/starter` and `examples/chatbot`) exists; otherwise Bun will
+report missing workspaces.
 
 ```bash
 bun install         # Links all workspaces, creates shared bun.lock
@@ -222,6 +227,12 @@ The workspace `bun.lock` is local. Delete and regenerate:
 rm bun.lock
 bun install
 ```
+
+### Examples still under `example-starter/` or `example-chatbot/` at repo root?
+
+Older setups cloned those at the top level. Remove the old folders (each is its own git
+repo — keep any work you need, then delete) and run `./setup.sh` again. New clones go to
+`examples/starter` and `examples/chatbot`.
 
 ### Clone failed?
 

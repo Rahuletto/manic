@@ -48,7 +48,7 @@ if git diff --cached --name-only | grep -q "^bun.lock$"; then
 fi
 
 # Check if workspace directories are accidentally added
-WORKSPACE_DIRS=("core" "bundler" "providers" "plugins" "create-manic" "tui" "docs" "example-starter" "example-chatbot")
+WORKSPACE_DIRS=("core" "bundler" "providers" "plugins" "create-manic" "tui" "docs" "examples/starter" "examples/chatbot")
 for dir in "${WORKSPACE_DIRS[@]}"; do
   if git diff --cached --name-only | grep -q "^$dir/"; then
     echo "❌ Error: Workspace directory '$dir' staged"

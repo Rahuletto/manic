@@ -69,7 +69,7 @@ bun install         # Links via workspaces, creates bun.lock
 | `packages/create-manic/` | Submodule: CLI scaffolding tool (`bun create manic`) and project templates.  |
 | `packages/providers/`    | Submodule: deployment adapters for Vercel, Netlify, Cloudflare, and more.    |
 | `demo/`                  | The primary development testbench for local feature verification. |
-| `examples/`              | Curated reference applications and integration patterns.          |
+| `examples/starter`, `examples/chatbot` | Reference apps (clones of manic-js/example-*; see `examples/README.md`). |
 | `plugins/`               | Submodules for first-party Manic plugins.                          |
 
 ### Framework Internals (`packages/manic/src/`)

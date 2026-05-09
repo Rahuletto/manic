@@ -21,6 +21,18 @@ echo "🚀 Setting up Manic workspace..."
 echo "   Using protocol: $GIT_PROTO"
 echo ""
 
+# Migrate legacy top-level example clones into examples/*
+if [ -d example-starter ] && [ ! -d examples/starter ]; then
+  echo "📦 Moving example-starter → examples/starter"
+  mkdir -p examples
+  mv example-starter examples/starter
+fi
+if [ -d example-chatbot ] && [ ! -d examples/chatbot ]; then
+  echo "📦 Moving example-chatbot → examples/chatbot"
+  mkdir -p examples
+  mv example-chatbot examples/chatbot
+fi
+
 # Clone all repos from manic-js organization
 REPOS=(
   "core:core"
@@ -36,8 +48,8 @@ REPOS=(
   "plugin-sitemap:plugins/sitemap"
   "plugin-api-docs:plugins/api-docs"
   "docs:docs"
-  "example-starter:example-starter"
-  "example-chatbot:example-chatbot"
+  "example-starter:examples/starter"
+  "example-chatbot:examples/chatbot"
 )
 
 # Clone all repos

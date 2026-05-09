@@ -10,8 +10,8 @@ create-manic/
 tui/
 plugins/
 docs/
-example-starter/
-example-chatbot/
+examples/starter/
+examples/chatbot/
 
 # output
 out

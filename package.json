@@ -10,8 +10,8 @@
     "create-manic",
     "tui",
     "plugins/*",
-    "example-starter",
-    "example-chatbot",
+    "examples/starter",
+    "examples/chatbot",
     "demo"
   ],
   "scripts": {

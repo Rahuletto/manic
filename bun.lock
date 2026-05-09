@@ -89,7 +89,7 @@
         "oxlint": "^1.63.0",
       },
     },
-    "example-chatbot": {
+    "examples/chatbot": {
       "name": "chatbot",
       "version": "0.1.1",
       "dependencies": {
@@ -116,7 +116,7 @@
         "oxlint": "1.63.0",
       },
     },
-    "example-starter": {
+    "examples/starter": {
       "name": "manic-app",
       "version": "0.1.1",
       "dependencies": {
@@ -762,7 +762,7 @@
 
     "character-reference-invalid": ["character-reference-invalid@2.0.1", "", {}, "sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw=="],
 
-    "chatbot": ["chatbot@workspace:example-chatbot"],
+    "chatbot": ["chatbot@workspace:examples/chatbot"],
 
     "chevrotain": ["chevrotain@12.0.0", "", { "dependencies": { "@chevrotain/cst-dts-gen": "12.0.0", "@chevrotain/gast": "12.0.0", "@chevrotain/regexp-to-ast": "12.0.0", "@chevrotain/types": "12.0.0", "@chevrotain/utils": "12.0.0" } }, "sha512-csJvb+6kEiQaqo1woTdSAuOWdN0WTLIydkKrBnS+V5gZz0oqBrp4kQ35519QgK6TpBThiG3V1vNSHlIkv4AglQ=="],
 
@@ -1000,7 +1000,7 @@
 
     "lucide-react": ["lucide-react@0.562.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-82hOAu7y0dbVuFfmO4bYF1XEwYk/mEbM5E+b1jgci/udUBEE/R7LF5Ip0CCEmXe8AybRM8L+04eP+LGZeDvkiw=="],
 
-    "manic-app": ["manic-app@workspace:example-starter"],
+    "manic-app": ["manic-app@workspace:examples/starter"],
 
     "manic-demo": ["manic-demo@workspace:demo"],
 
