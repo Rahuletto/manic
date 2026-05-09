@@ -16,7 +16,8 @@
     "perf:matrix": "bun run perf:baseline && cd demo && bun run build",
     "typecheck": "cd packages/manic && bun run tsc --noEmit",
     "publish": "bun run ./publish.ts",
-    "prepare": "bash scripts/install-local-hooks.sh"
+    "prepare": "bash scripts/install-local-hooks.sh",
+    "test:workspace": "bash scripts/run-workspace-tests.sh"
   },
   "workspaces": [
     "packages/*",
