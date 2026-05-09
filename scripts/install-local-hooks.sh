@@ -7,6 +7,9 @@ GITHOOKS_DIR="$REPO_ROOT/.githooks"
 
 echo "Installing git hooks for Manic workspace..."
 
+# Configure git to use .githooks directory
+git config core.hooksPath .githooks
+
 # Pre-commit hook: format check
 cat > "$HOOKS_DIR/pre-commit" << 'HOOK'
 #!/bin/bash
@@ -38,4 +41,16 @@ HOOK
 
 chmod +x "$HOOKS_DIR/pre-commit"
 
-echo "✓ Git hooks installed"
+# Install hook symlinks from .githooks if directory exists
+if [ -d "$GITHOOKS_DIR" ]; then
+  for hook in "$GITHOOKS_DIR"/*; do
+    hook_name=$(basename "$hook")
+    if [ -f "$hook" ]; then
+      cp "$hook" "$HOOKS_DIR/$hook_name"
+      chmod +x "$HOOKS_DIR/$hook_name"
+      echo "✓ Installed hook: $hook_name"
+    fi
+  done
+fi
+
+echo "✓ All git hooks installed and configured"
