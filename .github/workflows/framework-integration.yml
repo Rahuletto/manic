@@ -1,3 +1,11 @@
+# Required for merge queues: `merge_group` must be listed — otherwise this workflow
+# never runs on the merge-group ref and GitHub shows "Expected — Waiting for status".
+# https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#merge_group
+#
+# After changing this file, if the queue still waits: Rulesets may reference an old
+# check name — update required checks to match the latest run, or merge once with
+# admin bypass so `main` includes this trigger.
+
 name: Framework Integration
 
 on:
@@ -13,13 +21,14 @@ permissions:
   contents: read
 
 jobs:
-  demo-build:
+  framework-integration:
     runs-on: ubuntu-latest
-    name: Demo Build & Integration
+    name: Framework Integration
     timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
