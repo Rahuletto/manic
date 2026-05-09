@@ -1,8 +1,10 @@
 name: CI - Workspace Root
 
 on:
+  # Push only to main — pushes to PR branches (e.g. workspace/*) also emit
+  # pull_request (synchronize), so listing both would run every job twice.
   push:
-    branches: [main, workspace/*, sync/*]
+    branches: [main]
   pull_request:
     branches: [main]
   merge_group:
