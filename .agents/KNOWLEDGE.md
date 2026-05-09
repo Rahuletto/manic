@@ -631,7 +631,7 @@ In production builds, each API route is bundled separately to `.manic/api/`. Pro
 
 1. **Build speed**: Bun.build + OXC transform + OXC minify. No JavaScript bundler overhead. Parallel minification across client/api/server.
 2. **Zero external bundler dependencies**: No Vite, no esbuild, no Rollup. Just Bun and OXC.
-3. **Tiny dependency tree**: `hono`, `colorette`, `bun-plugin-tailwind`, `oxc-*` packages, `oxlint`. That's it.
+3. **Tiny dependency tree**: `hono`, `@manicjs/tui`, `bun-plugin-tailwind`, `oxc-*` packages, `oxlint`. That's it.
 4. **Plugin system is clean**: Two hooks, clear separation between dev and build. `emitClientFile` ensures providers pick up plugin output automatically.
 5. **Agent-first**: MCP, markdown negotiation, `?mode=agent`, Link headers, WebMCP browser registration. Very forward-thinking for AI agent integration.
 6. **Error overlay**: Production-quality error overlay with source map resolution, zero dependencies. Rivals Next.js error overlay.
@@ -3357,7 +3357,7 @@ Interactive TUI (`bun run publish.ts`):
 ### `manicjs` depends on:
 
 - `hono` (server, API routing)
-- `colorette` (CLI output coloring)
+- `@manicjs/tui` (CLI output styling)
 - `bun-plugin-tailwind` (CSS compilation)
 - `oxc-transform` (JSX/TS transform)
 - `oxc-minify` (production minification)
@@ -3371,7 +3371,7 @@ Interactive TUI (`bun run publish.ts`):
 
 ### `@manicjs/providers` depends on:
 
-- `colorette`
+- `@manicjs/tui`
 - Peer: `manicjs >= 0.7.2`
 
 ### `@manicjs/mcp` depends on:
