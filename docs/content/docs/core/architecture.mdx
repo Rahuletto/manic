@@ -6,6 +6,7 @@ description: Deep dive into Manic's design, build pipeline, and core systems.
 # Architecture Overview
 
 Manic is built on three core pillars: **type-safe routing**, **zero-config build engine**, and **plugin-driven extensibility**.
+The build system is now modularizing into a split architecture: framework orchestration in `manicjs` + reusable bundler primitives in `@manicjs/bundler`.
 
 ## System Design
 
@@ -70,6 +71,11 @@ graph TD
 
   Lint --> Client --> Plugins --> API --> Server --> Min --> Prov
 ```
+
+Extraction note:
+
+- `manicjs` owns CLI orchestration and plugin/provider coordination.
+- `@manicjs/bundler` owns low-level bundler primitives (resolver, stats helpers, minify helpers) used by `manic build`.
 
 Default artifact tree (**`build.outdir`**, usually **`.manic`**):
 

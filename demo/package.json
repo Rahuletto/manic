@@ -17,18 +17,17 @@
     "@manicjs/providers": "workspace:*",
     "@manicjs/seo": "workspace:*",
     "@manicjs/sitemap": "workspace:*",
-    "@manicjs/tailwind": "^1.0.0",
-    "hono": "^4.12.14",
+    "@manicjs/tailwind": "^1.0.3",
+    "hono": "^4.12.18",
     "manicjs": "workspace:*",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "tailwind": "^4.0.0",
-    "tailwindcss": "^4.2.2"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "oxfmt": "^0.45.0",
-    "oxlint": "^1.60.0"
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.63.0"
   }
 }

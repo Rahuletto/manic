@@ -1,11 +1,12 @@
 ---
 title: Build Pipeline
-description: Exact manic build ordering — lint, Bun.build graphs, plugin hooks, minify, providers — grounded in packages/manic/src/cli/commands/build.ts.
+description: Exact manic build ordering — lint, Bun.build graphs, plugin hooks, minify, providers — executed by @manicjs/bundler with manic as adapter.
 ---
 
 # Build pipeline
 
-Manic does **not** ship Vite, Webpack, or Turbopack. **`manic build`** (`packages/manic/src/cli/commands/build.ts`) orchestrates **`oxlint`**, **`writeRoutesManifest`**, three **`Bun.build`** graphs (client → optional API → server), **`oxc-minify`**, and finally **`provider.build`**.
+Manic does **not** ship Vite, Webpack, or Turbopack. **`manic build`** now delegates to **`@manicjs/bundler`**, which executes **`oxlint`**, **`writeRoutesManifest`**, three **`Bun.build`** graphs (client → optional API → server), **`oxc-minify`**, and finally **`provider.build`**.  
+`manicjs` is now the framework-facing adapter layer while bundling is owned by `@manicjs/bundler`.
 
 ---
 
@@ -47,6 +48,15 @@ flowchart TD
 | **10 · Server bundle** | **`~manic.ts`** → **`server.js`** | Rewrites HTML import + temp **`_entry.ts`** |
 | **11 · Minify** | **JS under client / api / dist root** | **`minifySync`**, **`es2022`**, mangle |
 | **12 · Providers** | Adapter-specific dirs | Executes **after** minification completes |
+
+---
+
+## Modularization status
+
+- **Framework adapter:** `packages/manic/src/cli/commands/build.ts`
+- **Bundler pipeline:** `packages/bundler/src/pipeline.ts`
+- **Bundler core internals:** `packages/bundler/src/core.ts`
+- **Bundler API surface:** `packages/bundler/src/index.ts`
 
 ---
 

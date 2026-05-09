@@ -5,6 +5,36 @@ description: Recent framework and CLI updates.
 
 # Changelog
 
+## 2026-05-09
+
+### Bundler extraction foundation (canary)
+
+- Introduced a new workspace package: `@manicjs/bundler`.
+- Moved full bundling pipeline ownership into `@manicjs/bundler`:
+  - lint gate
+  - client bundle
+  - plugin build hooks
+  - API route bundle
+  - server bundle
+  - minification
+  - provider build hooks
+- `manic build` is now a framework adapter that delegates to `@manicjs/bundler`.
+- Added `manic-bundler` CLI entrypoint so the bundler package can be used independently.
+- Moved shared bundler internals into modular files:
+  - `core.ts`
+  - `pipeline.ts`
+  - `types.ts`
+- Improved type safety and API docs for bundler contracts with explicit typed interfaces and JSDoc in `@manicjs/bundler`.
+- Removed `colorette` usage from providers and standardized console styling on `@manicjs/tui`.
+- Bundler utility exports:
+  - `resolver`
+  - `formatSize`
+  - `formatTime`
+  - `getDirSize`
+  - `countRoutes`
+  - `minifyDir`
+- Updated lint toolchain to latest `oxlint` in workspace surfaces touched by extraction to avoid stale-rule parse failures.
+
 ## 2026-05-07
 
 ### CLI and scaffold improvements

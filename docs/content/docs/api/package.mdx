@@ -25,6 +25,8 @@ The [`manicjs`](https://www.npmjs.com/package/manicjs) package exposes multiple 
 
 The **`manic` CLI** is shipped as the package binary (`package.json` `"bin"`); it is not a runtime import.
 
+Bundler internals and pipeline are extracted to **`@manicjs/bundler`** as a separate package. `manicjs` keeps framework runtime exports and does not re-export bundler internals on the root runtime barrel.
+
 ---
 
 ## `manicjs` (root)
