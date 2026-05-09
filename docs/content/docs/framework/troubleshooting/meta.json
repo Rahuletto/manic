@@ -1,9 +1,0 @@
-{
-  "title": "Troubleshooting",
-  "description": "Debugging common issues with build errors, runtime errors, and deployment problems in Manic.",
-  "pages": [
-    "index",
-    "build-errors",
-    "deployment-errors"
-  ]
-}

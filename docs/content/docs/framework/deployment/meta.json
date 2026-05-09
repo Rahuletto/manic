@@ -1,9 +1,0 @@
-{
-  "title": "Deployment",
-  "pages": [
-    "index",
-    "cloudflare",
-    "self-hosting",
-    "vercel"
-  ]
-}

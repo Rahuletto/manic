@@ -1,32 +1,32 @@
 {
-  "name": "manic-monorepo",
-  "devDependencies": {
-    "@manicjs/tui": "workspace:*",
-    "@types/bun": "^1.3.13",
-    "next": "^16.2.6",
-    "oxc-minify": "^0.129.0",
-    "oxlint": "^1.63.0",
-    "typescript": "^6.0.3"
-  },
+  "name": "manic-workspace",
+  "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "dev": "cd demo && bun run dev",
-    "build": "cd demo && bun run build",
-    "perf:baseline": "bun scripts/dev/benchmark-canary.ts",
-    "perf:matrix": "bun run perf:baseline && cd demo && bun run build",
-    "typecheck": "cd packages/manic && bun run tsc --noEmit",
-    "publish": "bun run ./publish.ts",
-    "prepare": "bash scripts/install-local-hooks.sh",
-    "test:workspace": "bash scripts/run-workspace-tests.sh",
-    "test:workspace:full": "RUN_MANIC_INTEGRATION_TESTS=1 bash scripts/run-workspace-tests.sh",
-    "verify:framework": "bash scripts/verify-framework-gate.sh",
-    "verify:submodule": "bash scripts/verify-submodule-quality.sh"
-  },
+  "description": "Bun workspace for Manic framework development",
   "workspaces": [
-    "packages/*",
+    "core",
+    "bundler",
+    "providers",
+    "create-manic",
+    "tui",
     "plugins/*",
-    "demo",
-    "docs",
-    "examples/*"
-  ]
+    "examples/starter",
+    "examples/chatbot",
+    "demo"
+  ],
+  "scripts": {
+    "setup": "bash setup.sh && bash scripts/install-local-hooks.sh",
+    "dev": "cd demo && bun dev",
+    "build": "bun run -r build",
+    "test": "bun run -r test",
+    "test:integration": "bun test scripts/test/core-integration/**/*.test.ts",
+    "test:watch": "bun test --watch",
+    "lint": "bunx oxlint --config .oxlintrc.json core/src bundler/src providers/src",
+    "format": "bunx oxfmt --config .oxfmt.json core/src bundler/src providers/src",
+    "ci:lint": "bunx oxlint --config .oxlintrc.json .",
+    "ci:format": "bunx oxfmt --check --config .oxfmt.json .",
+    "hooks": "bash scripts/install-local-hooks.sh",
+    "resolve-workspace-deps": "bun scripts/resolve-workspace-deps-for-push.ts"
+  },
+  "devDependencies": {}
 }

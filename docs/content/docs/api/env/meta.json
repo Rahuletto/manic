@@ -1,5 +1,0 @@
-{
-  "title": "Environment",
-  "description": "getEnv and getPublicEnv.",
-  "pages": ["index", "get-env", "get-public-env"]
-}

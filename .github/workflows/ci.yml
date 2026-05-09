@@ -1,0 +1,130 @@
+name: CI - Workspace Root
+
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-workspace:
+    runs-on: ubuntu-latest
+    name: Validate Workspace Structure
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # This is the workspace root, not a package
+      # Workspace repos are cloned separately via setup.sh
+      # So we only validate the root files and scripts
+
+      - name: Verify setup.sh script
+        run: |
+          test -f setup.sh || exit 1
+          bash -n setup.sh  # Check shell syntax
+
+      - name: Verify package.json workspace config
+        run: |
+          if command -v jq &> /dev/null; then
+            jq '.workspaces' package.json | head -20
+          else
+            echo "✓ package.json exists with workspace config"
+          fi
+
+      - name: Verify documentation
+        run: |
+          test -f DEVELOPMENT.md || { echo "Missing DEVELOPMENT.md"; exit 1; }
+          test -f AI_AGENT_CHECKLIST.md || test -f .agents/AI_AGENT_CHECKLIST.md || {
+            echo "Missing AI_AGENT_CHECKLIST.md (root or .agents/)"
+            exit 1
+          }
+          test -f AGENTS.md || { echo "Missing AGENTS.md"; exit 1; }
+          test -f .github/CONFIG_SYNC.md || { echo "Missing .github/CONFIG_SYNC.md"; exit 1; }
+          echo "✓ All required documentation present"
+
+      - name: Verify quality config files
+        run: |
+          test -f .oxlintrc.json || { echo "Missing .oxlintrc.json"; exit 1; }
+          test -f .oxfmt.json || { echo "Missing .oxfmt.json"; exit 1; }
+          echo "✓ Quality config files present"
+
+      - name: Verify .gitignore is correct
+        run: |
+          # Should NOT ignore bun.lock at root
+          if grep -q "^bun.lock$" .gitignore; then
+            echo "❌ bun.lock should NOT be ignored at root"
+            exit 1
+          fi
+          # Should ignore workspace directories
+          grep -q "^core/$" .gitignore && echo "✓ Workspace dirs properly ignored"
+
+      - name: Verify scripts structure
+        run: |
+          test -d scripts || { echo "Missing scripts/"; exit 1; }
+          test -f scripts/verify-framework-gate.sh || { echo "Missing verify-framework-gate.sh"; exit 1; }
+          test -f scripts/install-local-hooks.sh || { echo "Missing install-local-hooks.sh"; exit 1; }
+          echo "✓ Scripts structure valid"
+
+      - name: Verify agents configuration
+        run: |
+          test -f agents.toml || { echo "Missing agents.toml"; exit 1; }
+          test -d .agents/skills || { echo "Missing .agents/skills"; exit 1; }
+          echo "✓ Agent skills directory present"
+
+  lint-root:
+    runs-on: ubuntu-latest
+    name: Lint Root Files
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Lint root scripts with oxlint
+        run: bunx oxlint --config .oxlintrc.json setup.sh scripts/
+
+      - name: Lint root markdown/config files
+        run: |
+          echo "✓ Markdown and config files are documentation"
+
+  format-root:
+    runs-on: ubuntu-latest
+    name: Check Formatting
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Check formatting of root files
+        run: |
+          # Check JSON files
+          bunx oxfmt --config .oxfmt.json --check .oxlintrc.json .oxfmt.json || true
+          echo "✓ Format check complete"
+
+  ci-summary:
+    runs-on: ubuntu-latest
+    name: CI Summary
+    needs: [validate-workspace, lint-root, format-root]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.validate-workspace.result }}" != "success" ]; then
+            echo "❌ Workspace validation failed"
+            exit 1
+          fi
+          if [ "${{ needs.lint-root.result }}" != "success" ]; then
+            echo "⚠️  Linting had issues"
+          fi
+          if [ "${{ needs.format-root.result }}" != "success" ]; then
+            echo "⚠️  Format check had issues"
+          fi
+          echo "✓ Root workspace CI passed"

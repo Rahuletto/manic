@@ -12,14 +12,14 @@
     "format": "manic fmt"
   },
   "dependencies": {
-    "@manicjs/api-docs": "workspace:*",
-    "@manicjs/mcp": "workspace:*",
-    "@manicjs/providers": "workspace:*",
-    "@manicjs/seo": "workspace:*",
-    "@manicjs/sitemap": "workspace:*",
+    "@manicjs/api-docs": "^1.0.3",
+    "@manicjs/mcp": "^1.0.3",
+    "@manicjs/providers": "^1.1.0",
+    "@manicjs/seo": "^1.0.3",
+    "@manicjs/sitemap": "^1.0.3",
     "@manicjs/tailwind": "^1.0.3",
     "hono": "^4.12.18",
-    "manicjs": "workspace:*",
+    "manicjs": "^1.0.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.0"

@@ -1,32 +1,31 @@
 # Scripts Inventory
 
-This directory contains umbrella-level automation scripts.
+This directory contains workspace-level automation scripts.
 
-## Active scripts
+## Active Scripts
 
 - `install-local-hooks.sh`:
-  Installs local git hooks for this umbrella repo.
-- `stage-submodule-pointers.sh`:
-  Pre-commit helper that stages all submodule gitlink pointer changes.
-- `run-workspace-tests.sh`:
-  Runs Bun test suites across all workspace packages/plugins.
-  Use `RUN_MANIC_INTEGRATION_TESTS=1` to include `packages/manic` integration tests.
+  Installs local git hooks for the workspace.
 - `verify-framework-gate.sh`:
-  Runs umbrella framework gate checks (`bun run build`).
-- `verify-submodule-quality.sh`:
-  Runs best-available quality checks in submodules (`ci:lint`, `validate`, or `lint`).
+  Runs framework verification checks on demo build.
 
-## Dev scripts (`scripts/dev/`)
+## Dev Scripts (`scripts/dev/`)
 
 - `benchmark-canary.ts`:
-  Performance baseline benchmarking script for canary runtime comparisons.
+  Performance baseline benchmarking (optional, for perf analysis).
 - `generate-plugin-agents.ts`:
-  Generates plugin-focused `AGENTS.md` templates.
+  Generates plugin-specific AGENTS.md documentation (optional).
 
-## Standard root commands
+## Root Commands
 
-- `bun run test:workspace`
-- `bun run test:workspace:full`
-- `bun run verify:framework`
-- `bun run verify:submodule`
-- `bun run perf:baseline`
+```bash
+bun run dev              # Start demo dev server
+bun run build            # Build all workspaces
+bun run test             # Run tests in all workspaces
+```
+
+## Notes
+
+- Each independent repo (core, plugins, etc.) has its own CI/CD via `.github/workflows/ci.yml`
+- No umbrella-level test orchestration needed
+- Use `cd plugins/tailwind && bun test` to test individual packages

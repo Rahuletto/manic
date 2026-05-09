@@ -1,0 +1,85 @@
+# This is a TEMPLATE for CI workflows in manic-js/* repos (not executed here).
+# Copy this file to each independent repo as `.github/workflows/ci.yml`.
+#
+# Usage in manic-js/core/.github/workflows/ci.yml:
+# - Replace {PACKAGE_NAME} with the actual package name
+# - Uncomment the tests section if the repo has tests
+#
+# NOTE: This file must live outside `.github/workflows/` on Rahuletto/manic so
+# GitHub Actions does not treat it as a workflow for the umbrella repository.
+
+name: CI - {PACKAGE_NAME}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Lint, Format, Type Check, Test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # 1. LINTING - MANDATORY
+      - name: Lint with oxlint
+        run: bunx oxlint --config .oxlintrc.json .
+        if: always()
+
+      # 2. FORMATTING - MANDATORY
+      - name: Check formatting with oxfmt
+        run: bunx oxfmt --config .oxfmt.json --check .
+        if: always()
+
+      # 3. TYPE CHECKING - MANDATORY
+      - name: Type check with TypeScript
+        run: |
+          if [ -f tsconfig.json ]; then
+            bunx tsc --noEmit
+          else
+            bunx tsc --noEmit --module esnext --moduleResolution bundler --target es2022 src/index.ts
+          fi
+        if: always()
+
+      # 4. UNIT TESTS - REQUIRED (if applicable)
+      - name: Run unit tests
+        run: bun test --timeout 30000
+        if: always()
+
+      # 5. SMOKE TESTS - REQUIRED for plugins
+      - name: Smoke tests (plugins only)
+        run: |
+          if [ -f scripts/smoke-test.ts ]; then
+            bun scripts/smoke-test.ts
+          elif [ -f tests/smoke.test.ts ]; then
+            bun test tests/smoke.test.ts
+          fi
+        if: always()
+
+      # 6. COMPLIANCE CHECK - MANDATORY
+      - name: Verify compliance (CODE_OF_CONDUCT, LICENSE, README)
+        run: |
+          test -f CODE_OF_CONDUCT.md && echo "✓ CODE_OF_CONDUCT.md exists"
+          test -f LICENSE && echo "✓ LICENSE exists"
+          test -f README.md && echo "✓ README.md exists"
+
+      - name: Comment on PR if checks fail
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ CI checks failed. Please run locally:\n\n```bash\nbunx oxlint --config .oxlintrc.json .\nbunx oxfmt --config .oxfmt.json --write .\nbun typecheck\nbun test\n```'
+            })

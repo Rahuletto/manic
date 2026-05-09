@@ -25,6 +25,5 @@
 # Integration and release surfaces
 /demo/** @Rahuletto
 /examples/** @Rahuletto
-/docs/** @Rahuletto
 /scripts/** @Rahuletto
 /publish.ts @Rahuletto

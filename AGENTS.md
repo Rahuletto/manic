@@ -8,25 +8,54 @@ Manic is a high-performance, production-grade React framework built from the gro
 
 ---
 
-## 🧭 Umbrella Repository Model
+## 🧭 Polyrepo + Bun Workspace Model
 
-This repository is now an umbrella repository that assembles the Manic ecosystem using git submodules.
+This is a **polyrepo with local workspace linking** for development.
 
-- `packages/*` and `plugins/*` are submodule gitlinks, each pointing to a separate repository under `manic-js`.
-- Changes made inside submodule directories must be committed and pushed in the submodule repository first.
-- The umbrella repository must then commit the updated submodule pointers.
+**Architecture:**
+- 16 independent repositories under `manic-js` org (core, bundler, providers, 7 plugins, create-manic, tui, docs, examples)
+- Rahuletto/manic is **workspace coordinator** (not source)
+- Local dev: all repos cloned into one directory, linked via Bun workspaces
+- Each repo publishes independently to npm
 
-### Required Submodule Workflow
+**Setup:**
+```bash
+./setup.sh          # Clones all 16 manic-js/* repos
+bun install         # Links via workspaces, creates bun.lock
+```
 
-When working in this umbrella repository, always follow this sequence:
+### Required Polyrepo Workflow
 
-1. Edit inside submodule (e.g. `packages/manic`)
-2. Commit + push in that submodule repo
-3. Go to umbrella root `Coding/manic`
-4. Commit the submodule pointer change
-5. Push umbrella
+1. **Clone repos locally** (done via `setup.sh`):
+   ```bash
+   cd ~/manic-workspace
+   ./setup.sh
+   bun install
+   ```
 
-The umbrella pre-commit hook auto-stages submodule pointer changes, but you still need to commit and push them from the umbrella repo.
+2. **Edit in workspace directory:**
+   ```bash
+   cd plugins/tailwind/src
+   # Edit files directly
+   ```
+
+3. **Push to independent repo:**
+   ```bash
+   cd plugins/tailwind
+   git add src/index.ts
+   git commit -m "feat: ..."
+   git push origin main  # Pushes to manic-js/plugin-tailwind
+   ```
+
+4. **Rahuletto/manic (umbrella):** Only push if updating DEVELOPMENT.md, setup.sh, or .gitignore
+   ```bash
+   cd ~/manic-workspace
+   git add DEVELOPMENT.md
+   git commit -m "docs: ..."
+   git push origin main  # Pushes to Rahuletto/manic
+   ```
+
+**Key:** Each directory under `packages/`, `plugins/`, etc. is a full git repository with independent CI/CD, releases, and version management.
 
 ---
 
@@ -40,7 +69,7 @@ The umbrella pre-commit hook auto-stages submodule pointer changes, but you stil
 | `packages/create-manic/` | Submodule: CLI scaffolding tool (`bun create manic`) and project templates.  |
 | `packages/providers/`    | Submodule: deployment adapters for Vercel, Netlify, Cloudflare, and more.    |
 | `demo/`                  | The primary development testbench for local feature verification. |
-| `examples/`              | Curated reference applications and integration patterns.          |
+| `examples/starter`, `examples/chatbot` | Reference apps (clones of manic-js/example-*; see `examples/README.md`). |
 | `plugins/`               | Submodules for first-party Manic plugins.                          |
 
 ### Framework Internals (`packages/manic/src/`)
@@ -148,6 +177,7 @@ For contributors building plugins in this monorepo:
 - **Minify**: `oxc-minify` (Production-grade code compression).
 - **Resolve**: `oxc-resolver` (Node/Bun compatible module resolution).
 - **Lint**: `oxlint` (Blazing fast diagnostics).
+- **Format**: `oxfmt` (OXC formatter - single source of truth).
 
 ### Engineering Principles
 
@@ -156,16 +186,124 @@ For contributors building plugins in this monorepo:
 - **Zero-Config**: Framework should "just work" by scanning `app/` structure.
 - **Type Safety**: Maintain strict TypeScript contracts across router, config, and plugins.
 - **Workspace Integrity**: Always use `bun install` at the root.
+- **Polyrepo Integrity**: Each repo's CI/CD must pass independently.
+
+---
+
+## 🤖 AI Agent Code Quality Standards
+
+**All AI agents (including Claude/Cursor) MUST follow these standards when working on Manic.**
+
+### Required Quality Checks (Before Commit)
+
+1. **Linting with oxlint:**
+   ```bash
+   oxlint --config .oxlintrc.json .
+   ```
+   - **No warnings or errors.** Every linting failure must be fixed.
+   - Config: [.oxlintrc.json](./.oxlintrc.json) (React plugins, strict correctness/perf/suspicious)
+
+2. **Formatting with oxfmt:**
+   ```bash
+   oxfmt --config .oxfmt.json --check .
+   # or auto-fix:
+   oxfmt --config .oxfmt.json --write .
+   ```
+   - **Single source of truth.** No manual formatting debates.
+   - Config: [.oxfmt.json](./.oxfmt.json) (80 char width, strict semicolons, singleQuote)
+
+3. **Type checking:**
+   ```bash
+   bun run typecheck  # or tsc --noEmit in repo root
+   ```
+   - **Zero TypeScript errors** in production code.
+   - Warnings acceptable only with explicit ignore comments.
+
+4. **Tests (if applicable):**
+   ```bash
+   bun test
+   ```
+   - **All tests pass** before pushing.
+   - Smoke tests mandatory for plugins and core packages.
+
+### Workflow for AI Agents
+
+**When working on any file in Manic:**
+
+1. **Read relevant AGENTS.md** first (this file or repo-specific one)
+2. **Read existing code patterns** in the same directory
+3. **Make changes** following Manic's standards
+4. **Run all checks:**
+   ```bash
+   # In the specific package directory
+   bunx oxlint --config .oxlintrc.json .
+   bunx oxfmt --config .oxfmt.json --check .
+   bun typecheck
+   bun test
+   ```
+5. **Verify in demo:**
+   ```bash
+   cd demo && bun dev
+   # Test your changes with hot reload
+   ```
+6. **Commit with message:**
+   - Use conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`
+   - Include scope: `feat(plugin-tailwind): add dark mode`
+7. **Push to correct repo:**
+   ```bash
+   cd packages/core  # or plugins/tailwind, etc
+   git push origin main
+   ```
+
+### CI/CD Pipeline Requirements
+
+**Every repo under manic-js/ must pass these checks in CI:**
+
+- ✅ `oxlint` (linting)
+- ✅ `oxfmt --check` (formatting)
+- ✅ `tsc --noEmit` (TypeScript)
+- ✅ `bun test` (unit/integration tests)
+- ✅ `smoke tests` (for plugins)
+
+**Agents MUST ensure all checks pass locally before pushing.** CI failures block merges.
+
+### What NOT to Do
+
+- ❌ **Never disable oxlint rules** without explicit approval (document in code)
+- ❌ **Never manual format code** — let oxfmt handle it
+- ❌ **Never merge with type errors** — fix them first
+- ❌ **Never ignore test failures** — investigate and fix
+- ❌ **Never commit to main directly** — always create PRs
+- ❌ **Never work across multiple independent repos in one commit** — push each separately
+
+### per-Repo CI Configuration
+
+Each independent repo (core, plugins, etc.) has:
+- `.github/workflows/ci.yml` — Linting, formatting, tests
+- `.oxlintrc.json` — Lint rules
+- `.oxfmt.json` — Format rules
+- `package.json` scripts: `ci:lint`, `ci:format`, `ci:typecheck`, `ci:test`, `ci:compliance`
+
+Repos sync these configs periodically from root AGENTS.md. **If you modify .oxlintrc.json or .oxfmt.json here, cascade to all repos.**
 
 ---
 
 ## 📝 Development Workflow
 
-1. **Feature Work**: Modify code inside the relevant submodule directory.
-2. **Submodule Commit**: Commit and push in that submodule repository first.
-3. **Umbrella Pointer Sync**: Commit updated submodule pointers in umbrella root.
-4. **Local Validation**: Run `bun dev` or `bun build && bun start` in `demo/` as needed.
-5. **Publish/Release**: Use umbrella scripts only as orchestrators; source of truth is each submodule repo.
+1. **Setup:** `./setup.sh && bun install` (one-time)
+2. **Edit in workspace:** Make changes in `packages/`, `plugins/`, etc.
+3. **Local validation:**
+   - `cd plugins/tailwind && oxlint . && oxfmt --check . && bun test`
+   - `cd demo && bun dev` (verify with hot reload)
+4. **Commit & push per repo:**
+   ```bash
+   cd plugins/tailwind
+   git add .
+   git commit -m "feat: ..."
+   git push origin main
+   ```
+5. **Only push to Rahuletto/manic if:** Updating DEVELOPMENT.md, setup.sh, AGENTS.md, or .gitignore
+6. **Publish/Release:** Each repo publishes independently via CI/CD
 
 ---
 

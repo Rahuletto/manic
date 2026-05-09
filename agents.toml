@@ -29,5 +29,5 @@ name = "framework-docs-pro"
 source = "path:.agents/skills/framework-docs-pro"
 
 [[skills]]
-name = "submodule-ci-guardian"
-source = "path:.agents/skills/submodule-ci-guardian"
+name = "polyrepo-ci-guardian"
+source = "path:.agents/skills/polyrepo-ci-guardian"
