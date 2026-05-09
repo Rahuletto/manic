@@ -13,7 +13,10 @@ export interface BundlerPluginContext<TConfig> {
   prod: boolean;
   cwd: string;
   dist: string;
-  emitClientFile(relativePath: string, content: string | Uint8Array): Promise<void>;
+  emitClientFile(
+    relativePath: string,
+    content: string | Uint8Array
+  ): Promise<void>;
   injectHtml(tags: string): void;
 }
 
@@ -41,15 +44,18 @@ export interface BundlerProvider<TConfig = unknown> {
 
 /** Options accepted by the `buildApplication()` pipeline API. */
 export interface BuildApplicationOptions<TConfig = unknown> {
-  config: TConfig & { mode?: "fullstack" | "frontend"; app?: { name?: string } };
+  config: TConfig & {
+    mode?: 'fullstack' | 'frontend';
+    app?: { name?: string };
+  };
   dist: string;
   cwd?: string;
   runLint?: boolean;
   lintConfigPath?: string;
   writeRoutesManifest?: (path: string) => Promise<void>;
   discoverPageRoutes?: () => Promise<PageRoute[]>;
-  clientPlugins: import("bun").BunPlugin[];
-  serverPlugins: import("bun").BunPlugin[];
+  clientPlugins: import('bun').BunPlugin[];
+  serverPlugins: import('bun').BunPlugin[];
   plugins?: BundlerPlugin<TConfig>[];
   providers?: BundlerProvider<TConfig>[];
   onPending?: (message: string) => void;

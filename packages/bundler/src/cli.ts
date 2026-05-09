@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
-import { buildApplication } from "./index";
+import { buildApplication } from './index';
 
 interface CliConfig {
   config: {
-    mode?: "fullstack" | "frontend";
+    mode?: 'fullstack' | 'frontend';
     app?: { name?: string };
   };
   dist?: string;
-  clientPlugins?: import("bun").BunPlugin[];
-  serverPlugins?: import("bun").BunPlugin[];
+  clientPlugins?: import('bun').BunPlugin[];
+  serverPlugins?: import('bun').BunPlugin[];
 }
 
-const command = process.argv[2] ?? "build";
-const configArg = process.argv[3] ?? "bundler.config.ts";
+const command = process.argv[2] ?? 'build';
+const configArg = process.argv[3] ?? 'bundler.config.ts';
 
-if (command !== "build") {
+if (command !== 'build') {
   console.error(`Unknown command: ${command}`);
   process.exit(1);
 }
@@ -29,14 +29,14 @@ if (!loaded?.config) {
 
 const summary = await buildApplication({
   config: loaded.config,
-  dist: loaded.dist ?? ".dist",
+  dist: loaded.dist ?? '.dist',
   clientPlugins: loaded.clientPlugins ?? [],
   serverPlugins: loaded.serverPlugins ?? [],
   runLint: true,
-  onPending: (message) => console.log(`[bundler] ${message}`),
-  onSuccess: (message) => console.log(`[bundler] ${message}`),
-  onError: (message) => console.error(`[bundler] ${message}`),
+  onPending: message => console.log(`[bundler] ${message}`),
+  onSuccess: message => console.log(`[bundler] ${message}`),
+  onError: message => console.error(`[bundler] ${message}`),
 });
 
-console.log("[bundler] Build completed");
+console.log('[bundler] Build completed');
 console.log(`[bundler] Output: ${summary.dist}`);
