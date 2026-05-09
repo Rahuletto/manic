@@ -63,19 +63,14 @@ bun run ci:lint
 bun run ci:format
 ```
 
-## Pre-push Hook
+## Pre-commit Hook
 
-The `.githooks/pre-push` hook automatically runs tests before each push.
-
-Install the hook:
+Local hook validates workspace integrity on commit:
 ```bash
 bun run hooks
 ```
 
-Skip the hook (not recommended):
-```bash
-git push --no-verify
-```
+CI handles all test validation on push and PR.
 
 ## Test Coverage
 
