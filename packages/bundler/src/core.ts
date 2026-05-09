@@ -45,22 +45,22 @@ export async function minifyDir(dir: string): Promise<void> {
   const files: string[] = [];
   for await (const file of glob.scan({ cwd: dir })) files.push(`${dir}/${file}`);
 
-  await Promise.all(
-    files.map(async (filePath) => {
-      const code = await Bun.file(filePath).text();
-      try {
-        const minified = minifySync(filePath, code, {
-          compress: { target: "es2022" },
-          mangle: true,
-          codegen: { removeWhitespace: true },
-        });
-        if (minified.errors?.length) {
-          console.warn(`[Bundler Minify] Warning in ${filePath}:`, minified.errors);
-        }
-        await Bun.write(filePath, minified.code);
-      } catch (error) {
-        console.error(`[Bundler Minify] Failed to minify ${filePath}:`, error);
-      }
-    }),
-  );
+  await Promise.all(files.map((filePath) => minifyFile(filePath)));
+}
+
+export async function minifyFile(filePath: string): Promise<void> {
+  const code = await Bun.file(filePath).text();
+  try {
+    const minified = minifySync(filePath, code, {
+      compress: { target: "es2022" },
+      mangle: true,
+      codegen: { removeWhitespace: true },
+    });
+    if (minified.errors?.length) {
+      console.warn(`[Bundler Minify] Warning in ${filePath}:`, minified.errors);
+    }
+    await Bun.write(filePath, minified.code);
+  } catch (error) {
+    console.error(`[Bundler Minify] Failed to minify ${filePath}:`, error);
+  }
 }

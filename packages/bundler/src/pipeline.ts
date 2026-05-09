@@ -1,6 +1,6 @@
 import { cp, mkdir, rm } from "fs/promises";
 import { existsSync, statSync } from "fs";
-import { countRoutes, getDirSize, minifyDir, resolver } from "./core";
+import { countRoutes, getDirSize, minifyDir, minifyFile, resolver } from "./core";
 import type { BuildApplicationOptions, BuildSummary, BundlerPlugin } from "./types";
 
 const runLint = async (cwd: string, lintConfigPath?: string) => {
@@ -117,6 +117,7 @@ export async function buildApplication<TConfig = unknown>(
     entrypoints: [mainEntry.path],
     outdir: `${dist}/client`,
     target: "browser",
+    splitting: true,
     naming: {
       entry: "[name]-[hash].[ext]",
       chunk: "chunks/[name]-[hash].[ext]",
@@ -249,7 +250,7 @@ export async function buildApplication<TConfig = unknown>(
   await Promise.all([
     minifyDir(`${dist}/client`),
     existsSync(`${dist}/api`) ? minifyDir(`${dist}/api`) : Promise.resolve(),
-    minifyDir(dist),
+    minifyFile(`${dist}/server.js`),
   ]);
   onSuccess("Minifying with oxc-minify... done");
 

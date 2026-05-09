@@ -5,7 +5,7 @@
     "": {
       "name": "manic-monorepo",
       "devDependencies": {
-        "@manicjs/tui": "workspace:*",
+        "@manicjs/tui": "^1.0.3",
         "@types/bun": "^1.3.13",
         "next": "^16.2.6",
         "oxc-minify": "^0.129.0",
@@ -151,10 +151,6 @@
         "fumadocs-docgen": "^3.0.10",
         "typescript": "^6.0.3",
       },
-    },
-    "packages/tui": {
-      "name": "@manicjs/tui",
-      "version": "1.0.2",
     },
     "plugins/api-docs": {
       "name": "@manicjs/api-docs",
@@ -413,7 +409,7 @@
 
     "@manicjs/tailwind": ["@manicjs/tailwind@workspace:plugins/tailwind"],
 
-    "@manicjs/tui": ["@manicjs/tui@workspace:packages/tui"],
+    "@manicjs/tui": ["@manicjs/tui@1.0.3", "", {}, "sha512-GMX/vyL+O7877CIUC7a6kWmO9q0vDKsOu6SW0aQdaM0079dBXHzH+4CBxK2+/HvAd+X5BX0e8LJTGBw8iWDBWg=="],
 
     "@manicjs/unocss": ["@manicjs/unocss@workspace:plugins/unocss"],
 
@@ -1575,8 +1571,6 @@
 
     "@img/sharp-wasm32/@emnapi/runtime": ["@emnapi/runtime@1.9.2", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-3U4+MIWHImeyu1wnmVygh5WlgfYDtyf0k8AbLhMFxOipihf6nrWC4syIm/SwEeec0mNSafiiNnMJwbza/Is6Lw=="],
 
-    "@manicjs/providers/@manicjs/tui": ["@manicjs/tui@1.0.3", "", {}, "sha512-GMX/vyL+O7877CIUC7a6kWmO9q0vDKsOu6SW0aQdaM0079dBXHzH+4CBxK2+/HvAd+X5BX0e8LJTGBw8iWDBWg=="],
-
     "@radix-ui/react-collection/@radix-ui/react-slot": ["@radix-ui/react-slot@1.2.3", "", { "dependencies": { "@radix-ui/react-compose-refs": "1.1.2" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A=="],
 
     "@radix-ui/react-dialog/@radix-ui/react-slot": ["@radix-ui/react-slot@1.2.3", "", { "dependencies": { "@radix-ui/react-compose-refs": "1.1.2" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A=="],
@@ -1603,8 +1597,6 @@
 
     "bun-types/@types/node": ["@types/node@25.6.0", "", { "dependencies": { "undici-types": "~7.19.0" } }, "sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ=="],
 
-    "create-manic/@manicjs/tui": ["@manicjs/tui@1.0.3", "", {}, "sha512-GMX/vyL+O7877CIUC7a6kWmO9q0vDKsOu6SW0aQdaM0079dBXHzH+4CBxK2+/HvAd+X5BX0e8LJTGBw8iWDBWg=="],
-
     "cytoscape-fcose/cose-base": ["cose-base@2.2.0", "", { "dependencies": { "layout-base": "^2.0.0" } }, "sha512-AzlgcsCbUMymkADOJtQm3wO9S3ltPfYOFD5033keQn9NJzIbtnZj+UdBJe7DYml/8TdbtHJW3j58SOnKhWY/5g=="],
 
     "d3-dsv/commander": ["commander@7.2.0", "", {}, "sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw=="],
@@ -1620,8 +1612,6 @@
     "hast-util-raw/unist-util-visit": ["unist-util-visit@5.0.0", "", { "dependencies": { "@types/unist": "^3.0.0", "unist-util-is": "^6.0.0", "unist-util-visit-parents": "^6.0.0" } }, "sha512-MR04uvD+07cwl/yhVuVWAtw+3GOR/knlL55Nd/wAdblk27GCVt3lqpTivy/tkJcZoNPzTwS1Y+KMojlLDhoTzg=="],
 
     "manic-demo/@manicjs/tailwind": ["@manicjs/tailwind@1.0.3", "", { "dependencies": { "bun-plugin-tailwind": "^0.1.2" } }, "sha512-+tzj7wegcK6HNZ+PydYSYZ5z2tiCmFTy8edQLt2GJnLrfJdB0lLjzHlY6vQw7Iph7QDSUxNDB6xPVVUx/0gqjg=="],
-
-    "manicjs/@manicjs/tui": ["@manicjs/tui@1.0.3", "", {}, "sha512-GMX/vyL+O7877CIUC7a6kWmO9q0vDKsOu6SW0aQdaM0079dBXHzH+4CBxK2+/HvAd+X5BX0e8LJTGBw8iWDBWg=="],
 
     "mdast-util-frontmatter/mdast-util-from-markdown": ["mdast-util-from-markdown@2.0.2", "", { "dependencies": { "@types/mdast": "^4.0.0", "@types/unist": "^3.0.0", "decode-named-character-reference": "^1.0.0", "devlop": "^1.0.0", "mdast-util-to-string": "^4.0.0", "micromark": "^4.0.0", "micromark-util-decode-numeric-character-reference": "^2.0.0", "micromark-util-decode-string": "^2.0.0", "micromark-util-normalize-identifier": "^2.0.0", "micromark-util-symbol": "^2.0.0", "micromark-util-types": "^2.0.0", "unist-util-stringify-position": "^4.0.0" } }, "sha512-uZhTV/8NBuw0WHkPTrCqDOl0zVe1BIng5ZtHoDk49ME1qqcjYmmLmOf0gELgcRMxN4w2iuIeVso5/6QymSrgmA=="],
 

@@ -35,6 +35,14 @@ description: Recent framework and CLI updates.
   - `minifyDir`
 - Updated lint toolchain to latest `oxlint` in workspace surfaces touched by extraction to avoid stale-rule parse failures.
 
+### Canary performance hardening
+
+- Added repeatable canary benchmark runner: `bun run perf:baseline` (writes `.tmp/canary-baseline.json`).
+- Enabled client bundle chunk splitting in `@manicjs/bundler` while keeping framework behavior/API contracts unchanged.
+- Stopped double-minifying bundled server artifacts by minifying `server.js` directly (avoids redundant traversals).
+- Optimized route manifest generation to avoid unnecessary rewrites and reduce file-churn overhead in dev.
+- Added debug-level route telemetry (`MANIC_DEBUG=1`) for manifest sync duration and process RSS snapshots.
+
 ## 2026-05-07
 
 ### CLI and scaffold improvements

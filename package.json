@@ -1,7 +1,7 @@
 {
   "name": "manic-monorepo",
   "devDependencies": {
-    "@manicjs/tui": "workspace:*",
+    "@manicjs/tui": "^1.0.3",
     "@types/bun": "^1.3.13",
     "next": "^16.2.6",
     "oxc-minify": "^0.129.0",
@@ -12,6 +12,8 @@
   "scripts": {
     "dev": "cd demo && bun run dev",
     "build": "cd demo && bun run build",
+    "perf:baseline": "bun scripts/benchmark-canary.ts",
+    "perf:matrix": "bun run perf:baseline && cd demo && bun run build",
     "typecheck": "cd packages/manic && bun run tsc --noEmit",
     "publish": "bun run ./publish.ts",
     "prepare": "bash scripts/install-local-hooks.sh"
