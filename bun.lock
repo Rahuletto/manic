@@ -72,7 +72,7 @@
       "dependencies": {
         "@manicjs/api-docs": "^1.0.3",
         "@manicjs/mcp": "^1.0.3",
-        "@manicjs/providers": "^1.0.4",
+        "@manicjs/providers": "^1.1.0",
         "@manicjs/seo": "^1.0.3",
         "@manicjs/sitemap": "^1.0.3",
         "@manicjs/tailwind": "^1.0.3",
@@ -228,9 +228,9 @@
     },
     "providers": {
       "name": "@manicjs/providers",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "dependencies": {
-        "@manicjs/tui": "1.0.2",
+        "@manicjs/tui": "^1.0.2",
       },
       "devDependencies": {
         "@shikijs/transformers": "^4.0.2",
@@ -1383,8 +1383,6 @@
     "manic-demo/@manicjs/api-docs": ["@manicjs/api-docs@1.0.3", "", { "dependencies": { "@scalar/hono-api-reference": "^0.10.14", "hono": "^4.12.18" }, "peerDependencies": { "manicjs": "^0.7.7" } }, "sha512-8aUr1vbVvXFQhB0HGzvXJpWVHZ2sUcfDsv3lSlnYu4yMyzP2wSjzuO7fmsajaLM8ZuDofACRN8B9G0z2nW8FLA=="],
 
     "manic-demo/@manicjs/mcp": ["@manicjs/mcp@1.0.3", "", { "peerDependencies": { "manicjs": "^0.7.7", "zod": "^4.4.3" } }, "sha512-uBt0zFTPebA/KsEk9In7uL2i9GiiXT3yCaDukFpK0/nqjTV43EiZefy4pvs/vcE3OMgU0t1USMh/se55wfvqGg=="],
-
-    "manic-demo/@manicjs/providers": ["@manicjs/providers@1.0.4", "", { "dependencies": { "@manicjs/tui": "1.0.2" } }, "sha512-nK2YWgcAkdnAp4whLc4ODLoIAhoBD4AHkiyDZ6WLw/fMw+leRSFjCujf47TCF+DHIXSC7AP0RsS8mWXv2cLufQ=="],
 
     "manic-demo/@manicjs/seo": ["@manicjs/seo@1.0.3", "", { "peerDependencies": { "manicjs": "^0.7.7", "react": "^19.2.6" } }, "sha512-3LE7hmBw1gqPXxfV0kFh12mTbtdYsZHIeCOldeCfsefZbUxjMwe871Zoo4tvrwI6nYlW+MmJPuJ0/vqY+npVjg=="],
 

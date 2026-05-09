@@ -14,7 +14,7 @@
   "dependencies": {
     "@manicjs/api-docs": "^1.0.3",
     "@manicjs/mcp": "^1.0.3",
-    "@manicjs/providers": "^1.0.4",
+    "@manicjs/providers": "^1.1.0",
     "@manicjs/seo": "^1.0.3",
     "@manicjs/sitemap": "^1.0.3",
     "@manicjs/tailwind": "^1.0.3",
