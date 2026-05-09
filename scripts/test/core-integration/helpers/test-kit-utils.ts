@@ -43,9 +43,11 @@ export const waitForHttp = async (url: string, timeoutMs = 20000) => {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
     try {
+      // eslint-disable-next-line no-await-in-loop
       await fetch(url);
       return;
     } catch {
+      // eslint-disable-next-line no-await-in-loop
       await Bun.sleep(150);
     }
   }
