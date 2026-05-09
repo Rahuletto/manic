@@ -19,7 +19,7 @@ This is a **Bun workspace** coordinating development across independent reposito
 │   ├── seo/              (manic-js/plugin-seo)
 │   ├── sitemap/          (manic-js/plugin-sitemap)
 │   └── api-docs/         (manic-js/plugin-api-docs)
-├── docs/                 (manic-js/docs)
+├── docs/                 (manic-js/docs — cloned locally; not tracked in Rahuletto/manic)
 ├── example-starter/      (manic-js/example-starter)
 ├── example-chatbot/      (manic-js/example-chatbot)
 ├── demo/                 (Rahuletto/manic - testbench)

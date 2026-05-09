@@ -37,22 +37,22 @@ if [ -n "$UPSTREAM" ] && [ "${AHEAD:-0}" -eq 0 ]; then
 fi
 
 # Remote installs (Vercel) cannot resolve workspace: — sibling repos are not in git.
-echo "📌 Resolving workspace: protocol in demo/docs (if any)..."
+echo "📌 Resolving workspace: protocol in demo (if any)..."
 bun "$WORKSPACE_ROOT/scripts/resolve-workspace-deps-for-push.ts"
 bun install
 
-if ! git diff --quiet -- demo/package.json docs/package.json bun.lock 2>/dev/null; then
+if ! git diff --quiet -- demo/package.json bun.lock 2>/dev/null; then
   echo ""
   echo "❌ package.json or bun.lock still differ after resolving workspace: protocol."
   echo "   Commit the updated files, then push:"
   echo ""
-  echo "     git add demo/package.json docs/package.json bun.lock"
+  echo "     git add demo/package.json bun.lock"
   echo "     git commit -m 'chore: resolve workspace deps for deploy'"
   echo ""
   exit 1
 fi
 
-for f in demo/package.json docs/package.json; do
+for f in demo/package.json; do
   if [ -f "$f" ] && grep -q '"workspace:' "$f" 2>/dev/null; then
     echo "❌ $f still contains workspace: protocol. Run:"
     echo "   bun scripts/resolve-workspace-deps-for-push.ts && bun install"

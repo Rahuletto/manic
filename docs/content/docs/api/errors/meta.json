@@ -1,5 +1,0 @@
-{
-  "title": "Errors & boundaries",
-  "description": "NotFound, ErrorOverlay, ServerError.",
-  "pages": ["index", "not-found", "error-overlay", "server-error"]
-}

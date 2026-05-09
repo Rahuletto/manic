@@ -1,5 +1,0 @@
-{
-  "title": "Client & RPC",
-  "description": "createClient and typed RPC patterns.",
-  "pages": ["index", "create-client", "rpc"]
-}

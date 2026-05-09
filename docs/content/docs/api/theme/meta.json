@@ -1,5 +1,0 @@
-{
-  "title": "Theme",
-  "description": "ThemeProvider, useTheme, ThemeToggle, initTheme.",
-  "pages": ["index", "theme-provider", "use-theme", "theme-toggle", "init-theme"]
-}

@@ -1,5 +1,0 @@
-{
-  "title": "Plugin loaders",
-  "description": "manicjs/plugins low-level helpers.",
-  "pages": ["index", "api-loader-plugin", "file-importer-plugin"]
-}

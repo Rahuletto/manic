@@ -1,5 +1,0 @@
-{
-  "title": "Server",
-  "description": "createManicServer and plugin server hooks.",
-  "pages": ["index", "create-manic-server"]
-}

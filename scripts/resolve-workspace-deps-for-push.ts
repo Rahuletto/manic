@@ -4,13 +4,13 @@
  * package manifests with ^<latest> from npm so remotes (Vercel, CI) work when
  * sibling repos are not cloned.
  *
- * Targets: demo/, docs/ (paths committed on Rahuletto/manic).
+ * Targets: demo/ only. Docs live in manic-js/docs (separate repo).
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.join(import.meta.dir, '..');
-const TARGETS = ['demo/package.json', 'docs/package.json'] as const;
+const TARGETS = ['demo/package.json'] as const;
 
 const WORKSPACE_PROTO = /^workspace:/u;
 
@@ -59,7 +59,7 @@ function main() {
   }
 
   if (!anyChanged) {
-    console.log('No workspace: entries to resolve in demo/docs package.json');
+    console.log('No workspace: entries to resolve in demo/package.json');
   }
 }
 

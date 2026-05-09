@@ -10,7 +10,6 @@
     "create-manic",
     "tui",
     "plugins/*",
-    "docs",
     "example-starter",
     "example-chatbot",
     "demo"
