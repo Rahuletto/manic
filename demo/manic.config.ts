@@ -5,6 +5,7 @@ import { seo } from '@manicjs/seo';
 import { sitemap } from '@manicjs/sitemap';
 import { mcp } from '@manicjs/mcp';
 import { tailwind } from '@manicjs/tailwind';
+import { lightningcss } from '@manicjs/lightningcss';
 
 export default defineConfig({
   app: {
@@ -24,6 +25,7 @@ export default defineConfig({
     sitemap({ hostname: 'https://manic.js.org' }),
     mcp({ name: 'manic-demo' }),
     tailwind(),
+    lightningcss(),
   ],
 
   providers: [vercel(), cloudflare()],
