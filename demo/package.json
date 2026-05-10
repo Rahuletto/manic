@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@manicjs/api-docs": "^1.0.5",
-    "@manicjs/lightningcss": "workspace:*",
     "@manicjs/mcp": "^1.0.5",
     "@manicjs/providers": "^1.1.1",
     "@manicjs/seo": "^1.0.5",
