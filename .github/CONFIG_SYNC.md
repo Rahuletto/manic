@@ -11,6 +11,8 @@ The following files should be **identical or nearly identical** across all repos
 | `.oxlintrc.json` | root | OXC lint rules | all |
 | `.oxfmt.json` | root | OXC format rules | all |
 | `.github/workflows/ci.yml` | template | CI pipeline | all |
+| `.github/workflows/codeql.yml` | `.github/codeql-template.yml` | CodeQL (JS/TS) on push/PR/merge queue + weekly | core, bundler, providers, create-manic, tui, all plugins, umbrella |
+| `.github/workflows/dependency-review.yml` | `.github/dependency-review-template.yml` | Dependency Review on PRs (each push to the PR) | core, bundler, providers, create-manic, tui, all plugins, umbrella |
 | `AGENTS.md` (partial) | root | Agent standards | core, all plugins |
 | `package.json` (scripts) | each repo | Standard CI scripts | all |
 
@@ -20,6 +22,7 @@ The following files should be **identical or nearly identical** across all repos
 - [ ] Changes to `.oxlintrc.json` or `.oxfmt.json` in root
 - [ ] New linting rules added to AGENTS.md
 - [ ] CI/CD improvements in `.github/ci-template.yml`
+- [ ] Updates to `.github/codeql-template.yml` or `.github/dependency-review-template.yml`
 - [ ] Major version updates (Bun, OXC, TypeScript)
 
 ## How to Sync
@@ -104,6 +107,13 @@ For each repo under manic-js/:
    git commit -m "chore: sync quality configs from Rahuletto/manic"
    git push origin main
    ```
+
+## CodeQL and Dependency Review
+
+- **`codeql.yml`** — Code scanning for `javascript-typescript` via `github/codeql-action` v4. Triggers on **push** and **pull_request** to `main` / `canary`, **`merge_group`** (merge queue), and a **weekly** `schedule`. Requires default **Actions: Read repository contents** and **Security events: Write** for uploading SARIF (handled in the workflow `permissions`).
+- **`dependency-review.yml`** — Uses `actions/dependency-review-action` v4 on **`pull_request`** targeting `main` / `canary`. That includes **every new commit pushed to an open PR** (`synchronize`). It does **not** run on direct pushes to `main` without a PR; GitHub’s Dependency Review API is diff-based. **Dependency graph** must be enabled for the repo (on by default for public repos). Private repos need appropriate GitHub plan/features per [Dependency review](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review).
+
+Copy from `.github/codeql-template.yml` and `.github/dependency-review-template.yml` when adding new package repositories.
 
 ## Package.json Scripts
 
