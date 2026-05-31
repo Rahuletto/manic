@@ -24,7 +24,7 @@
     },
     "core": {
       "name": "manicjs",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "bin": {
         "manic": "./src/cli/index.ts",
       },
