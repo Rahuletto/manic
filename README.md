@@ -53,7 +53,7 @@ bun dev
 - Fast transforms/minification powered by OXC
 - File-based routing and SSR-ready architecture
 - Provider adapters for major deployment targets
-- AI-focused plugins (`@manicjs/mcp`, API docs, SEO, sitemap)
+- App-focused plugins (`@manicjs/pwa`, `@manicjs/mcp`, API docs, SEO, sitemap)
 
 ## Packages
 
@@ -70,6 +70,7 @@ bun dev
 | [@manicjs/sitemap](https://www.npmjs.com/package/@manicjs/sitemap) | Sitemap generation plugin |
 | [@manicjs/mcp](https://www.npmjs.com/package/@manicjs/mcp) | Model Context Protocol plugin |
 | [@manicjs/api-docs](https://www.npmjs.com/package/@manicjs/api-docs) | Scalar API docs plugin |
+| [@manicjs/pwa](https://www.npmjs.com/package/@manicjs/pwa) | Progressive Web App plugin |
 
 ## Requirements
 

@@ -73,6 +73,7 @@
         "@manicjs/api-docs": "^1.0.5",
         "@manicjs/mcp": "^1.0.5",
         "@manicjs/providers": "^1.1.1",
+        "@manicjs/pwa": "workspace:*",
         "@manicjs/seo": "^1.0.5",
         "@manicjs/sitemap": "^1.0.5",
         "@manicjs/tailwind": "^1.0.8",
@@ -182,6 +183,17 @@
       "optionalPeers": [
         "fumadocs-core",
       ],
+    },
+    "plugins/pwa": {
+      "name": "@manicjs/pwa",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@types/bun": "^1.3.13",
+        "manicjs": "^1.0.0",
+      },
+      "peerDependencies": {
+        "manicjs": ">=1.0.0",
+      },
     },
     "plugins/seo": {
       "name": "@manicjs/seo",
@@ -296,6 +308,8 @@
     "@manicjs/mdx": ["@manicjs/mdx@workspace:plugins/mdx"],
 
     "@manicjs/providers": ["@manicjs/providers@workspace:providers"],
+
+    "@manicjs/pwa": ["@manicjs/pwa@workspace:plugins/pwa"],
 
     "@manicjs/seo": ["@manicjs/seo@workspace:plugins/seo"],
 

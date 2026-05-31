@@ -1,8 +1,6 @@
 import { gitConfig } from '@/lib/shared';
 import Link from 'next/link';
 
-const licenseUrl = `${gitConfig.protocol}://${gitConfig.hostname}/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/LICENSE`;
-
 export function FreeOpenSourceSection() {
   return (
     <section className="border-b border-fd-border bg-fd-muted/30">
@@ -11,16 +9,7 @@ export function FreeOpenSourceSection() {
           Free & open source
         </h2>
         <p className="mt-4 text-sm leading-relaxed text-fd-muted-foreground max-w-2xl">
-          Manic will always be free and open source, under the{' '}
-          <Link
-            href={licenseUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            GNU General Public License v3.0 (GPL-3.0)
-          </Link>
-          . This is made possible by our contributors.
+          Manic is MIT Licensed and will always be free and open source. This is made possible by our contributors.
         </p>
         <Link
           href={`${gitConfig.protocol}://${gitConfig.hostname}/${gitConfig.user}/${gitConfig.repo}`}

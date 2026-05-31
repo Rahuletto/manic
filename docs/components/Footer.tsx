@@ -107,7 +107,7 @@ export function Footer() {
         <div className="border-t border-fd-border pt-8">
           {/* Copyright */}
           <p className="text-xs text-fd-muted-foreground">
-            © {copyrightStart}{copyrightStart !== currentYear ? `-${currentYear}` : ''} Manic contributors. Licensed under GPL-3.0.
+            © {copyrightStart}{copyrightStart !== currentYear ? `-${currentYear}` : ''} Manic contributors. MIT Licensed.
           </p>
         </div>
       </div>

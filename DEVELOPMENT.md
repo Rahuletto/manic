@@ -18,7 +18,8 @@ This is a **Bun workspace** coordinating development across independent reposito
 │   ├── mcp/              (manic-js/plugin-mcp)
 │   ├── seo/              (manic-js/plugin-seo)
 │   ├── sitemap/          (manic-js/plugin-sitemap)
-│   └── api-docs/         (manic-js/plugin-api-docs)
+│   ├── api-docs/         (manic-js/plugin-api-docs)
+│   └── pwa/              (manic-js/plugin-pwa)
 ├── docs/                 (manic-js/docs — cloned locally; not tracked in Rahuletto/manic)
 ├── examples/
 │   ├── starter/        (manic-js/example-starter)
