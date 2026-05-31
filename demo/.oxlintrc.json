@@ -25,6 +25,17 @@
         "allow": ["_server", "__MANIC_ROUTES__", "__MANIC_ERROR_PAGES__"]
       }
     ],
-    "max-lines-per-function": "off"
-  }
+    "max-lines-per-function": "off",
+    "manic/no-raw-img-element": "warn",
+    "manic/no-raw-anchor-element": "warn",
+    "manic/image-needs-dimensions": "warn",
+    "manic/routes-require-default-export": "error",
+    "manic/no-sibling-route-import": "error"
+  },
+  "jsPlugins": [
+    {
+      "name": "manic",
+      "specifier": "@manicjs/lint"
+    }
+  ]
 }

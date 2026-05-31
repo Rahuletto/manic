@@ -1,4 +1,5 @@
 import { useTheme } from 'manicjs/theme';
+import { Image, Link } from 'manicjs';
 import { useState, useCallback } from 'react';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
@@ -15,8 +16,8 @@ export default function Home() {
   return (
     <main className="py-24 md:px-24 px-12 mx-auto flex items-start justify-center gap-32 flex-col max-w-screen-lg min-h-screen text-foreground">
       <div className="flex gap-6 flex-col">
-        <img
-          src={isDark ? '/assets/wordmark.svg' : '/assets/wordmark-dark.svg'}
+        <Image
+          src={isDark ? '/assets/wordmark.png' : '/assets/wordmark-dark.png'}
           alt="MANIC."
           className="max-md:w-54 max-sm:w-54 transition-all duration-250"
           style={LOGO_STYLE}
@@ -83,24 +84,24 @@ export default function Home() {
       </div>
 
       <div className="mt-6 flex gap-6 md:flex-row flex-col items-start">
-        <a
-          href="https://www.manicjs.tech/docs/framework/benchmarks"
+        <Link
+          to="https://www.manicjs.tech/docs/framework/benchmarks"
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary flex items-center justify-center"
           style={LINKBUTTON_STYLE}
         >
           How fast? →
-        </a>
-        <a
-          href="https://manic-docs.vercel.app/"
+        </Link>
+        <Link
+          to="https://manicjs.tech/"
           target="_blank"
           rel="noopener noreferrer"
           className="btn-secondary flex items-center justify-center"
           style={LINKBUTTON_STYLE}
         >
           Documentation
-        </a>
+        </Link>
       </div>
     </main>
   );
