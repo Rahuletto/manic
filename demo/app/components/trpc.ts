@@ -1,10 +1,5 @@
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '../api/trpc/router';
+import { hc } from 'hono/client';
+import type { AppType } from '@/api/~rpc.generated';
 
-export const trpc = createTRPCClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      url: '/api/trpc',
-    }),
-  ],
-});
+export const rpc = hc<AppType>('/api');
+

@@ -1,7 +1,7 @@
 import { useTheme } from 'manicjs/theme';
 import { Image, Link } from 'manicjs';
 import { useCallback, useState } from 'react';
-import { trpc } from '@/components/trpc';
+import { rpc } from '@/components/trpc';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
@@ -26,8 +26,9 @@ export default function Home() {
   const fetchTimestamp = useCallback(() => {
     setLoading(true);
     setError('');
-    trpc.timestamp
-      .query()
+    rpc.timestamp
+      .$get()
+      .then(res => res.json())
       .then(result => {
         setTsData(result);
       })
@@ -111,12 +112,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* tRPC Timestamp Section */}
+      {/* Hono RPC Timestamp Section */}
       <div className="flex flex-col gap-4 w-full max-w-md">
-        <h2 className="text-xl font-bold">tRPC Timestamp</h2>
+        <h2 className="text-xl font-bold">Hono RPC Timestamp</h2>
         <p className="text-sm text-foreground/60">
-          Fetch the current server timestamp via tRPC over the Hono fetch
-          adapter.
+          Fetch the current server timestamp via Hono's native RPC mechanism over
+          dynamic file-system routes.
         </p>
 
         <button
