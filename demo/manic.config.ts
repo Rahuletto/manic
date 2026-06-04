@@ -5,6 +5,7 @@ import { sitemap } from '@manicjs/sitemap';
 import { mcp } from '@manicjs/mcp';
 import { tailwind } from '@manicjs/tailwind';
 import { pwa } from '@manicjs/pwa';
+import { vercel, cloudflare, netlify } from '@manicjs/providers';
 
 export default defineConfig({
   app: {
@@ -14,6 +15,8 @@ export default defineConfig({
   server: {
     port: 6070,
   },
+
+  providers: [vercel(), cloudflare(), netlify()],
 
   plugins: [
     apiDocs(),

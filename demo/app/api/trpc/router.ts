@@ -7,6 +7,7 @@ export const appRouter = t.router({
     ok: true,
     service: 'manic-trpc',
   })),
+
   greeting: t.procedure
     .input((value: unknown) => {
       if (
@@ -22,6 +23,12 @@ export const appRouter = t.router({
     .query(({ input }) => ({
       message: `Hello ${input.name} from tRPC on Hono!`,
     })),
+
+  timestamp: t.procedure.query(() => ({
+    timestamp: new Date().toISOString(),
+    unix: Date.now(),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  })),
 });
 
 export type AppRouter = typeof appRouter;

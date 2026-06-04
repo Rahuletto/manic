@@ -1,25 +1,42 @@
 import { useTheme } from 'manicjs/theme';
 import { Image, Link } from 'manicjs';
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { trpc } from '@/components/trpc';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
 const LINKBUTTON_STYLE = { viewTransitionName: 'linkbutton' };
 
+interface TimestampData {
+  timestamp: string;
+  unix: number;
+  timezone: string;
+}
+
 export default function Home() {
   const { isDark } = useTheme();
   const [state, setState] = useState(0);
-  const [trpcMessage, setTrpcMessage] = useState('');
+  const [tsData, setTsData] = useState<TimestampData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const increment = useCallback(() => setState(s => s + 1), []);
   const decrement = useCallback(() => setState(s => s - 1), []);
 
-  useEffect(() => {
-    trpc.greeting
-      .query({ name: 'Manic' })
-      .then(result => setTrpcMessage(result.message))
-      .catch(() => setTrpcMessage('tRPC unavailable'));
+  const fetchTimestamp = useCallback(() => {
+    setLoading(true);
+    setError('');
+    trpc.timestamp
+      .query()
+      .then(result => {
+        setTsData(result);
+      })
+      .catch(() => {
+        setError('Failed to fetch timestamp');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -47,9 +64,6 @@ export default function Home() {
           </code>{' '}
           file and see the speed of the HMR.
         </p>
-        {trpcMessage ? (
-          <p className="text-sm text-foreground/60">{trpcMessage}</p>
-        ) : null}
         <div className="flex items-center w-44 overflow-hidden border-2 border-foreground/10 rounded-xl">
           <button
             onClick={decrement}
@@ -95,6 +109,45 @@ export default function Home() {
             </svg>
           </button>
         </div>
+      </div>
+
+      {/* tRPC Timestamp Section */}
+      <div className="flex flex-col gap-4 w-full max-w-md">
+        <h2 className="text-xl font-bold">tRPC Timestamp</h2>
+        <p className="text-sm text-foreground/60">
+          Fetch the current server timestamp via tRPC over the Hono fetch
+          adapter.
+        </p>
+
+        <button
+          id="fetch-timestamp-btn"
+          onClick={fetchTimestamp}
+          disabled={loading}
+          className="btn-primary w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Fetching…' : 'Fetch Timestamp'}
+        </button>
+
+        {error ? (
+          <p className="text-sm text-accent">{error}</p>
+        ) : null}
+
+        {tsData ? (
+          <div className="flex flex-col gap-2 rounded-xl border-2 border-foreground/10 p-4 font-mono text-sm">
+            <div className="flex justify-between">
+              <span className="text-foreground/50">ISO</span>
+              <span id="ts-iso">{tsData.timestamp}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/50">Unix</span>
+              <span id="ts-unix">{tsData.unix}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground/50">TZ</span>
+              <span id="ts-tz">{tsData.timezone}</span>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-6 flex gap-6 md:flex-row flex-col items-start">
