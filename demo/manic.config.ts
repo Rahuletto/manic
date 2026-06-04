@@ -1,5 +1,4 @@
 import { defineConfig } from 'manicjs/config';
-import { cloudflare, vercel } from '@manicjs/providers';
 import { apiDocs } from '@manicjs/api-docs';
 import { seo } from '@manicjs/seo';
 import { sitemap } from '@manicjs/sitemap';
@@ -47,6 +46,4 @@ export default defineConfig({
       ],
     }),
   ],
-
-  providers: [vercel(), cloudflare()],
 });

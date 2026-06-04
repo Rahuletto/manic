@@ -1,6 +1,7 @@
 import { useTheme } from 'manicjs/theme';
 import { Image, Link } from 'manicjs';
-import { useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { trpc } from '@/components/trpc';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
@@ -9,9 +10,17 @@ const LINKBUTTON_STYLE = { viewTransitionName: 'linkbutton' };
 export default function Home() {
   const { isDark } = useTheme();
   const [state, setState] = useState(0);
+  const [trpcMessage, setTrpcMessage] = useState('');
 
   const increment = useCallback(() => setState(s => s + 1), []);
   const decrement = useCallback(() => setState(s => s - 1), []);
+
+  useEffect(() => {
+    trpc.greeting
+      .query({ name: 'Manic' })
+      .then(result => setTrpcMessage(result.message))
+      .catch(() => setTrpcMessage('tRPC unavailable'));
+  }, []);
 
   return (
     <main className="py-24 md:px-24 px-12 mx-auto flex items-start justify-center gap-32 flex-col max-w-screen-lg min-h-screen text-foreground">
@@ -19,6 +28,8 @@ export default function Home() {
         <Image
           src={isDark ? '/assets/wordmark.png' : '/assets/wordmark-dark.png'}
           alt="MANIC."
+          width={582}
+          height={122}
           className="max-md:w-54 max-sm:w-54 transition-all duration-250"
           style={LOGO_STYLE}
         />
@@ -36,6 +47,9 @@ export default function Home() {
           </code>{' '}
           file and see the speed of the HMR.
         </p>
+        {trpcMessage ? (
+          <p className="text-sm text-foreground/60">{trpcMessage}</p>
+        ) : null}
         <div className="flex items-center w-44 overflow-hidden border-2 border-foreground/10 rounded-xl">
           <button
             onClick={decrement}
