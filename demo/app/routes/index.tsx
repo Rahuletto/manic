@@ -1,7 +1,7 @@
 import { useTheme } from 'manicjs/theme';
 import { Image, Link } from 'manicjs';
 import { useCallback, useState } from 'react';
-import { rpc } from '@/components/trpc';
+import { rpc } from '@/components/rpc';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
@@ -116,8 +116,8 @@ export default function Home() {
       <div className="flex flex-col gap-4 w-full max-w-md">
         <h2 className="text-xl font-bold">Hono RPC Timestamp</h2>
         <p className="text-sm text-foreground/60">
-          Fetch the current server timestamp via Hono's native RPC mechanism over
-          dynamic file-system routes.
+          Fetch the current server timestamp via Hono's native RPC mechanism
+          over dynamic file-system routes.
         </p>
 
         <button
@@ -129,9 +129,7 @@ export default function Home() {
           {loading ? 'Fetching…' : 'Fetch Timestamp'}
         </button>
 
-        {error ? (
-          <p className="text-sm text-accent">{error}</p>
-        ) : null}
+        {error ? <p className="text-sm text-accent">{error}</p> : null}
 
         {tsData ? (
           <div className="flex flex-col gap-2 rounded-xl border-2 border-foreground/10 p-4 font-mono text-sm">
