@@ -27,37 +27,44 @@ export interface BundlerPlugin<TConfig = unknown> {
   build?(ctx: BundlerPluginContext<TConfig>): void | Promise<void>;
 }
 
-/** Context passed to providers during deployment export step. */
-export interface BundlerProviderContext<TConfig> {
-  dist: string;
-  config: TConfig;
-  apiEntries: string[];
-  clientDir: string;
-  serverFile: string;
-}
-
-/** Provider contract for platform-specific output generation. */
-export interface BundlerProvider<TConfig = unknown> {
-  name: string;
-  build(context: BundlerProviderContext<TConfig>): Promise<void> | void;
-}
-
 /** Options accepted by the `buildApplication()` pipeline API. */
 export interface BuildApplicationOptions<TConfig = unknown> {
   config: TConfig & {
-    mode?: 'fullstack' | 'frontend';
-    app?: { name?: string };
+    app?: { name?: string; port?: number };
+    router?: { ssr?: boolean };
   };
   dist: string;
   cwd?: string;
   runLint?: boolean;
   lintConfigPath?: string;
   writeRoutesManifest?: (path: string) => Promise<void>;
+  writeSSRManifest?: (path: string) => Promise<void>;
   discoverPageRoutes?: () => Promise<PageRoute[]>;
   clientPlugins: import('bun').BunPlugin[];
   serverPlugins: import('bun').BunPlugin[];
   plugins?: BundlerPlugin<TConfig>[];
-  providers?: BundlerProvider<TConfig>[];
+  onPending?: (message: string) => void;
+  onSuccess?: (message: string) => void;
+  onError?: (message: string) => void;
+  onLog?: (scope: string, message: string) => void;
+}
+
+export interface BuildWarning {
+  file: string;
+  message: string;
+  code?: string;
+}
+
+export interface BuildContext<TConfig = unknown> {
+  config: TConfig & {
+    app?: { name?: string; port?: number };
+    router?: { ssr?: boolean };
+  };
+  cwd: string;
+  dist: string;
+  warnings: BuildWarning[];
+  clientPlugins: import('bun').BunPlugin[];
+  serverPlugins: import('bun').BunPlugin[];
   onPending?: (message: string) => void;
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
@@ -74,4 +81,7 @@ export interface BuildSummary {
   pageCount: number;
   apiCount: number;
   apiEntries: string[];
+  ssrEnabled: boolean;
+  ssrMode?: 'streaming' | 'static';
+  ssrServerSize?: number;
 }

@@ -12,7 +12,5 @@ export type {
   BuildSummary,
   BundlerPlugin,
   BundlerPluginContext,
-  BundlerProvider,
-  BundlerProviderContext,
   PageRoute,
 } from './types';
