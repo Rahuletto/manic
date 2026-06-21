@@ -2,6 +2,7 @@
   "name": "manic-workspace",
   "version": "0.0.0",
   "dependencies": {
+    "manic-workspace": ".",
     "oxc-transform": "^0.134.0"
   },
   "description": "Bun workspace for Manic framework development",
