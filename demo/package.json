@@ -17,6 +17,7 @@
     "@manicjs/mcp": "^1.0.5",
     "@manicjs/providers": "^1.1.1",
     "@manicjs/pwa": "^1.0.0",
+    "@manicjs/rosetta": "^0.0.1",
     "@manicjs/seo": "^1.0.5",
     "@manicjs/sitemap": "^1.0.5",
     "@manicjs/tailwind": "^1.0.8",

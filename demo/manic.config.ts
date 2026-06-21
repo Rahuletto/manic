@@ -6,11 +6,15 @@ import { mcp } from '@manicjs/mcp';
 import { tailwind } from '@manicjs/tailwind';
 import { pwa } from '@manicjs/pwa';
 import { vercel, cloudflare, netlify } from '@manicjs/providers';
+import { rosetta } from '@manicjs/rosetta';
+import { viteTestPlugin } from './vite-test-plugin';
 
 export default defineConfig({
   app: {
     name: 'Manic',
   },
+
+  ssr: 'streaming',
 
   server: {
     port: 6070,
@@ -19,6 +23,7 @@ export default defineConfig({
   providers: [vercel(), cloudflare(), netlify()],
 
   plugins: [
+    rosetta(viteTestPlugin()),
     apiDocs(),
     seo({
       hostname: 'https://manic.js.org',

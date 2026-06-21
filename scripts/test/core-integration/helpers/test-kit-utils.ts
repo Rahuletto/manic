@@ -88,6 +88,12 @@ export const createDemoFixture = async (port = 6070) => {
   }
 
   await cp(join(demoSourceDir, '~manic.ts'), join(fixtureDir, '~manic.ts'));
+  if (existsSync(join(demoSourceDir, '~manic.ssr.ts'))) {
+    await cp(
+      join(demoSourceDir, '~manic.ssr.ts'),
+      join(fixtureDir, '~manic.ssr.ts')
+    );
+  }
   await cp(
     join(demoSourceDir, 'tsconfig.json'),
     join(fixtureDir, 'tsconfig.json')
@@ -116,6 +122,7 @@ export const createDemoFixture = async (port = 6070) => {
         dependencies: {
           manicjs: `file:${coreRoot}`,
           '@manicjs/api-docs': `file:${join(pluginsRoot, 'api-docs')}`,
+          '@manicjs/lint': `file:${join(pluginsRoot, 'lint')}`,
           '@manicjs/mcp': `file:${join(pluginsRoot, 'mcp')}`,
           '@manicjs/seo': `file:${join(pluginsRoot, 'seo')}`,
           '@manicjs/sitemap': `file:${join(pluginsRoot, 'sitemap')}`,

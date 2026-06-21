@@ -1,19 +1,11 @@
 {
   "name": "manic-workspace",
   "version": "0.0.0",
-  "private": true,
+  "dependencies": {
+    "oxc-transform": "^0.134.0"
+  },
   "description": "Bun workspace for Manic framework development",
-  "workspaces": [
-    "core",
-    "bundler",
-    "providers",
-    "create-manic",
-    "tui",
-    "plugins/*",
-    "examples/starter",
-    "examples/chatbot",
-    "demo"
-  ],
+  "private": true,
   "scripts": {
     "setup": "bash setup.sh && bash scripts/install-local-hooks.sh",
     "dev": "cd demo && bun dev",
@@ -28,5 +20,17 @@
     "hooks": "bash scripts/install-local-hooks.sh",
     "resolve-workspace-deps": "bun scripts/resolve-workspace-deps-for-push.ts"
   },
-  "devDependencies": {}
+  "workspaces": [
+    "core",
+    "bundler",
+    "providers",
+    "create-manic",
+    "tui",
+    "rosetta",
+    "plugins/*",
+    "examples/starter",
+    "examples/chatbot",
+    "demo",
+    "fuma-demo"
+  ]
 }

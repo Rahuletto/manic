@@ -1,5 +1,12 @@
 export const routes = {
-  "/": () => import("./routes/index"),
+  "/": {
+    import: () => import("./routes/index"),
+    client: false
+  },
+  "/post/:slug": {
+    import: () => import("./routes/post/[slug]"),
+    client: false
+  },
 };
 
 export const notFoundPage = undefined;

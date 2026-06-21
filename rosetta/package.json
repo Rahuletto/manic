@@ -1,0 +1,29 @@
+{
+  "name": "@manicjs/rosetta",
+  "version": "0.0.1",
+  "description": "Translates Vite plugins to Manic plugins",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./preload": {
+      "types": "./src/preload.ts",
+      "import": "./src/preload.ts"
+    }
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "hono": "^4.12.18"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.13",
+    "@types/node": "^20.12.7",
+    "typescript": "^6.0.3"
+  }
+}

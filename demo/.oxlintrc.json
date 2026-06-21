@@ -22,7 +22,7 @@
     "no-underscore-dangle": [
       "error",
       {
-        "allow": ["_server", "__MANIC_ROUTES__", "__MANIC_ERROR_PAGES__"]
+        "allow": ["_server", "__MANIC_ROUTES__", "__MANIC_ERROR_PAGES__", "__MANIC_LOADER_DATA__", "__MANIC_SSR_COMPONENT__"]
       }
     ],
     "max-lines-per-function": "off",

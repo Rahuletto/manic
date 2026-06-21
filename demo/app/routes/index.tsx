@@ -1,160 +1,101 @@
-import { useTheme } from 'manicjs/theme';
 import { Image, Link } from 'manicjs';
-import { useCallback, useState } from 'react';
-import { rpc } from '@/components/rpc';
+import textContent from '@/test.txt';
+import InteractiveChart from '@/components/InteractiveChart';
+import Counter from '@/components/Counter';
+import TimestampFetcher from '@/components/TimestampFetcher';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
 const LINKBUTTON_STYLE = { viewTransitionName: 'linkbutton' };
 
-interface TimestampData {
-  timestamp: string;
-  unix: number;
-  timezone: string;
+interface HomeLoaderData {
+  serverTime: string;
+  buildInfo: { version: string; env: string };
 }
 
-export default function Home() {
-  const { isDark } = useTheme();
-  const [state, setState] = useState(0);
-  const [tsData, setTsData] = useState<TimestampData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export const loader = (): Promise<HomeLoaderData> => {
+  return Promise.resolve({
+    serverTime: new Date().toISOString(),
+    buildInfo: {
+      version: '1.0.0',
+      env: process.env.NODE_ENV || 'development',
+    },
+  });
+};
 
-  const increment = useCallback(() => setState(s => s + 1), []);
-  const decrement = useCallback(() => setState(s => s - 1), []);
-
-  const fetchTimestamp = useCallback(() => {
-    setLoading(true);
-    setError('');
-    rpc.timestamp
-      .$get()
-      .then(res => res.json())
-      .then(result => {
-        setTsData(result);
-      })
-      .catch(() => {
-        setError('Failed to fetch timestamp');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
+export default function Home({ loaderData }: { loaderData?: HomeLoaderData }) {
   return (
     <main className="py-24 md:px-24 px-12 mx-auto flex items-start justify-center gap-32 flex-col max-w-screen-lg min-h-screen text-foreground">
       <div className="flex gap-6 flex-col">
+        {/* Theme-aware logo using pure Tailwind CSS classes */}
         <Image
-          src={isDark ? '/assets/wordmark.png' : '/assets/wordmark-dark.png'}
+          src="/assets/wordmark.png"
           alt="MANIC."
           width={582}
           height={122}
-          className="max-md:w-54 max-sm:w-54 transition-all duration-250"
+          className="hidden dark:block max-md:w-54 max-sm:w-54 transition-all duration-250"
+          style={LOGO_STYLE}
+        />
+        <Image
+          src="/assets/wordmark-dark.png"
+          alt="MANIC."
+          width={582}
+          height={122}
+          className="block dark:hidden max-md:w-54 max-sm:w-54 transition-all duration-250"
           style={LOGO_STYLE}
         />
 
         <p className="md:text-2xl text-xl font-medium" style={SUBTITLE_STYLE}>
           Stupidly fast, Crazy light React framework.
         </p>
-      </div>
 
-      <div className="flex flex-col gap-5">
-        <p className="text-foreground text-lg max-w-[500px]">
-          To get started, edit the{' '}
-          <code className="px-1 py-0.5 bg-white/5 rounded-md text-accent">
-            routes/index.tsx
-          </code>{' '}
-          file and see the speed of the HMR.
-        </p>
-        <div className="flex items-center w-44 overflow-hidden border-2 border-foreground/10 rounded-xl">
-          <button
-            onClick={decrement}
-            className="flex items-center justify-center px-4 py-2 shrink-0 opacity-70 border-r-2 border-foreground/20"
-            aria-label="Decrease counter"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 12H4"
-              />
-            </svg>
-          </button>
-
-          <span className="flex-1 min-w-0 px-2 py-2 text-2xl font-bold text-center truncate">
-            {state}
-          </span>
-
-          <button
-            onClick={increment}
-            className="flex items-center justify-center px-4 py-2 shrink-0 opacity-70 border-l-2 border-foreground/20"
-            aria-label="Increase counter"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Hono RPC Timestamp Section */}
-      <div className="flex flex-col gap-4 w-full max-w-md">
-        <h2 className="text-xl font-bold">Hono RPC Timestamp</h2>
-        <p className="text-sm text-foreground/60">
-          Fetch the current server timestamp via Hono's native RPC mechanism
-          over dynamic file-system routes.
-        </p>
-
-        <button
-          id="fetch-timestamp-btn"
-          onClick={fetchTimestamp}
-          disabled={loading}
-          className="btn-primary w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+        <p
+          id="rosetta-transform-output"
+          className="text-sm text-accent opacity-80 font-mono"
         >
-          {loading ? 'Fetching…' : 'Fetch Timestamp'}
-        </button>
-
-        {error ? <p className="text-sm text-accent">{error}</p> : null}
-
-        {tsData ? (
-          <div className="flex flex-col gap-2 rounded-xl border-2 border-foreground/10 p-4 font-mono text-sm">
-            <div className="flex justify-between">
-              <span className="text-foreground/50">ISO</span>
-              <span id="ts-iso">{tsData.timestamp}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-foreground/50">Unix</span>
-              <span id="ts-unix">{tsData.unix}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-foreground/50">TZ</span>
-              <span id="ts-tz">{tsData.timezone}</span>
-            </div>
-          </div>
-        ) : null}
+          [Rosetta Transform]: {textContent}
+        </p>
       </div>
+
+      {loaderData && (
+        <div className="flex flex-col gap-3 w-full max-w-md mb-8 rounded-xl border-2 border-foreground/10 p-4 font-mono text-sm bg-foreground/5">
+          <div className="flex justify-between">
+            <span className="text-foreground/50">Server Time (SSR)</span>
+            <span>{loaderData.serverTime}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-foreground/50">Build Version</span>
+            <span>{loaderData.buildInfo.version}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-foreground/50">Environment</span>
+            <span>{loaderData.buildInfo.env}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Counter Component (Client Component Island) */}
+      <Counter />
+
+      {/* Dynamic Timestamp Fetcher Component (Client Component Island) */}
+      <TimestampFetcher />
+
+      {/* Interactive Chart Component (Client Component Island) */}
+      <InteractiveChart />
 
       <div className="mt-6 flex gap-6 md:flex-row flex-col items-start">
+        <Link
+          to="/post/hello-ssr"
+          className="btn-primary flex items-center justify-center"
+          style={LINKBUTTON_STYLE}
+        >
+          Dynamic Route Test →
+        </Link>
         <Link
           to="https://www.manicjs.tech/docs/framework/benchmarks"
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary flex items-center justify-center"
+          className="btn-secondary flex items-center justify-center"
           style={LINKBUTTON_STYLE}
         >
           How fast? →
