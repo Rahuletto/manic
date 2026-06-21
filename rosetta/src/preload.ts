@@ -3,12 +3,9 @@ import { getLoaderForExtension } from './adapter';
 
 // Register global Bun plugin to translate import.meta.glob
 // This plugin works for both build-time (Bun.build) and runtime (bun --watch, bun run)
-console.log('[Rosetta Glob] Preload module loaded, registering plugin');
-
 Bun.plugin({
   name: 'rosetta-glob-translator',
   setup(build) {
-    console.log('[Rosetta Glob] Plugin setup called');
     
     // Process files in app/ and .source/ directories that might contain import.meta.glob
     // Filter matches absolute paths like `/.../.source/server.ts` or relative `app/routes/...ts`
@@ -35,14 +32,12 @@ async function transformSourceFile(filePath: string) {
       return { contents: code, loader };
     }
 
-    console.log('[Rosetta Glob] Transforming:', filePath);
     const transformed = transformGlob(code, filePath);
     return {
       contents: transformed,
       loader,
     };
-  } catch (err) {
-    console.error('[Rosetta Glob] Error transforming', filePath, ':', err);
+  } catch {
     return undefined;
   }
 }

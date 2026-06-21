@@ -174,6 +174,11 @@ export function rosetta(vitePlugin: any, options?: { filter?: RegExp }): any {
     );
   }
 
+  const pluginNames = Array.isArray(vitePlugin)
+    ? vitePlugin.map((p: any) => p.name).join(', ')
+    : vitePlugin.name;
+  console.log(`[Rosetta] translating [ ${pluginNames} ] plugin(s)`);
+
   // Create the corresponding Bun plugin registration block
   const bunPlugin = {
     name: `rosetta-bun:${vitePlugin.name}`,
@@ -685,7 +690,7 @@ async function transformSourceFile(filePath: string): Promise<void> {
     const fileHandle = Bun.file(filePath);
     const code = await fileHandle.text();
     if (code.includes('import.meta.glob')) {
-      console.log('[Rosetta] Transforming .source file:', filePath);
+
       const transformed = transformGlob(code, filePath);
       await Bun.write(filePath, transformed);
     }
