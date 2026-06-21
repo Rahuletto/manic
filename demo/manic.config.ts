@@ -12,12 +12,11 @@ import { viteTestPlugin } from './vite-test-plugin';
 export default defineConfig({
   app: {
     name: 'Manic',
+    port: 6070,
   },
 
-  ssr: 'streaming',
-
-  server: {
-    port: 6070,
+  router: {
+    ssr: true,
   },
 
   providers: [vercel(), cloudflare(), netlify()],
