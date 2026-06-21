@@ -30,7 +30,6 @@
     "plugins/*",
     "examples/starter",
     "examples/chatbot",
-    "demo",
-    "fuma-demo"
+    "demo"
   ]
 }
