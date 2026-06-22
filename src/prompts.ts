@@ -1,7 +1,16 @@
-import * as readline from 'readline';
 import { cyan, dim, yellow } from './index';
 
 const ANSI_REGEX = /\x1b\[[0-9;]*m/gu;
+
+let readlineModule: ReturnType<typeof import('readline')> | null = null;
+async function getReadline() {
+  if (!readlineModule) {
+    // Use computed specifier to avoid static analysis by bundlers
+    const specifier = 'read' + 'line';
+    readlineModule = await import(specifier);
+  }
+  return readlineModule;
+}
 
 function clearLines(count: number): void {
   for (let i = 0; i < count; i++) {
@@ -24,15 +33,24 @@ function countWrappedRows(lines: string[]): number {
 }
 
 export class PromptSession {
-  private rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  private rl: ReturnType<typeof import('readline').createInterface> | null = null;
+
+  private async ensureReadline() {
+    if (!this.rl) {
+      const readline = await getReadline();
+      this.rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+    }
+    return this.rl;
+  }
 
   async input(question: string, defaultValue?: string): Promise<string> {
     const suffix = defaultValue ? dim(` (${defaultValue})`) : '';
+    const rl = await this.ensureReadline();
     return await new Promise(resolve => {
-      this.rl.question(`  ${question}${suffix}: `, answer => {
+      rl.question(`  ${question}${suffix}: `, answer => {
         resolve(answer.trim() || defaultValue || '');
       });
     });
@@ -59,7 +77,8 @@ export class PromptSession {
     let previousRows = 0;
     const wasRaw = process.stdin.isRaw;
     if (process.stdin.isTTY) process.stdin.setRawMode?.(true);
-    this.rl.pause();
+    const rl = await this.ensureReadline();
+    rl.pause();
     process.stdin.resume();
 
     const render = (): number => {
@@ -82,7 +101,7 @@ export class PromptSession {
         if (key === '\u0003') {
           process.stdin.off('data', onData);
           if (process.stdin.isTTY) process.stdin.setRawMode?.(wasRaw ?? false);
-          this.rl.close();
+          rl.close();
           process.exit(130);
         }
 
@@ -90,7 +109,7 @@ export class PromptSession {
           process.stdin.off('data', onData);
           if (process.stdin.isTTY) process.stdin.setRawMode?.(wasRaw ?? false);
           clearLines(previousRows);
-          this.rl.resume();
+          rl.resume();
           resolve(choices[selected]);
           return;
         }
@@ -120,7 +139,8 @@ export class PromptSession {
     );
     const wasRaw = process.stdin.isRaw;
     if (process.stdin.isTTY) process.stdin.setRawMode?.(true);
-    this.rl.pause();
+    const rl = await this.ensureReadline();
+    rl.pause();
     process.stdin.resume();
 
     const render = (): number => {
@@ -152,7 +172,7 @@ export class PromptSession {
         if (key === '\u0003') {
           process.stdin.off('data', onData);
           if (process.stdin.isTTY) process.stdin.setRawMode?.(wasRaw ?? false);
-          this.rl.close();
+          rl.close();
           process.exit(130);
         }
 
@@ -160,7 +180,7 @@ export class PromptSession {
           process.stdin.off('data', onData);
           if (process.stdin.isTTY) process.stdin.setRawMode?.(wasRaw ?? false);
           clearLines(previousRows);
-          this.rl.resume();
+          rl.resume();
           resolve([...selected].sort((a, b) => a - b).map(i => choices[i]));
           return;
         }

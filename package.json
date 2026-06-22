@@ -1,6 +1,6 @@
 {
   "name": "@manicjs/tui",
-  "version": "1.0.4",
+  "version": "2.0.0-alpha.0",
   "description": "Shared TUI and terminal output primitives for Manic CLI tools",
   "keywords": [
     "cli",
@@ -8,15 +8,15 @@
     "terminal",
     "tui"
   ],
-  "homepage": "https://github.com/manic-js/tui#readme",
+  "homepage": "https://github.com/manic-js/manic#readme",
   "bugs": {
-    "url": "https://github.com/manic-js/tui/issues"
+    "url": "https://github.com/manic-js/manic/issues"
   },
   "license": "GPL-3.0",
   "author": "Rahuletto",
   "repository": {
     "type": "git",
-    "url": "https://github.com/manic-js/tui"
+    "url": "https://github.com/manic-js/manic"
   },
   "files": [
     "src",
@@ -29,7 +29,8 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "import": "./src/index.ts"
+      "import": "./src/index.ts",
+      "browser": "./src/browser-mock.ts"
     }
   },
   "publishConfig": {
@@ -42,7 +43,10 @@
     "ci:build": "if bun run | grep -q \"^ build$\"; then bun run build; elif [ -f src/index.ts ]; then bun build src/index.ts --target bun --outdir .ci-build; elif [ -f index.ts ]; then bun build index.ts --target bun --outdir .ci-build; else echo \"No build entrypoint found\"; exit 1; fi",
     "ci:test": "bun run test",
     "ci:compliance": "test -f CODE_OF_CONDUCT.md && test -f LICENSE && test -f README.md",
-    "test": "bun test --timeout 30000"
+    "test": "bun test --timeout 30000",
+    "typecheck": "if [ -f tsconfig.json ]; then bunx --bun tsc --noEmit; elif [ -f src/index.ts ]; then bunx --bun tsc --noEmit --module esnext --moduleResolution bundler --target es2022 src/index.ts; elif [ -f index.ts ]; then bunx --bun tsc --noEmit --module esnext --moduleResolution bundler --target es2022 index.ts; else echo \"No TypeScript entrypoint found\"; exit 1; fi",
+    "lint": "bunx --bun oxlint --config .oxlintrc.json .",
+    "format:check": "bunx --bun oxfmt --check --config .oxfmt.json ."
   },
   "dependencies": {},
   "devDependencies": {}
