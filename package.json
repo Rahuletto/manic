@@ -1,36 +1,38 @@
 {
-  "name": "manic-workspace",
+  "name": "@manicjs/monorepo",
   "version": "0.0.0",
-  "dependencies": {
-    "manic-workspace": ".",
-    "oxc-transform": "^0.134.0"
-  },
-  "description": "Bun workspace for Manic framework development",
+  "dependencies": {},
+  "description": "Manic v2 framework monorepo",
   "private": true,
   "scripts": {
-    "setup": "bash setup.sh && bash scripts/install-local-hooks.sh",
-    "dev": "cd demo && bun dev",
-    "build": "bun run -r build",
-    "test": "bun run -r test",
-    "test:integration": "bun test scripts/test/core-integration/**/*.test.ts",
-    "test:watch": "bun test --watch",
-    "lint": "bunx oxlint --config .oxlintrc.json core/src bundler/src providers/src",
-    "format": "bunx oxfmt --config .oxfmt.json core/src bundler/src providers/src",
-    "ci:lint": "bunx oxlint --config .oxlintrc.json .",
-    "ci:format": "bunx oxfmt --check --config .oxfmt.json .",
-    "hooks": "bash scripts/install-local-hooks.sh",
-    "resolve-workspace-deps": "bun scripts/resolve-workspace-deps-for-push.ts"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "format": "bunx oxfmt --config .oxfmt.json .",
+    "format:check": "bunx oxfmt --check --config .oxfmt.json .",
+    "typecheck": "turbo typecheck",
+    "ci:lint": "bunx oxlint --config .oxlintrc.json core/src bundler/src tui/src create-manic",
+    "ci:format": "bunx oxfmt --check --config .oxfmt.json core bundler tui create-manic package.json turbo.json",
+    "ci:typecheck": "turbo typecheck",
+    "ci:test": "turbo test",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo build && changeset publish"
   },
   "workspaces": [
     "core",
     "bundler",
-    "providers",
     "create-manic",
-    "tui",
-    "rosetta",
-    "plugins/*",
-    "examples/starter",
-    "examples/chatbot",
-    "demo"
-  ]
+    "tui"
+  ],
+  "packageManager": "bun@1.3.0",
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "turbo": "^2.6.3",
+    "typescript": "^6.0.3",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.63.0",
+    "@types/bun": "^1.3.13"
+  }
 }
