@@ -13,24 +13,46 @@ const rootEl = document.getElementById('root')!;
 const hasServerContent = rootEl.hasChildNodes();
 
 if (hasServerContent) {
-  const initialRouteEntry = routes[window.location.pathname] ?? routes['/'];
-  if (initialRouteEntry) {
-    const importFn = typeof initialRouteEntry === 'function' ? initialRouteEntry : initialRouteEntry.import;
+  const pathname = window.location.pathname;
+  const segments = pathname === '/' ? [''] : pathname.split('/');
+  let matchedEntry: any = null;
+  for (const [pattern, entry] of Object.entries(routes)) {
+    const patternSegs = pattern === '/' ? [''] : pattern.split('/');
+    if (patternSegs.length !== segments.length) continue;
+    let ok = true;
+    for (let i = 0; i < patternSegs.length; i++) {
+      const ps = patternSegs[i]!;
+      const pp = segments[i]!;
+      if (ps.startsWith(':')) {
+        continue;
+      } else if (ps !== pp) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) {
+      matchedEntry = entry;
+      break;
+    }
+  }
+  if (!matchedEntry) matchedEntry = routes['/'];
+  if (matchedEntry) {
+    const importFn =
+      typeof matchedEntry === 'function'
+        ? matchedEntry
+        : matchedEntry.import;
     window.__MANIC_SSR_COMPONENT__ = (await importFn()).default;
   }
 }
 
+const app = (
+  <ThemeProvider>
+    <Router />
+  </ThemeProvider>
+);
+
 if (hasServerContent) {
-  hydrateRoot(
-    rootEl,
-    <ThemeProvider>
-      <Router />
-    </ThemeProvider>
-  );
+  hydrateRoot(rootEl, app);
 } else {
-  createRoot(rootEl).render(
-    <ThemeProvider>
-      <Router />
-    </ThemeProvider>
-  );
+  createRoot(rootEl).render(app);
 }
