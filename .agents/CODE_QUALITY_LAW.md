@@ -49,9 +49,8 @@ I will preserve Manic's architecture, protect reliability, and refuse shortcuts 
 
 1. Agents MUST preserve Manic's Bun+Hono+OXC-first architecture.
 2. Agents MUST protect zero-config behavior and route/app discovery conventions.
-3. Agents MUST keep plugin and provider boundaries clean (no provider-specific logic leaking into generic plugin behavior).
-4. Agents MUST use existing framework extension points instead of hardcoding one-off behavior.
-5. Agents MUST NOT regress the umbrella/submodule workflow defined in repository AGENTS guidance.
+3. Agents MUST use existing framework extension points instead of hardcoding one-off behavior.
+4. Agents MUST NOT regress the monorepo workspace configurations defined in repository AGENTS guidance.
 
 ## 6) Verification Before Marking Work Done
 
@@ -70,7 +69,7 @@ Any of the following is a BLOCKER:
 3. Unplanned scope expansion with no documented rationale.
 4. Failing lint/build/type/test checks relevant to the change.
 5. Known regressions left unresolved.
-6. Architecture boundary violations (plugin/provider/runtime coupling regressions).
+6. Architecture boundary violations.
 7. Missing verification evidence for high-impact changes.
 
 ## 8) Reference Standard (Inspiration Baseline)
@@ -102,3 +101,4 @@ npm run build
 ---
 
 Enforcement note: Reviewers and agents MUST treat this document as binding policy for all future agent-authored changes in this repository.
+
