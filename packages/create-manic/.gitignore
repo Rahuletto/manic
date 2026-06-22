@@ -1,0 +1,9 @@
+node_modules
+template/node_modules
+.bun
+.ci-build
+dist
+coverage
+.manic
+*.log
+.DS_Store

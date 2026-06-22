@@ -1,0 +1,20 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "create-manic",
+      "dependencies": {
+        "@manicjs/tui": "1.0.1",
+      },
+      "devDependencies": {
+        "simple-git-hooks": "^2.13.1",
+      },
+    },
+  },
+  "packages": {
+    "@manicjs/tui": ["@manicjs/tui@1.0.1", "", {}, "sha512-53p/5trYriuiEziTBYMISzrgM30bz+YYaJ16O/tBdwwhiV1m+uoVLIOiqF+7ZXB2TYEJLxl/AIbf8gVnh7N6Hg=="],
+
+    "simple-git-hooks": ["simple-git-hooks@2.13.1", "", { "bin": { "simple-git-hooks": "cli.js" } }, "sha512-WszCLXwT4h2k1ufIXAgsbiTOazqqevFCIncOuUBZJ91DdvWcC5+OFkluWRQPrcuSYd8fjq+o2y1QfWqYMoAToQ=="],
+  }
+}

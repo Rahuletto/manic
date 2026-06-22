@@ -1,0 +1,33 @@
+{
+  "name": "manic-app",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "manic dev",
+    "build": "manic build",
+    "start": "manic start",
+    "deploy": "manic deploy",
+    "lint": "manic lint",
+    "format": "manic fmt"
+  },
+  "dependencies": {
+    "@manicjs/api-docs": "^1.0.5",
+    "@manicjs/lint": "^1.1.0",
+    "@manicjs/mcp": "^1.0.5",
+    "@manicjs/seo": "^1.0.6",
+    "@manicjs/sitemap": "^1.0.5",
+    "@manicjs/tailwind": "^1.0.8",
+    "hono": "^4.12.18",
+    "manicjs": "^2.0.0-alpha.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.63.0"
+  }
+}
