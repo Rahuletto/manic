@@ -53,6 +53,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/manic-js/manic"
+    "url": "https://github.com/manic-js/manic.git"
   }
 }
