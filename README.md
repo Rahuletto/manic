@@ -8,27 +8,25 @@ Manic is a high-performance React framework built exclusively for Bun.
 
 It ships with a custom build pipeline, first-class plugin architecture, and production-ready DX for local development, deployment, and AI-native workflows.
 
-## Monorepo Layout
+## Monorepo Workspace
 
-This repository is now an umbrella workspace that tracks core packages and plugins as git submodules from the [`manic-js`](https://github.com/manic-js) organization.
-
-Clone with submodules:
+This repository is the monorepo workspace containing core framework packages:
 
 ```bash
-git clone --recurse-submodules https://github.com/Rahuletto/manic
+git clone https://github.com/manic-js/manic.git
+cd manic
+bun install
 ```
 
-If you already cloned:
+## Packages
 
-```bash
-git submodule update --init --recursive
-```
-
-Pull latest submodule changes:
-
-```bash
-git submodule update --remote --recursive
-```
+| Package | Directory | Description |
+| --- | --- | --- |
+| [manicjs](https://www.npmjs.com/package/manicjs) | `packages/manic` | Core framework runtime and CLI |
+| [create-manic](https://www.npmjs.com/package/create-manic) | `packages/create-manic` | Project scaffolding CLI |
+| [@manicjs/bundler](https://www.npmjs.com/package/@manicjs/bundler) | `packages/bundler` | Custom bundler and build modules |
+| [@manicjs/rosetta](https://www.npmjs.com/package/@manicjs/rosetta) | `packages/rosetta` | Vite to Manic plugin adapter |
+| [@manicjs/tui](https://www.npmjs.com/package/@manicjs/tui) | `packages/tui` | Shared terminal UI primitives |
 
 ## Documentation
 
@@ -47,31 +45,6 @@ bun install
 bun dev
 ```
 
-## Why Manic
-
-- Bun-first runtime and tooling
-- Fast transforms/minification powered by OXC
-- File-based routing and SSR-ready architecture
-- Provider adapters for major deployment targets
-- App-focused plugins (`@manicjs/pwa`, `@manicjs/mcp`, API docs, SEO, sitemap)
-
-## Packages
-
-| Package | Description |
-| --- | --- |
-| [manicjs](https://www.npmjs.com/package/manicjs) | Core framework runtime and CLI |
-| [create-manic](https://www.npmjs.com/package/create-manic) | Project scaffolding CLI |
-| [@manicjs/providers](https://www.npmjs.com/package/@manicjs/providers) | Deploy adapters (Vercel, Netlify, Cloudflare) |
-| [@manicjs/tui](https://www.npmjs.com/package/@manicjs/tui) | Shared terminal UI primitives |
-| [@manicjs/tailwind](https://www.npmjs.com/package/@manicjs/tailwind) | Tailwind CSS plugin |
-| [@manicjs/unocss](https://www.npmjs.com/package/@manicjs/unocss) | UnoCSS plugin |
-| [@manicjs/mdx](https://www.npmjs.com/package/@manicjs/mdx) | MDX support plugin |
-| [@manicjs/seo](https://www.npmjs.com/package/@manicjs/seo) | SEO metadata and robots plugin |
-| [@manicjs/sitemap](https://www.npmjs.com/package/@manicjs/sitemap) | Sitemap generation plugin |
-| [@manicjs/mcp](https://www.npmjs.com/package/@manicjs/mcp) | Model Context Protocol plugin |
-| [@manicjs/api-docs](https://www.npmjs.com/package/@manicjs/api-docs) | Scalar API docs plugin |
-| [@manicjs/pwa](https://www.npmjs.com/package/@manicjs/pwa) | Progressive Web App plugin |
-
 ## Requirements
 
 - [Bun](https://bun.sh) `>= 1.3.13`
@@ -79,3 +52,4 @@ bun dev
 ## License
 
 GPL-3.0
+
