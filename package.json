@@ -12,8 +12,8 @@
     "format": "bunx oxfmt --config .oxfmt.json .",
     "format:check": "bunx oxfmt --check --config .oxfmt.json .",
     "typecheck": "turbo typecheck",
-    "ci:lint": "bunx oxlint --config .oxlintrc.json core/src bundler/src tui/src create-manic",
-    "ci:format": "bunx oxfmt --check --config .oxfmt.json core bundler tui create-manic package.json turbo.json",
+    "ci:lint": "bunx oxlint --config .oxlintrc.json packages/manic/src packages/bundler/src packages/tui/src packages/create-manic packages/rosetta/src",
+    "ci:format": "bunx oxfmt --check --config .oxfmt.json packages package.json turbo.json",
     "ci:typecheck": "turbo typecheck",
     "ci:test": "turbo test",
     "changeset": "changeset",
@@ -21,10 +21,11 @@
     "release": "turbo build && changeset publish"
   },
   "workspaces": [
-    "core",
-    "bundler",
-    "create-manic",
-    "tui"
+    "packages/rosetta",
+    "packages/manic",
+    "packages/bundler",
+    "packages/create-manic",
+    "packages/tui"
   ],
   "packageManager": "bun@1.3.0",
   "devDependencies": {
