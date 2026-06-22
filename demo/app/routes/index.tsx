@@ -1,8 +1,6 @@
 import { Image, Link } from 'manicjs';
 import textContent from '@/test.txt';
-import InteractiveChart from '@/components/InteractiveChart';
 import Counter from '@/components/Counter';
-import TimestampFetcher from '@/components/TimestampFetcher';
 
 const LOGO_STYLE = { viewTransitionName: 'logo' };
 const SUBTITLE_STYLE = { viewTransitionName: 'subtitle' };
@@ -76,12 +74,6 @@ export default function Home({ loaderData }: { loaderData?: HomeLoaderData }) {
 
       {/* Interactive Counter Component (Client Component Island) */}
       <Counter />
-
-      {/* Dynamic Timestamp Fetcher Component (Client Component Island) */}
-      <TimestampFetcher />
-
-      {/* Interactive Chart Component (Client Component Island) */}
-      <InteractiveChart />
 
       <div className="mt-6 flex gap-6 md:flex-row flex-col items-start">
         <Link

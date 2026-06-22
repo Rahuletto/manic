@@ -82,10 +82,32 @@ bun run lint        # Verifies packages correctness using oxlint
 We use Changesets to manage versions and releases:
 
 ```bash
-# Add a changeset describing the changes
+# Add a changeset describing changes made
 bun changeset
 
-# Release workflow is handled automatically via GitHub Actions upon merge to main
+# Version packages locally (bumps package versions and updates changelogs)
+bun run version-packages
+
+# Release packages to NPM
+bun run release
+```
+
+## Running Turborepo Commands
+
+We use Turbo to manage tasks across workspaces. Key scripts:
+
+```bash
+# Boot the demo dev server with workspace file-watching active
+bun run dev
+
+# Run build across all workspaces in parallel in dependency order
+bun run build
+
+# Run unit tests across all workspaces
+bun run test
+
+# Typecheck all workspace packages
+bun run typecheck
 ```
 
 ## FAQ
